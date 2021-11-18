@@ -17,10 +17,13 @@ path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM')
 # Plot the annual cycle of vegetation variables
 ###################################################################################################
 var_list = ['TLAI', 'GPP'] # ['QVEGE', 'QVEGT'] Need to add these variables
+
+# -------------------------------------------------------------------------------------------------
+# PFT level
+# -------------------------------------------------------------------------------------------------
 pft_list = {'needleleaf evergreen boreal tree': 2, 
             'needleleaf deciduous boreal tree': 3, 
             'broadleaf deciduous boreal shrub': 11}
-
 clist = ['#1b9e77', '#d95f02', '#7570b3']
 
 flist = glob(os.path.join(path_data, '*h2*.nc'))
@@ -61,6 +64,50 @@ for ii in range(len(var_list)):
 fig.savefig(os.path.join(path_out, level + '_1.png'), dpi = 600., bbox_inches = 'tight')
 plt.close()
 
+
+# -------------------------------------------------------------------------------------------------
+# Grid level
+# -------------------------------------------------------------------------------------------------
+grid_list = {'hollow': 0, 'hummock': 1}
+clist = ['#1b9e77', '#d95f02']
+
+flist = glob(os.path.join(path_data, '*h0*.nc'))
+
+fig, axes = plt.subplots(2, 1, figsize = (6, 6))
+for ii in range(len(var_list)):
+    hr = xr.open_mfdataset(flist, decode_times = True)
+
+    ax = axes.flat[ii]
+
+    count = 0
+    nlist = []
+    for jj, kk in grid_list.items():
+
+        # temporary fix for align
+        fixture = datetime.strptime('20150101', '%Y%m%d') - \
+            datetime.strptime('18500101', '%Y%m%d')
+
+        retype = pd.DataFrame(hr[var_list[ii]][:, kk].values,
+                              index = hr['time'].indexes['time'].to_datetimeindex() + \
+                              fixture) # temporary fix for align
+        if var_list[ii] == 'TLAI':
+            retype = retype.groupby(retype.index.month).mean()
+        else:
+            # # s to day, add up to month, divide by years
+            retype = retype.groupby(retype.index.month).sum() * 24 * 3600 / len(flist)
+
+        ax.plot(retype.index, retype.values, '-o', color = clist[count])
+        ax.set_title(var_list[ii])
+
+        count += 1
+        nlist.append(jj)
+
+    ax.legend(nlist, loc = 'upper right', bbox_to_anchor = (1.8, 1.))
+
+    hr.close()
+
+fig.savefig(os.path.join(path_out, level + '_1-1.png'), dpi = 600., bbox_inches = 'tight')
+plt.close()
 
 ###################################################################################################
 # Plot the annual cycle of air temperature
