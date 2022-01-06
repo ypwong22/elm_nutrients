@@ -50,7 +50,7 @@ def ax_regress(ax, x, vector,
 
     if display == 'equation':
         ax.text(pos_xy[0], pos_xy[1],
-                ppf(reg.params[1], reg.params[0],
+                ppf(reg.params[1] , reg.params[0],
                     reg.pvalues[1], reg.pvalues[0]),
                 transform = ax.transAxes, **args_tx)
     elif display == 'pearson':
