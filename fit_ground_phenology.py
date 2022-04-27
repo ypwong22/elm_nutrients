@@ -4,25 +4,29 @@ from pandas.core.indexes.datetimes import DatetimeIndex
 from utils.constants import *
 from utils.paths import *
 from utils.analysis import *
+from utils.phenofuncs import *
 import numpy as np
 from datetime import datetime, timedelta
-from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import itertools as it
+import xarray as xr
 
 
 lat, lon, tzn, elv = '47.563 N', '93.438 W', 'US/Central', 430
 
 
 ##################################################################################################
-# Growing degree days model for budburst
+# Load the start of season data and soil temperature
 ##################################################################################################
-pheno_obs = pd.read_excel(os.path.join(path_input, 'SPRUCE_budburst_summary.xlsx'),
-                          engine = 'openpyxl', sheet_name = 'Sheet1')
-pheno_obs = pheno_obs.loc[:, 
-    ['year', 'plot', 'buds breaking']].set_index(['year', 'plot'])['buds breaking'].unstack()
-pheno_obs.columns = ['%02d' % c for c in pheno_obs.columns]
+hr = xr.open_dataset(os.path.join(path_intrim, 'spruce_validation_data.nc'))
+pheno_obs = hr['pheno_dates_lai'].loc[:, 'SOS', :, 'EN']
+pheno_obs = pd.DataFrame(pheno_obs.values,
+                         index = pheno_obs['year'],
+                         columns = ['%02d' % i for i in pheno_obs['chamber']])
+pheno_obs = pheno_obs.dropna(axis = 1, how = 'all' \
+    ).dropna(axis = 0, how = 'all').sort_index(axis = 1)
+hr.close()
 
 
 annt2m = pd.DataFrame()
@@ -59,58 +63,28 @@ for fid in chamber_levels.keys():
             tsoi_collect[k][fid] = tsoi[k]
 
 
-def crit_gdd(x, a, b):
-    # crit_gdd  = pd.DataFrame(np.exp(4.8 + 0.13 * annt2m.values), index = annt2m.index + 1)
-    return np.exp(a + b * x)
-gdds = dict([('GDD_%d' % i,
-              pd.DataFrame(index = [2016, 2017, 2018, 2019], columns = chamber_levels.keys()))
-             for i in soil_layer_list])
-
-for key, year in it.product(tsoi_collect.keys(), [2016, 2017, 2018, 2019]):
-    # Find last solstice
-    last_year = pd.DatetimeIndex([datetime(year-1, 12, 1) + timedelta(days = i) \
-                                 for i in range((datetime(year,1,1)-datetime(year-1, 1, 1)).days)])
-
-    dl_prev = 1e20
-    for ind, yy, mm, dd in zip(range(len(last_year)), 
-                                     last_year.year, last_year.month, last_year.day):
-        dl = daylength(yy, mm, dd, lat, lon, elv, tzn)
-        if dl >= dl_prev:
-            break
-        else:
-            dl_prev = dl
-    solstice = last_year[ind]
-
-    # Accumulate GDD
-    for fid in chamber_levels.keys():
-        tsoi_accu = tsoi_collect[key].loc[(tsoi_collect[key].index >= solstice) & \
-                                        (tsoi_collect[key].index <= (datetime(year-1, 12, 31) \
-            + timedelta(days = float(pheno_obs.loc[year, fid])))), fid]
-        tsoi_accu = (tsoi_accu * (tsoi_accu > 0.)).sum(axis = 0) * \
-                    (tsoi_collect[key].index[1] - tsoi_collect[key].index[0]).total_seconds() / 86400
-        gdds['GDD_' + key.split('_')[1]].loc[year, fid] = tsoi_accu
-
-
-Optim = pd.DataFrame(index = ['a', 'b', 'RMSE'], columns = gdds.keys())
+##################################################################################################
+# Growing degree days model for budburst
+##################################################################################################
+# Test the fitting outcome of different soil layers
+Optim = pd.DataFrame(np.nan, columns = ['a', 'b', 'RMSE'], index = soil_layer_list)
 
 mpl.rcParams['font.size'] = 6
 mpl.rcParams['axes.titlesize'] = 6
 fig, axes = plt.subplots(3, 4, figsize = (9,9), sharex = True, sharey = True)
-for i, lyr in enumerate(soil_layer_list):
-    x = annt2m.loc[gdds['GDD_%d' % lyr].index - 1, :].values.reshape(-1)
-    y = gdds['GDD_%d' % lyr].values.reshape(-1)
-    popt, pcov = curve_fit(crit_gdd, x, y)
-    ypred = crit_gdd(x, *popt)
+for i,lyr in enumerate(soil_layer_list):
+    model = GDD()
+    popt, ypred, x, y = model.fit(pheno_obs, annt2m, tsoi_collect[f'TS_{lyr:d}'])
 
-    Optim.loc['a', 'GDD_%d' % lyr] = popt[0]
-    Optim.loc['b', 'GDD_%d' % lyr] = popt[1]
-    Optim.loc['RMSE', 'GDD_%d' % lyr] = np.sqrt(np.mean(np.power(y - ypred, 2)))
+    Optim.loc['GDD_%d' % lyr, 'a'   ] = popt[0]
+    Optim.loc['GDD_%d' % lyr, 'b'   ] = popt[1]
+    Optim.loc['GDD_%d' % lyr, 'RMSE'] = np.sqrt(np.mean(np.power(y - ypred, 2)))
 
     ax = axes.flat[i]
     h1, = ax.plot(x, y, 'or', markersize = 3)
-    h2, = ax.plot(np.linspace(6, 15, 40), crit_gdd(np.linspace(5, 15, 40), *popt), '-b')
+    h2, = ax.plot(np.linspace(6, 15, 40), model.predict(np.linspace(5, 15, 40)), '-b')
 
-    ax.text(0.6, 0.85, 'RMSE=%.2f' % Optim.loc['RMSE', 'GDD_%d' % lyr], transform = ax.transAxes)
+    ax.text(0.6, 0.85, 'RMSE=%.2f' % Optim.loc['GDD_%d' % lyr, 'RMSE'], transform = ax.transAxes)
 
     ax.set_title('Soil layer %s cm' % lyr)
     ax.set_xlabel('T2M previous year average')
@@ -118,10 +92,17 @@ for i, lyr in enumerate(soil_layer_list):
 ax.legend([h1,h2], ['Ground observation', 'Critical GDD model'], loc = (-1, -0.4))
 fig.savefig(os.path.join(path_out, 'fit_ground_phenology.png'), dpi = 600.)
 plt.close(fig)
-
 Optim.to_csv(os.path.join(path_out, 'fit_ground_phenology.csv'))
 
 
+##################################################################################################
+# Alternating model for budburst
+##################################################################################################
+
+
+
+
+"""
 ##################################################################################################
 # Critical daylength model for leaves senescing
 ##################################################################################################
@@ -135,3 +116,4 @@ for i in range(len(pheno_obs)):
     print('Critical day length = %f seconds' % crit_dayl)
     crit_dayl_all.append(crit_dayl)
 print('Average critical day length = %f seconds' % np.mean(crit_dayl_all))
+"""

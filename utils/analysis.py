@@ -1,6 +1,7 @@
 # https://gist.github.com/anttilipp/ed3ab35258c7636d87de6499475301ce
 import numpy as np
-def daylength(dayOfYear, lat):
+
+def daylength_simple(dayOfYear, lat):
     """
     Computes the length of the day (the time between sunrise and
     sunset) given the day of the year and latitude of the location.
