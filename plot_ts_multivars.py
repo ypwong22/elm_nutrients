@@ -1,6 +1,5 @@
 """ Plot multiple variables on different panels on the same figure. 
     Each simulation is a separate plot. """
-
 import itertools as it
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -20,7 +19,7 @@ parser.add_option('--extra', dest = 'extra', default = '', help = 'Extra prefix.
 (options, args) = parser.parse_args()
 
 
-# level = 'plot10' # 'ambient'
+#level = 'plot10' # 'ambient'
 level = 'plot' + options.level
 
 # 20211008: original
@@ -31,16 +30,19 @@ level = 'plot' + options.level
 #           python plot_ts_multipanel.py --date 20220407 --extra _stopdate171_switch1 --plot 04
 date  = options.date
 extra = options.extra
+#date = '20220407_stopdate171_switch2'
+#extra = ''
 
 path_data = os.path.join(os.environ['SCRATCHDIR'], 'E3SM', 'output', 
                          date + extra + '_' + level + '_US-SPR_ICB20TRCNPRDCTCBC','run')
+print(path_data)
 path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm')
 ###################################################################################################
 # Plot the time series of vegetation variables
 ###################################################################################################
 # 'TLAI', 'GPP', 'QVEGE', 'QVEGT', 'LEAFC_STORAGE', 'FROOTC', 
-var_list = ['FROOTC', 'PROOT_ONSET_FLAG', 'PROOT_ONSET_OFFSET', 'PROOT_GDD2', 
-            'PROOT_CWD2', 'PROOT_SUMFRAC']
+#var_list = ['FROOTC','PROOT_ONSET_FLAG','PROOT_ONSET_OFFSET','PROOT_GDD2','PROOT_CWD2','PROOT_SUMFRAC']
+var_list = ['LEAFC','LEAFC_STORAGE_TO_XFER','LEAFC_XFER','LEAFC_XFER_TO_LEAFC','FROOTC','FROOTC_STORAGE','LITFALL']
 
 # -------------------------------------------------------------------------------------------------
 # PFT level
@@ -50,11 +52,16 @@ pft_list = {'needleleaf evergreen boreal tree': 2,
             'broadleaf deciduous boreal shrub': 11}
 clist = ['#1b9e77', '#d95f02', '#7570b3']
 
-flist = glob(os.path.join(path_data, '*.h2.*.nc'))
+flist = sorted(glob(os.path.join(path_data, '*.h2.*.nc')))
 
 fig, axes = plt.subplots(len(var_list), 1, figsize = (12, 14), sharex = True)
 for ii in range(len(var_list)):
-    hr = xr.open_mfdataset(flist, decode_times = True)
+    # autocoversion misidentified PROOT_ONSET_OFFSET as a datetime variable because its unit "days"
+    hr = xr.open_mfdataset(flist, decode_times = False)
+    units, reference_date = hr.time.attrs['units'].split('since')
+    tvec = pd.date_range(start = reference_date, end = '2021-01-01', freq='D')
+    tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
+    hr['time'] = tvec
 
     ax = axes.flat[ii]
 
@@ -74,10 +81,11 @@ for ii in range(len(var_list)):
                                    index = tvec)
             retype2 = retype2 * 24 * 3600
 
-        if kk == 2:
-            if ii == 0:
-                collect = pd.DataFrame(np.nan, index = retype.index, columns = var_list)
-            collect.loc[:, var_list[ii]] = retype.values
+        if (ii == 0) & (count == 0):
+            collect = pd.DataFrame(np.nan, index = retype.index,
+                columns = pd.MultiIndex.from_product([var_list, sorted(pft_list.keys())]))
+
+        collect.loc[:, (var_list[ii],jj)] = retype.values
 
         if var_list[ii] == 'QVEGE':
             retype = retype.iloc[1:]
