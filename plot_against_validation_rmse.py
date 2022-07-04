@@ -18,7 +18,7 @@ title_list = ['Daily CO$_2$ flux', 'Daily CH$_4$ flux', 'Annual ANPP$_{tree}$',
 unit_list = ['gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 yr-1', 'gC m-2 yr-1', 'gC m-2 yr-1',
              'gC m-2 yr-1', 'mm day-1', 'm below hollow surface']
 
-stat = 'Corr' # 'RMSE','Corr','Bias
+stat = 'RMSE' # 'RMSE','Corr','Bias
 
 ds_collect = pd.DataFrame(np.nan, index = var_list,
                           columns = pd.MultiIndex.from_product([sims_prefix, chamber_list]))

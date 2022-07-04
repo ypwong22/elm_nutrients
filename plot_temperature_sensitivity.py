@@ -127,19 +127,16 @@ mpl.rcParams['font.size'] = 16
 mpl.rcParams['axes.titlesize'] = 16
 
 
-pft = 3
+pft = 11
 if pft == 2:
-    sims_prefix = ['20211008', '20220103', '20220407_stopdate365_switch1',
-                   '20220407_stopdate365_switch3']
-    sims_names = ['Default', 'AltEvgrPheno', 'AltRoot_365_1', 'AltRoot_365_3']
+    sims_prefix = ['20211008', '20220103', '20220407_stopdate171_switch1']
+    sims_names = ['Default', 'AltEvgrPheno', 'AltRoot_171_1']
 elif pft == 3:
-    sims_prefix = ['20220103', '20220407_stopdate365_switch1', '20220407_stopdate365_switch3']
-    sims_names = ['AltEvgrPheno', 'AltRoot_365_1', 'AltRoot_365_3']
+    sims_prefix = ['20211008', '20220103', '20220407_stopdate171_switch1']
+    sims_names = ['Default', 'AltEvgrPheno', 'AltRoot_171_1']
 elif pft == 11:
-    sims_prefix = ['20220103', '20220407_stopdate171_switch3',
-                   '20220407_stopdate365_switch4']
-    sims_names = ['AltEvgrPheno', 'AltRoot_171_3',
-                  'AltRoot_365_4']
+    sims_prefix = ['20211008', '20220103', '20220407_stopdate171_switch1']
+    sims_names = ['Default', 'AltEvgrPheno', 'AltRoot_171_1']
 co2_levels    = {'ambient' : [6, 20, 13, 8, 17],
                  'elevated': [19, 11, 4, 16, 10]}
 for variable in ['TLAI', 'GPP', 'FROOTC']:

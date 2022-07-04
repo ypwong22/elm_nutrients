@@ -40,9 +40,9 @@ path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm')
 ###################################################################################################
 # Plot the time series of vegetation variables
 ###################################################################################################
-# 'TLAI', 'GPP', 'QVEGE', 'QVEGT', 'LEAFC_STORAGE', 'FROOTC', 
+var_list = ['TLAI', 'GPP', 'QVEGT', 'FROOTC']
 #var_list = ['FROOTC','PROOT_ONSET_FLAG','PROOT_ONSET_OFFSET','PROOT_GDD2','PROOT_CWD2','PROOT_SUMFRAC']
-var_list = ['LEAFC','LEAFC_STORAGE_TO_XFER','LEAFC_XFER','LEAFC_XFER_TO_LEAFC','FROOTC','FROOTC_STORAGE','LITFALL']
+#var_list = ['LEAFC_STORAGE_TO_XFER','LEAFC_XFER','LEAFC_XFER_TO_LEAFC','FROOTC_STORAGE','FROOTC_XFER'] # 'LITFALL'
 
 # -------------------------------------------------------------------------------------------------
 # PFT level
