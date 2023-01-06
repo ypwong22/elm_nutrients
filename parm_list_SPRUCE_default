@@ -1,0 +1,60 @@
+# 2 evergreen
+# 3 deciduous
+# 11 shrub
+# 12 moss
+
+flnr 2 0.02 0.20
+leaf_long 2 0.75 2.0
+slatop 2 0.004 0.04
+froot_leaf 2 0.15 2.0
+mbbopt 2 4.5 12
+q10_mr 2 1.2 3.0
+br_mr 2 1e-6 5e-6
+grperc 2 0.12 0.4
+
+flnr 3 0.02 0.20
+slatop 3 0.004 0.04
+froot_leaf 3 0.15 2.0
+mbbopt 3 4.5 12
+q10_mr 3 1.2 3.0
+br_mr 3 1e-6 5e-6
+grperc 3 0.12 0.4
+
+flnr 11 0.02 0.20
+slatop 11 0.004 0.04
+froot_leaf 11 0.15 2.0
+mbbopt 11 4.5 12
+q10_mr 11 1.2 3.0
+br_mr 11 1e-6 5e-6
+grperc 11 0.12 0.4
+
+flnr 12 0.02 0.20
+mbbopt 12 4.5 12
+q10_mr 12 1.2 3.0
+br_mr 12 1e-6 5e-6
+grperc 12 0.12 0.4
+
+decomp_depth_efolding 0 0.2 0.7
+qflx_h2osfc_surfrate 0 8e-8 3e-7
+rsub_top_globalmax 0 1e-5 1.8e-5
+
+# Meng et al. 2021 suggests small impacts
+# croot_stem 2 0.05 0.8
+# stem_leaf 2 0.3 2.2
+# leafcn 2 20 75
+# leafcn 3 20 75
+# lwtop_ann 3 0.2 0.85
+# qflx_h2osfc_surfrate 0 8e-8 3e-7
+# rsub_top_max 0 1e-5 1.8e-5
+
+
+# It seems these are not used any more or only in dgvm / satellite phenology
+# crit_onset_gdd 3 20 500
+# phen_a 3 1.0 30.0
+# phen_b 3 1000 2500
+# phen_c 3 -0.06 -0.01
+# phen_tbspring 3 269.15 282.15
+# phen_tbfall 3 272.15 308.15
+# phen_ycrit 3 1000 2000
+# phen_pstart 3 12.0 16.5
+# r_mort 2 0.005 0.1

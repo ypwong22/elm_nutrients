@@ -9,6 +9,7 @@ from optparse import OptionParser
 from utils.constants import *
 
 
+"""
 parser = OptionParser()
 parser.add_option("--sim_id", dest="sim_id", default = '', \
                   help = 'Index to the simulation to extract.')
@@ -16,14 +17,12 @@ parser.add_option('--plot_id', dest = 'plot_id', default = '', \
                   help = 'Index to the chamber to extract.')
 (options,args) = parser.parse_args()
 
-
 prefix  =  sims_prefix[int( options.sim_id)]
 plot    = chamber_list[int(options.plot_id)]
-
+"""
 
 def read_vars(prefix, plot):
-    path_data = os.path.join(os.environ['SCRATCHDIR'], 'E3SM', 'output', 
-                             f'{prefix}_plot{plot}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+    path_data = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', f'{prefix}_plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
 
     data_list = {}
     for i, varname in enumerate(var_list):
@@ -35,7 +34,7 @@ def read_vars(prefix, plot):
         else:
             varname2 = ''
 
-        if varname2 in ['lala', 'pima', 'shrub', 'moss']:
+        if varname2 in ['lala', 'pima', 'shrub', 'moss'] or varname1 == 'BGNPP':
             flist = sorted(glob(os.path.join(path_data, '*.h2.*.nc')))[:-1]
             hr = xr.open_mfdataset(flist, decode_times = False)
         else:
@@ -51,6 +50,8 @@ def read_vars(prefix, plot):
                 var = hr[varname1][:, 11 + 17*kk]
             elif varname2 == 'moss':
                 var = hr[varname1][:, 12 + 17*kk]
+            elif varname1 == 'BGNPP':
+                var = hr[varname1][:, 2 + 17*kk] * 0.36 + hr[varname1][:, 3 + 17*kk] * 0.14 + hr[varname1][:, 11 + 17*kk]*0.25
             elif varname1 == 'H2OSOI':
                 subset = np.where(hr['levgrnd'].values <= 0.4)[0][-1]
                 thickgrnd = soil_interfaces[:(subset+1)].copy()
@@ -76,6 +77,8 @@ def read_vars(prefix, plot):
     return data_list
 
 
-path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm')
-data_list = read_vars(prefix, plot)
-pd.DataFrame(data_list).to_csv(os.path.join(path_out, prefix, f'plot{plot}_ts_extract.csv'))
+prefix = '20221212' # '20221231'
+for plot in [4, 10, 11, 16, 19, 6, 8, 13, 17, 20]:
+    path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm')
+    data_list = read_vars(prefix, plot)
+    pd.DataFrame(data_list).to_csv(os.path.join(path_out, prefix, f'plot{plot}_ts_extract.csv'))

@@ -34,8 +34,7 @@ def get_model_dates(variable, pft, read = False):
         data = pd.DataFrame(np.nan, 
                             index = pd.MultiIndex.from_product([chamber_list, years]),
                             columns = pd.MultiIndex.from_product([sims_names,
-                                                                  ['temperature','CO2','SOS',
-                                                                   'EOS']]))
+                                                                  ['temperature','CO2','SOS','EOS']]))
         for yy, model in zip(sims_prefix, sims_names):
             for chamber in chamber_list:
                 hr = xr.open_mfdataset(os.path.join(path_run, yy + '_plot' + chamber + \
@@ -84,10 +83,10 @@ def get_model_dates(variable, pft, read = False):
                         data.loc[(chamber, year),
                                  (model,'EOS'        )] = tvec.dayofyear[ee]
 
-        data.to_csv(os.path.join(path_out,
+        data.to_csv(os.path.join(path_out, 'temperature_sensitivity', 
                                  'fit_model_phenology_{}_{}.csv'.format(variable, pft)))
     else:
-        data = pd.read_csv(os.path.join(path_out,
+        data = pd.read_csv(os.path.join(path_out, 'temperature_sensitivity', 
                                         'fit_model_phenology_{}_{}.csv'.format(variable, pft)),
                            index_col = [1,2], header = [0,1])
     return data
@@ -127,16 +126,16 @@ mpl.rcParams['font.size'] = 16
 mpl.rcParams['axes.titlesize'] = 16
 
 
-pft = 11
+pft = 2
 if pft == 2:
-    sims_prefix = ['20211008', '20220103', '20220407_stopdate171_switch1']
-    sims_names = ['Default', 'AltEvgrPheno', 'AltRoot_171_1']
+    sims_prefix = ['20221231', '20230101']
+    sims_names = ['AltEvgr', 'AltEvgrRoot']
 elif pft == 3:
-    sims_prefix = ['20211008', '20220103', '20220407_stopdate171_switch1']
-    sims_names = ['Default', 'AltEvgrPheno', 'AltRoot_171_1']
+    sims_prefix = ['20221231', '20230101']
+    sims_names = ['AltEvgr', 'AltEvgrRoot']
 elif pft == 11:
-    sims_prefix = ['20211008', '20220103', '20220407_stopdate171_switch1']
-    sims_names = ['Default', 'AltEvgrPheno', 'AltRoot_171_1']
+    sims_prefix = ['20221231', '20230101']
+    sims_names = ['AltEvgr', 'AltEvgrRoot']
 co2_levels    = {'ambient' : [6, 20, 13, 8, 17],
                  'elevated': [19, 11, 4, 16, 10]}
 for variable in ['TLAI', 'GPP', 'FROOTC']:
@@ -233,7 +232,7 @@ for variable in ['TLAI', 'GPP', 'FROOTC']:
                 ax.legend([h3], ['Modeled'], ncol =2, loc = (-1,-0.5))
             else:
                 ax.legend([h1, h3], ['Observed','Modeled'], ncol =2, loc = (-1,-0.5))
-        fig.savefig(os.path.join(path_out, 
+        fig.savefig(os.path.join(path_out, 'temperature_sensitivity', 
                                  'temperature_sensitivity_{}_{}_{}.png'.format(variable,co2,pft)),
                     dpi = 600., bbox_inches = 'tight')
         plt.close(fig)

@@ -15,7 +15,7 @@ import xarray as xr
 
 lat, lon, tzn, elv = '47.563 N', '93.438 W', 'US/Central', 430
 
-
+"""
 ##################################################################################################
 # Load the start of season data and soil temperature
 ##################################################################################################
@@ -93,7 +93,7 @@ ax.legend([h1,h2], ['Ground observation', 'Critical GDD model'], loc = (-1, -0.4
 fig.savefig(os.path.join(path_out, 'fit_ground_phenology.png'), dpi = 600.)
 plt.close(fig)
 Optim.to_csv(os.path.join(path_out, 'fit_ground_phenology.csv'))
-
+"""
 
 ##################################################################################################
 # Alternating model for budburst
@@ -102,12 +102,11 @@ Optim.to_csv(os.path.join(path_out, 'fit_ground_phenology.csv'))
 
 
 
-"""
 ##################################################################################################
 # Critical daylength model for leaves senescing
 ##################################################################################################
 pheno_obs = pd.read_excel(os.path.join(path_input, 'SPRUCE_budburst_summary.xlsx'),
-                          engine = 'openpyxl', sheet_name = 'Sheet1')
+                          engine = 'openpyxl', sheet_name = 'EN')
 pheno_obs = pheno_obs.loc[:, ['year', 'leaves senescing']].set_index('year', drop = True).dropna()
 crit_dayl_all = []
 for i in range(len(pheno_obs)):
@@ -116,4 +115,6 @@ for i in range(len(pheno_obs)):
     print('Critical day length = %f seconds' % crit_dayl)
     crit_dayl_all.append(crit_dayl)
 print('Average critical day length = %f seconds' % np.mean(crit_dayl_all))
-"""
+print('Minimum critical day length = %f seconds' % np.min(crit_dayl_all))
+print('Minimum critical day length = %f seconds' % np.max(crit_dayl_all))
+print('Std of day length = %f seconds' % np.std(crit_dayl_all))

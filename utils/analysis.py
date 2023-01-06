@@ -1,6 +1,31 @@
 # https://gist.github.com/anttilipp/ed3ab35258c7636d87de6499475301ce
 import numpy as np
 
+
+def get_treatment_string(chamber):
+    chamber_levels = {'07': ['TAMB',  0], '14': ['TAMB',  0], '21': ['TAMB',  0],
+                    '06': [0     ,  0], '19': [0     ,500], 
+                    '11': [2.25  ,500], '20': [2.25  ,  0],
+                    '04': [4.5   ,500], '13': [4.5   ,  0],
+                    '08': [6.75  ,  0], '16': [6.75  ,500],
+                    '10': [9     ,500], '17': [9     ,  0]}
+    temperature, co2 = chamber_levels[f'{chamber:02g}']
+    if temperature == 'TAMB':
+        treatment = 'TAMB'
+    else:
+        treatment = f'T{temperature:.2f}'
+    if co2 > 0:
+        treatment = treatment + 'CO2'
+    return treatment
+
+
+def get_mossfrac(year, treatment):
+    mossfrac = pd.read_excel('Sphagnum_fraction.xlsx', index_col = 0, skiprows = 1,
+                             engine = 'openpyxl').drop(['plot','Temp','CO2'], axis = 1)
+    mossfrac[2015] = mossfrac[2016]
+    return mossfrac.loc[treatment, year]
+
+
 def daylength_simple(dayOfYear, lat):
     """
     Computes the length of the day (the time between sunrise and
