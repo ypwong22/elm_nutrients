@@ -6,23 +6,9 @@ chamber_levels = {'04': [4.5,500], '06': [0   ,  0], '08': [6.75,  0],
                   '07': [0  ,  0], '21': [0  ,  0]}
 
 # T: 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
-chamber_list = ['06', '20', '13', '08', '17', '19', '11', '04', '16', '10']
+chamber_list = [6, 19, 20, 11, 13, 4, 8, 16, 17, 10] # 7, 21, 
+chamber_list_names = ['T0.00', 'T0.00CO2', 'T2.25', 'T2.25CO2', 'T4.50', 'T4.50CO2', 'T6.75', 'T6.75CO2', 'T9.00', 'T9.00CO2']
 
-sims_prefix = ['20211008', '20220103',
-               '20220407_stopdate171_switch1', '20220407_stopdate365_switch1',
-               '20220407_stopdate171_switch2', '20220407_stopdate365_switch2',
-               '20220407_stopdate171_switch3', '20220407_stopdate365_switch3',
-               '20220407_stopdate171_switch4', '20220407_stopdate365_switch4']
-sims_names =  ['Original', 'AltEvgrPheno',
-               'AltRoot_171_1', 'AltRoot_365_1',
-               'AltRoot_171_2', 'AltRoot_365_2',
-               'AltRoot_171_3', 'AltRoot_365_3',
-               'AltRoot_171_4', 'AltRoot_365_4']
-sims_colors = ['#08519c', '#54278f', # blue, purple
-               '#a50f15', '#006d2c',
-               '#de2d26', '#31a354',
-               '#fb6a4a', '#74c476', 
-               '#fc9272', '#a1d99b'] # red - 171, green - 365
 
 sim_tvec = pd.date_range('2015-01-01', '2020-12-31', freq = '1D')
 sim_tvec = sim_tvec[(sim_tvec.month != 2) | (sim_tvec.day != 29)]
@@ -45,6 +31,7 @@ var_list = ['TLAI_lala'   , 'TLAI_pima'   , 'TLAI_shrub'    , 'TLAI_moss'   , 'T
             'AGNPP_lala'  , 'AGNPP_pima'  , 'AGNPP_shrub'   , 'AGNPP_moss'  , 'AGNPP'  ,
             'BGNPP_lala'  , 'BGNPP_pima'  , 'BGNPP_shrub'   , 'BGNPP_moss'  , 'BGNPP'  ,
             'FROOTC_lala' , 'FROOTC_pima' , 'FROOTC_shrub'  , 'FROOTC_moss' , 'FROOTC' ,
+            'LEAFC_lala'  , 'LEAFC_pima'  , 'LEAFC_shrub'   , 'LEAFC_moss'  , 'LEAFC' ,
             'AR_lala'     , 'AR_pima'     , 'AR_shrub'      , 'AR_moss'     , 'AR'     ,
             'FSDS', 'FSA', 'FSH', 'TBOT', 'NEE', 'HR',
             'H2OSOI', 'QOVER', 'ZWT'] # , 'CH4PROD', 'LITFALL_lala', 'LITFALL_pima', 'LITFALL_shrub' , 'LITFALL_moss', 'LITFALL',
@@ -54,6 +41,7 @@ unit_list = ['none'        , 'none'        , 'none'      , 'none'      , 'none' 
              'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1',
              'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1',
              'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1', 'gC m-2 day-1',
+             'gC m-2'      , 'gC m-2'      , 'gC m-2'    , 'gC m-2'    , 'gC m-2'    ,
              'gC m-2'      , 'gC m-2'      , 'gC m-2'    , 'gC m-2'    , 'gC m-2'    ,
              'gC m-2 day-1','gC m-2 day-1','gC m-2 day-1','gC m-2 day-1','gC m-2 day-1',
              'W m-2', 'W m-2', 'W m-2', 'degC', 'gC m-2 day-1', 'gC m-2 day-1',

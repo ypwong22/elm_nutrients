@@ -21,6 +21,7 @@ prefix  =  sims_prefix[int( options.sim_id)]
 plot    = chamber_list[int(options.plot_id)]
 """
 
+
 def read_vars(prefix, plot):
     path_data = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', f'{prefix}_plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
 
@@ -77,7 +78,7 @@ def read_vars(prefix, plot):
     return data_list
 
 
-prefix = '20221212' # '20221231'
+prefix = '20230212' # '20221212' # '20221231'
 for plot in [4, 10, 11, 16, 19, 6, 8, 13, 17, 20]:
     path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm')
     data_list = read_vars(prefix, plot)

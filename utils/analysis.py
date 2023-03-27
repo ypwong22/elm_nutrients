@@ -1,14 +1,16 @@
 # https://gist.github.com/anttilipp/ed3ab35258c7636d87de6499475301ce
 import numpy as np
+import pandas as pd
+import os
 
 
 def get_treatment_string(chamber):
     chamber_levels = {'07': ['TAMB',  0], '14': ['TAMB',  0], '21': ['TAMB',  0],
-                    '06': [0     ,  0], '19': [0     ,500], 
-                    '11': [2.25  ,500], '20': [2.25  ,  0],
-                    '04': [4.5   ,500], '13': [4.5   ,  0],
-                    '08': [6.75  ,  0], '16': [6.75  ,500],
-                    '10': [9     ,500], '17': [9     ,  0]}
+                      '06': [0     ,  0], '19': [0     ,500], 
+                      '11': [2.25  ,500], '20': [2.25  ,  0],
+                      '04': [4.5   ,500], '13': [4.5   ,  0],
+                      '08': [6.75  ,  0], '16': [6.75  ,500],
+                      '10': [9     ,500], '17': [9     ,  0]}
     temperature, co2 = chamber_levels[f'{chamber:02g}']
     if temperature == 'TAMB':
         treatment = 'TAMB'
@@ -20,10 +22,36 @@ def get_treatment_string(chamber):
 
 
 def get_mossfrac(year, treatment):
-    mossfrac = pd.read_excel('Sphagnum_fraction.xlsx', index_col = 0, skiprows = 1,
+    mossfrac = pd.read_excel(os.path.join(os.environ['HOME'], 'Git', 'phenology_elm', 'Sphagnum_fraction.xlsx'), index_col = 0, skiprows = 1,
                              engine = 'openpyxl').drop(['plot','Temp','CO2'], axis = 1)
     mossfrac[2015] = mossfrac[2016]
     return mossfrac.loc[treatment, year]
+
+
+def read_mortality():
+    """ Return the data from SPRUCE_S1_Minirhizotron data_2012_For Yaoping.xls """
+    dates = pd.DatetimeIndex([datetime(2012, 5,16), datetime(2012, 5,21), datetime(2012, 5,28),
+                              datetime(2012, 6, 5), datetime(2012, 6,12), datetime(2012, 6,18),
+                              datetime(2012, 7, 3), datetime(2012, 7, 9), datetime(2012, 7,17),
+                              datetime(2012, 7,24), datetime(2012, 7,30), datetime(2012, 8,17),
+                              datetime(2012, 9, 1), datetime(2012, 9,15)])
+    # 
+    mortality = np.array([0, 33.4986, 104.1712, 27.1749, 45.6811, 30.8191, 93.8463, 49.2897, 61.8272, 69.4396, 50.9765, 158.3639, 176.7845, 99.4316])
+
+    days = (dates[1:] - dates[:-1]).days
+
+    mortality = mortality[1:] / days
+
+    date_list = []
+    mort_list = []
+    for i in range(len(days)):
+        date_list.extend(list(pd.date_range(dates[i], dates[i+1] - timedelta(days = 1))))
+        mort_list.extend([mortality[i]]*days[i])
+
+    mort = pd.Series(mort_list, index = date_list)
+    mort_eos = mort.index[np.where(mort.cumsum() >= mort.cumsum()[-1] * 0.75)[0]][0]
+
+    return mort, mort_eos
 
 
 def daylength_simple(dayOfYear, lat):

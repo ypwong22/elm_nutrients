@@ -1,4 +1,4 @@
-""" Compare the time series of multiple runs on the same graph. """
+""" Compare the time series of multiple runs on the same graph. Plot level. """
 import itertools as it
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -11,106 +11,115 @@ from scipy.signal import savgol_filter
 from scipy.stats import pearsonr
 from optparse import OptionParser
 from utils.constants import *
+from utils.paths import *
 
 
-path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm')
+var_list    = ['LITFALL', 'GROSS_NMIN', 'GROSS_PMIN']
+unit_list   = ['gC m-2 day-1', 'gN m-2 day-1', 'gP m-2 day-1']
+sims_prefix = ['20221212', '20221231', '20230212']
+sims_names  = ['Default', 'Evergreen', 'EvgrRoot']
+clist = ['#fcbba1', '#c6dbef', '#fc9272', '#9ecae1', '#fb6a4a', '#6baed6', '#de2d26', '#3182bd', '#a50f15', '#08519c']
+pft_list = [2, 3, 11]
 
 
+###########################################################################################
 # Time series
-for varname, unit in zip(var_list, unit_list):
-    print(varname, unit)
+###########################################################################################
+fig, axes = plt.subplots(len(var_list), len(sims_prefix), figsize = (12, 3 * len(var_list)), sharex = True, sharey = False)
+fig.subplots_adjust(hspace = 0.05, wspace = 0.05)
+for i, varname in enumerate(var_list):
+    ymin =  999999
+    ymax = -999999
 
-    data_collect = {}
-    for prefix,model in zip(sims_prefix, sims_names):
-        for plot in chamber_list:
-            data_list = pd.read_csv(os.path.join(path_out, prefix,
-                                                 f'plot{plot}_ts_extract.csv'),
-                                    index_col = 0, parse_dates = True, header = [0,1])
-            for loc in ['hummock', 'hollow']:
-                data_collect[(f'P{plot}', loc, model)] = data_list[(loc, varname)]
-    data_collect = pd.DataFrame(data_collect)
+    for j, prefix in enumerate(sims_prefix):
+        ax = axes[i, j]
 
-    # separately plot the elevated CO2 and ambient CO2 chambers
-    for co2 in [0,1]:
-        if co2 == 0:
-            ch_list = chamber_list[:5]
+        h = [None] * len(chamber_list)
+        for k, plot in enumerate(chamber_list):
+            path_data = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', f'{prefix}_plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+            flist = sorted(glob(os.path.join(path_data, '*.h0.*.nc')))
+
+            hr = xr.open_mfdataset(flist, decode_times = False)
+            units, reference_date = hr.time.attrs['units'].split('since')
+            tvec = pd.date_range(start = reference_date, end = '2020-12-31', freq='MS')
+            hr['time'] = tvec
+            retype = pd.DataFrame(hr[varname][:, 0].values * 0.64 + hr[varname][:,  1].values * 0.36, index = tvec)
+            if ('/s' in hr[varname].attrs['units']) and ('day-1' in unit_list[i]):
+                # s to year
+                retype = retype * 24 * 3600 * 365
+            hr.close()
+
+            h[k], = ax.plot(retype.index, retype.values, color = clist[k])
+
+        if j == 0:
+            ax.set_ylabel(f'{varname} {unit_list[i]}')
         else:
-            ch_list = chamber_list[5:]
+            ax.set_yticklabels([])
+        if i == 0:
+            ax.set_title(sims_names[j])
 
-        fig, axes = plt.subplots(5, 2, figsize = (16, 16), sharex = True, sharey = True)
-        for i, loc in enumerate(['hummock', 'hollow']):
-            for j, plot in enumerate(ch_list):
-                ax = axes[j,i]
+        ymin_, ymax_ = ax.get_ylim()
+        ymin = min(ymin, ymin_)
+        ymax = max(ymax, ymax_)
 
-                data = data_collect[(f'P{plot}', loc)]
-                h = [None] * len(sims_names)
-                for k, m in enumerate(sims_names):
-                    temp = savgol_filter(data_collect[(f'P{plot}', loc, m)].values, 61, 3)
-                    h[k], = ax.plot(data_collect.index, temp, '-', lw = 0.5)
+    for j in range(len(sims_prefix)):
+        axes[i, j].set_ylim([ymin, ymax])
 
-                    if i == 0:
-                        ax.set_ylabel(f'P{plot} ({chamber_levels[plot][0]}$^o$C, {chamber_levels[plot][1]})')
-                        if j == 2:
-                            ax.text(-0.4, 0.5, f'{varname} ({unit})', fontsize = 14,
-                                    transform = ax.transAxes, rotation = 90)
-                    if j == 0:
-                        ax.set_title(loc.capitalize())
-        ax.legend(h, sims_names, loc = [-1, -1], ncol = 3)
-        fig.savefig(os.path.join(path_out, 'ts_multiruns', f'{varname}_{co2}.png'), dpi = 600., 
-                    bbox_inches = 'tight')
-        plt.close(fig)
+ax.legend(h, chamber_list_names, loc = [-2.2, -0.4], ncol = 5)
+fig.savefig(os.path.join(path_out_elm, f'ts_multiruns_soil.png'), dpi = 600.,  bbox_inches = 'tight')
+plt.close(fig)
 
 
-# Sensitivity of GPP to the variables
-for prefix, model in zip(sims_prefix, sims_names):
-    for loc, suffix in it.product(['hummock', 'hollow'], ['_pima', '_lala', '_shrub']):
-        fig, axes = plt.subplots(len(chamber_list), 4, figsize = (3 * len(chamber_list), 16))
-        for j,ch in enumerate(chamber_list):
-            data_list = pd.read_csv(os.path.join(path_out, prefix, f'plot{ch}_ts_extract.csv'),
-                                    index_col = 0, parse_dates = True, header = [0,1])
-            for i, (varname,unit) in enumerate([('FSDS','W m-2'), 
-                                                ('TLAI',''),
-                                                ('FROOTC','gC m-2')]):
-                ax = axes[j,i]
-                if varname == 'FSDS':
-                    x = data_list[(loc, varname)].values
-                else:
-                    x = data_list[(loc, varname + suffix)].values
-                y = data_list[(loc, 'GPP' + suffix)].values
-                ax.plot(x, y, 'o', markersize = 3)
-                r, pval = pearsonr(x, y)
-                ax.text(0.05, 0.85, '{:.4f}, p = {:.3f}'.format(r, pval), 
-                        transform = ax.transAxes)
+###########################################################################################
+# Mean annual cycle
+###########################################################################################
+fig, axes = plt.subplots(len(var_list), len(sims_prefix), figsize = (3 * len(var_list), 12), sharex = True, sharey = False)
+fig.subplots_adjust(hspace = 0.05, wspace = 0.05)
+for i, varname in enumerate(var_list):
+    ymin =  999999
+    ymax = -999999
 
-                if j == 0:
-                    ax.set_title(varname)
-                elif j == (len(chamber_list)-1):
-                    ax.set_xlabel(unit)
-                if i == 0:
-                    ax.set_ylabel('GPP (gC m-2)')
-                if i == 2:
-                    ax.text(-0.5, 0.5, 
-                            f'P{ch} ({chamber_levels[ch][0]}$^o$C, {chamber_levels[ch][1]})', rotation = 90, transform = ax.transAxes)
+    for j, prefix in enumerate(sims_prefix):
+        ax = axes[i, j]
 
-        for j,ch in enumerate(chamber_list):
-            data_list = pd.read_csv(os.path.join(path_out, prefix,
-                                                 f'plot{ch}_ts_extract.csv'),
-                                    index_col = 0, parse_dates = True, header = [0,1])
+        h = [None] * len(chamber_list)
+        for k, plot in enumerate(chamber_list):
+            path_data = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', f'{prefix}_plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+            flist = sorted(glob(os.path.join(path_data, '*.h0.*.nc')))
 
-            ax = axes[j,3]
+            # osbolete # autocoversion misidentified PROOT_ONSET_OFFSET as a datetime variable because its unit "days"
+            hr = xr.open_mfdataset(flist, decode_times = False)
+            units, reference_date = hr.time.attrs['units'].split('since')
+            tvec = pd.date_range(start = reference_date, end = '2020-12-31', freq='MS')
+            hr['time'] = tvec
+            retype = pd.DataFrame(hr[varname][:, 0].values * 0.64 + hr[varname][:,  1].values * 0.36, index = tvec)
+            hr.close()
 
-            x = data_list[(loc, 'TLAI' + suffix)].values
-            # y = data_list[(loc, 'FSDS')].values
-            y = data_list[(loc, 'FROOTC' + suffix)].values
-            z = data_list[(loc, 'GPP' + suffix)].values
-            cf = ax.scatter(x, y, c = z, s = 3, cmap = 'Spectral')
-            plt.colorbar(cf, ax = ax)
-            ax.set_title('GPP (gC m-2)')
-            ax.set_xlabel('TLAI')
-            #ax.set_ylabel('FSDS (W m-2)')
-            ax.set_ylabel('FROOTC (gC m-2)')
+            if ('/s' in hr[varname].attrs['units']) and ('day-1' in unit_list[i]):
+                # s to year
+                retype = retype * 24 * 3600 * 365
 
-        fig.savefig(os.path.join(path_out, 'ts_multiruns', model + '_' + loc + \
-                                 '_photosyntheis' + suffix + '.png'), dpi = 600., 
-                    bbox_inches = 'tight')
-        plt.close(fig)
+            retype = retype.groupby(retype.index.month).mean()
+
+            h[k], = ax.plot(retype.index, retype.values, color = clist[k])
+
+        if j == 0:
+            ax.set_ylabel(f'{varname} {unit_list[i]}')
+        else:
+            ax.set_yticklabels([])
+        if i == 0:
+            ax.set_title(sims_names[j])
+
+        if i == (len(var_list) - 1):
+            ax.set_xlabel('Month')
+
+        ymin_, ymax_ = ax.get_ylim()
+        ymin = min(ymin, ymin_)
+        ymax = max(ymax, ymax_)
+
+    for j in range(len(sims_prefix)):
+        axes[i, j].set_ylim([ymin, ymax])
+
+ax.legend(h, chamber_list_names, loc = [-2.2, -0.4], ncol = 5)
+fig.savefig(os.path.join(path_out_elm, f'ts_multiruns_seasonal_soil.png'), dpi = 600.,  bbox_inches = 'tight')
+plt.close(fig)
