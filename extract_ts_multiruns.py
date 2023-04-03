@@ -78,7 +78,7 @@ def read_vars(prefix, plot):
     return data_list
 
 
-prefix = '20230212' # '20221212' # '20221231'
+prefix = '20221212' # '20230212' # '20221212' # '20221231'
 for plot in [4, 10, 11, 16, 19, 6, 8, 13, 17, 20]:
     path_out = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm')
     data_list = read_vars(prefix, plot)

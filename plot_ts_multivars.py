@@ -29,8 +29,8 @@ parser.add_option('--extra', dest = 'extra', default = '', help = 'Extra prefix.
 """
 
 
-date   = '20230214' # '20230101', '20221231', '20221212'
-varset = 'soil' # ['vegc', 'root', 'xfer', 'soil', 'diag']
+date   = '20221212' # '20230214', '20221231', '20221212'
+varset = 'vegc' # ['vegc', 'root', 'xfer', 'soil', 'diag']
 
 
 ###################################################################################################

@@ -60,3 +60,14 @@ def ax_regress(ax, x, vector,
                 transform = ax.transAxes, **args_tx)
 
     return h
+
+
+def hex_color_interpolate(color1, color2, steps):
+    color1_rgb = [int(color1[i:i+2], 16) for i in (1, 3, 5)]
+    color2_rgb = [int(color2[i:i+2], 16) for i in (1, 3, 5)]
+
+    rgb_list = [tuple(int(color1_rgb[j] + (color2_rgb[j] - color1_rgb[j]) * i / (steps - 1)) for j in range(3)) for i in range(steps)]
+
+    hex_list = [f'#{r:02x}{g:02x}{b:02x}' for r, g, b in rgb_list]
+
+    return hex_list

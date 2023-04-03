@@ -54,6 +54,7 @@ for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
     line += f'AGNPP\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
 
 
+"""
 # (3) hr['annual_npp_moss']
 for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
     obs = float(hr['annual_npp_moss'].loc[year, chamber])
@@ -68,7 +69,7 @@ for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
     factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
 
     line += f'NPP\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
-
+"""
 
 # (4) hr['annual_bnpp']
 for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
@@ -133,10 +134,10 @@ for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
 
         if pft == 2 or pft == 12:
             # max LAI is in Oct
-            line += f'TLAI\t{year}\t{year}\t274\t304\t31\t{factor}\t0\t{pft}\t{obs}\t0.1\t{treatment}\n'
+            line += f'TLAI\t{year}\t{year}\t274\t304\t31\t{factor}\t0\t{pft}\t{obs}\t{obs*0.25}\t{treatment}\n'
         else:
             # chose Aug
-            line += f'TLAI\t{year}\t{year}\t213\t243\t31\t{factor}\t0\t{pft}\t{obs}\t0.1\t{treatment}\n'
+            line += f'TLAI\t{year}\t{year}\t213\t243\t31\t{factor}\t0\t{pft}\t{obs}\t{obs*0.5}\t{treatment}\n'
 
 
 f = open(os.path.join('./temp/postproc_vars_SPRUCE'), 'w')

@@ -4,10 +4,14 @@ chamber_levels = {'04': [4.5,500], '06': [0   ,  0], '08': [6.75,  0],
                   '10': [9  ,500], '11': [2.25,500], '13': [4.5 ,  0], '16': [6.75,500], 
                   '17': [9  ,  0], '19': [0   ,500], '20': [2.25,  0],
                   '07': [0  ,  0], '21': [0  ,  0]}
-
 # T: 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
-chamber_list = [6, 19, 20, 11, 13, 4, 8, 16, 17, 10] # 7, 21, 
+chamber_list = [6, 19, 20, 11, 13, 4, 8, 16, 17, 10]
 chamber_list_names = ['T0.00', 'T0.00CO2', 'T2.25', 'T2.25CO2', 'T4.50', 'T4.50CO2', 'T6.75', 'T6.75CO2', 'T9.00', 'T9.00CO2']
+
+chamber_levels_complete = chamber_levels.update({'07': [0, 0], '21': [0, 500]})
+# T: AMB, 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
+chamber_list_complete = [7, 21, 6, 19, 20, 11, 13, 4, 8, 16, 17, 10]
+chamber_list_names_complete = ['TAMB', 'TAMBCO2', 'T0.00', 'T0.00CO2', 'T2.25', 'T2.25CO2', 'T4.50', 'T4.50CO2', 'T6.75', 'T6.75CO2', 'T9.00', 'T9.00CO2']
 
 
 sim_tvec = pd.date_range('2015-01-01', '2020-12-31', freq = '1D')
