@@ -12,7 +12,7 @@ header = ['Variable', 'Startyear', 'endyear', 'Startday', 'endday', 'averaging p
 pft_stride = 17
 chamber_list = [6, 19, 20, 11, 13, 4, 8, 16, 17, 10, 7]
 chamber_list_names = ['T0.00', 'T0.00CO2', 'T2.25', 'T2.25CO2', 'T4.50', 'T4.50CO2', 'T6.75', 'T6.75CO2', 'T9.00', 'T9.00CO2', 'TAMB']
-
+year_list = [2016, 2017, 2018, 2019, 2020]
 
 ####################################################################################################################
 hr = xr.open_dataset(os.path.join(path_intrim, 'spruce_validation_data.nc'))
@@ -26,32 +26,35 @@ line = ''
 
 
 # (1) hr['annual_anpp_tree'][7, 21, 6, 19, 20, 11, 13, 4, 8, 16, 17, 10]
-for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
+for chamber in chamber_list:
     # pima: 0.36, lala: 0.14
+
     pairs = (
         (2, 0.36 * 86400 * 365),
         (3, 0.14 * 86400 * 365),
     )
     pft_list = ','.join([str(x[0]) for x in pairs])
     factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
-    obs = float(hr['annual_anpp_tree'].loc[year, chamber])
+    obs = float(hr['annual_anpp_tree'].loc[year_list, chamber].mean())
     treatment = get_treatment_string(chamber)
+    ndays = 365 * len(year_list)
 
-    line += f'AGNPP\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
+    line += f'AGNPP\t{year_list[0]}\t{year_list[-1]}\t1\t365\t{ndays}\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.25}\t{treatment}\n'
 
 
 # (2) hr['annual_anpp_shrub']
-for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
+for chamber in chamber_list:
     # hummock: 0.64, hollow: 0.36
     pairs = (
         (11, 0.25 * 86400 * 365),
     )
     pft_list = ','.join([str(x[0]) for x in pairs])
     factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
-    obs = float(hr['annual_anpp_shrub'].loc[year, chamber])
+    obs = float(hr['annual_anpp_shrub'].loc[year_list, chamber].mean())
     treatment = get_treatment_string(chamber)
+    ndays = 365 * len(year_list)
 
-    line += f'AGNPP\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
+    line += f'AGNPP\t{year_list[0]}\t{year_list[-1]}\t1\t365\t{ndays}\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.25}\t{treatment}\n'
 
 
 """
@@ -72,7 +75,7 @@ for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
 """
 
 # (4) hr['annual_bnpp']
-for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
+for chamber in chamber_list:
     pairs = (
         (2, 0.36 * 86400 * 365),
         (3, 0.14 * 86400 * 365),
@@ -80,10 +83,11 @@ for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
     )
     pft_list = ','.join([str(x[0]) for x in pairs])
     factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
-    obs = float(hr['annual_bnpp'].loc[year, chamber])
+    obs = float(hr['annual_bnpp'].loc[year_list, chamber].mean())
     treatment = get_treatment_string(chamber)
+    ndays = 365 * len(year_list)
 
-    line += f'BGNPP\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
+    line += f'BGNPP\t{year_list[0]}\t{year_list[-1]}\t1\t365\t{ndays}\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.25}\t{treatment}\n'
 
 
 """
@@ -119,25 +123,29 @@ hr.close()
 
 
 # (7) hr['annual_lai'][7, 21, 6, 19, 20, 11, 13, 4, 8, 16, 17, 10]
-for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
+for pft, pft_name, frac in zip([2, 3, 11], ['EN', 'DN', 'SH'], [0.36, 0.14, 0.25, 0.25]):
     # pima: 0.36, lala: 0.14, shrub: 0.25, sphagnum: 0.25
     # but do not calibrate the LAI of Sphagnum
-    for pft, pft_name, frac in zip([2, 3, 11], ['EN', 'DN', 'SH'], [0.36, 0.14, 0.25, 0.25]):
+    for chamber in chamber_list:
         factor = frac * 66.4 / 114.8 # make the modeled result compatible with observation
 
-        obs = float(hr['annual_lai'].loc[year, chamber, pft_name])
-        
+        obs = float(hr['annual_lai'].loc[year_list, chamber, pft_name].mean())
+
         if np.isnan(obs):
             continue
 
         treatment = get_treatment_string(chamber)
 
         if pft == 2 or pft == 12:
+            ndays = 31 * len(year_list)
             # max LAI is in Oct
-            line += f'TLAI\t{year}\t{year}\t274\t304\t31\t{factor}\t0\t{pft}\t{obs}\t{obs*0.25}\t{treatment}\n'
+            line += f'TLAI\t{year_list[0]}\t{year_list[-1]}\t274\t304\t{ndays}\t{factor}\t0\t{pft}\t{obs}\t{obs*0.25}\t{treatment}\n'
+        elif pft == 3:
+            line += f'TLAI\t{year_list[0]}\t{year_list[-1]}\t274\t304\t{ndays}\t{factor}\t0\t{pft}\t{obs}\t{obs*0.1}\t{treatment}\n'
         else:
+            ndays = 31 * len(year_list)
             # chose Aug
-            line += f'TLAI\t{year}\t{year}\t213\t243\t31\t{factor}\t0\t{pft}\t{obs}\t{obs*0.5}\t{treatment}\n'
+            line += f'TLAI\t{year_list[0]}\t{year_list[-1]}\t213\t243\t{ndays}\t{factor}\t0\t{pft}\t{obs}\t{obs*0.25}\t{treatment}\n'
 
 
 f = open(os.path.join('./temp/postproc_vars_SPRUCE'), 'w')

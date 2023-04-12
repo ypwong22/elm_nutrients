@@ -15,7 +15,7 @@ import xarray as xr
 
 lat, lon, tzn, elv = '47.563 N', '93.438 W', 'US/Central', 430
 
-"""
+
 ##################################################################################################
 # Load the start of season data and soil temperature
 ##################################################################################################
@@ -46,6 +46,7 @@ for fid in chamber_levels.keys():
     #tavg      = tseries.groupby(env.index.year * 1000 + env.index.month * 100 + env.index.day).mean()
     annt2m[fid]     = tseries.groupby(env.index.year).mean()
 
+
     soil_layer_list = [200, 0, -5, -10, -20, -30, -40, -50, -100, -200]
     tsoi            = env.loc[:, 
         ['TS_%d__A%d' % (i,ind+1) for ind, i in enumerate(soil_layer_list[1:])]]
@@ -66,6 +67,10 @@ for fid in chamber_levels.keys():
 ##################################################################################################
 # Growing degree days model for budburst
 ##################################################################################################
+# match the annt2m's year to the next year
+annt2m = annt2m.loc[(annt2m.index >= (pheno_obs.index[0]-1)) & (annt2m.index <= (pheno_obs.index[-1]-1)), :]
+annt2m = annt2m.loc[:, pheno_obs.columns]
+
 # Test the fitting outcome of different soil layers
 Optim = pd.DataFrame(np.nan, columns = ['a', 'b', 'RMSE'], index = soil_layer_list)
 
@@ -74,6 +79,7 @@ mpl.rcParams['axes.titlesize'] = 6
 fig, axes = plt.subplots(3, 4, figsize = (9,9), sharex = True, sharey = True)
 for i,lyr in enumerate(soil_layer_list):
     model = GDD()
+
     popt, ypred, x, y = model.fit(pheno_obs, annt2m, tsoi_collect[f'TS_{lyr:d}'])
 
     Optim.loc['GDD_%d' % lyr, 'a'   ] = popt[0]
@@ -93,7 +99,7 @@ ax.legend([h1,h2], ['Ground observation', 'Critical GDD model'], loc = (-1, -0.4
 fig.savefig(os.path.join(path_out, 'fit_ground_phenology.png'), dpi = 600.)
 plt.close(fig)
 Optim.to_csv(os.path.join(path_out, 'fit_ground_phenology.csv'))
-"""
+
 
 ##################################################################################################
 # Alternating model for budburst

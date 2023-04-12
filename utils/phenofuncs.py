@@ -53,15 +53,19 @@ class GDD():
         self.tsoi      = tsoi
         self.solstice = _find_solstice(self.dayofyear.index)
 
+        print(self.solstice)
+
         gdds = pd.DataFrame(np.nan, index = self.dayofyear.index, columns = self.dayofyear.columns)
         for year in self.dayofyear.index:
             for c in self.dayofyear.columns:
                 tsoi_accu = self.tsoi.loc[(self.tsoi.index >= self.solstice.loc[year]) & \
                                           (self.tsoi.index <= (datetime(year-1, 12, 31) \
-                           + timedelta(days = float(self.dayofyear.loc[year, c])))), c]
+                                                               + timedelta(days = float(self.dayofyear.loc[year, c])))), c]
                 tsoi_accu = (tsoi_accu * (tsoi_accu > 0.)).sum(axis = 0) * \
                             (self.tsoi.index[1] - self.tsoi.index[0]).total_seconds() / 86400
                 gdds.loc[year, c] = tsoi_accu
+
+        print(gdds)
 
         x = self.tair.loc[gdds.index - 1, :].values.reshape(-1)
         y = gdds.values.reshape(-1)
