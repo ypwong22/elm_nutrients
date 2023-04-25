@@ -10,7 +10,7 @@ parm_best = os.path.join(os.environ['HOME'], 'models', 'OLMT', 'UQ_output', 'UQ_
 
 prefix = os.path.join(os.environ['PROJDIR'], 'E3SM', 'inputdata', 'atm', 'datm7', 'CLM1PT_data', 'SPRUCE_data')
 
-for file in ['clm_params.nc_yang_dmr_02242021']: # ['clm_params.nc_yang_dmr_yw_20230101', 'clm_params.nc_yang_dmr_02242021', 'clm_params.nc_yang_dmr_yw_20211201']:
+for file in ['clm_params.nc_yang_dmr_yw_20230212']: # ['clm_params.nc_yang_dmr_yw_20230212', 'clm_params.nc_yang_dmr_yw_20230101', 'clm_params.nc_yang_dmr_02242021', 'clm_params.nc_yang_dmr_yw_20211201']
     hr = xr.open_dataset(os.path.join(prefix, file), decode_times = False)
 
     f = open(parm_best, 'r')
@@ -19,7 +19,11 @@ for file in ['clm_params.nc_yang_dmr_02242021']: # ['clm_params.nc_yang_dmr_yw_2
         pft = int(pft)
         val = float(val)
         if pft == 0:
-            hr[name] = val
+            if name == 'q10_mr':
+                # Catch a pitfall: q10_mr is modified globally but is a PFT level parameter
+                hr[name][:] = val
+            else:
+                hr[name] = val
         else:
             hr[name][pft] = val
     f.close()
@@ -32,7 +36,7 @@ for file in ['clm_params.nc_yang_dmr_02242021']: # ['clm_params.nc_yang_dmr_yw_2
             encoding[data_var] = {'_FillValue': None}
 
     suffix = file.split('_')[-1]
-    if suffix == '20230101':
+    if suffix == '20230212':
         suffix_new = '20230120_root'
     elif suffix == '02242021':
         suffix_new = '20230120'

@@ -1,4 +1,10 @@
-""" Extract the time series of multiple runs and variables. """
+""" Extract the time series of multiple runs and variables.
+
+!!!!!!!!!!!!!! Edit this file to extract any variable
+
+and save to csv files!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+"""
 import itertools as it
 import xarray as xr
 import pandas as pd

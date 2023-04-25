@@ -2,6 +2,9 @@
 import numpy as np
 import pandas as pd
 import os
+from glob import glob
+import xarray as xr
+from .constants import *
 
 
 def get_treatment_string(chamber):
@@ -179,3 +182,52 @@ def kge(simulations, evaluation):
     kge_ = 1 - np.sqrt((r - 1) ** 2 + (alpha - 1) ** 2 + (beta - 1) ** 2)
 
     return np.vstack((kge_, r, alpha, beta))
+
+
+def extract_sim_one(prefix, var_list = {'pft': [], 'col': []}):
+    tvec = pd.date_range('2015-01-01', '2020-12-31', freq = '1D')
+    tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
+
+    pft_list = [2, 3, 11, 12]
+    hol_add = 17
+
+    var_tuples = [(i, j) for i in var_list['pft'] for j in pft_list]
+    var_tuples = var_tuples + [(i, 0) for i in var_list['col']]
+
+    colnames = pd.MultiIndex.from_tuples([(i, j[0], j[1], k) for i in chamber_list_complete for j in var_tuples for k in ['hummock', 'hollow']])
+    collection = pd.DataFrame(np.nan, index = tvec, columns = colnames)
+
+    for plot in chamber_list_complete:
+        path_data = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', f'{prefix}_plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+
+        var_list_pft = var_list['pft']
+        flist = sorted(glob(os.path.join(path_data, '*.h2.*.nc')))[:-1]
+        hr = xr.open_mfdataset(flist, decode_times = False)
+        for var in var_list_pft:
+            for pft in pft_list:
+                collection.loc[:, (plot, var, pft, 'hummock')] = hr[var][:, pft].values
+                collection.loc[:, (plot, var, pft, 'hollow')] = hr[var][:, pft + hol_add].values
+        hr.close()
+
+        var_list_col  = var_list['pft']
+        flist = sorted(glob(os.path.join(path_data, '*.h1.*.nc')))[:-1]
+        hr = xr.open_mfdataset(flist, decode_times = False)
+        for var in var_list_col:
+            if var == 'TSOI_3':
+                pass
+            elif var == 'TSOI_AVG':
+                pass
+            elif var == 'SWC_3':
+                pass
+            elif var == 'SWC_AVG':
+                pass
+            elif var == 'SOIPSI_3':
+                pass
+            elif var == 'SOIPSI_AVG':
+                pass
+            else:
+                collection.loc[:, (plot, var, 0, 'hummock')] = hr[var][:, 0].values
+                collection.loc[:, (plot, var, 0, 'hollow')] = hr[var][:, 1].values
+        hr.close()
+
+    return collection
