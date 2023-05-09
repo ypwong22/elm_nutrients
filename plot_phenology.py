@@ -18,6 +18,7 @@ import itertools as it
 from utils.constants import *
 from utils.paths import *
 from utils.plotting import *
+from utils.analysis import *
 import xarray as xr
 from datetime import datetime
 import matplotlib as mpl
@@ -36,55 +37,84 @@ def get_model_dates(variable, pft, read = False):
                             index = pd.MultiIndex.from_product([chamber_list, years]),
                             columns = pd.MultiIndex.from_product([sims_names,
                                                                   ['temperature','CO2','SOS','EOS']]))
-        for yy, model in zip(sims_prefix, sims_names):
+        for prefix, model in zip(sims_prefix, sims_names):
+            collection_ts = read_extract_sims_ts(prefix)
+            tvec = collection_ts.index
             for chamber in chamber_list:
-                hr = xr.open_mfdataset(os.path.join(path_run, f'{yy}_plot{chamber:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run', '*.h2.*.nc'), decode_times = True)
-                tvec = pd.DatetimeIndex([datetime(year = t.year, month = t.month, day = t.day) for t in hr['time'].values])
+                value = collection_ts.loc[:, (chamber, variable, pft, 'hummock')].values * 0.64 + \
+                        collection_ts.loc[:, (chamber, variable, pft, 'hollow')].values * 0.36
+
                 # use savgol filter to smooth the GPP
-                filtered = pd.Series(savgol_filter(hr[variable][:, pft].values.copy(), 81, 3),
-                                     index = tvec.year)
-                hr.close()
+                if variable == 'GPP':
+                    try:
+                        value = pd.Series(savgol_filter(value, 81, 3), index = tvec.year)
+                    except:
+                        import pdb; pdb.set_trace()
+                else:
+                    value = pd.Series(value, index = tvec.year)
 
-                threshold = float(pct) * (filtered.groupby(filtered.index).max() - \
-                                          filtered.groupby(filtered.index).min()) / 100 + \
-                            filtered.groupby(filtered.index).min()
-                filtered = ((filtered - threshold) >= 0)
+                start = pd.Series(np.nan, index = np.unique(tvec.year))
+                end   = pd.Series(np.nan, index = np.unique(tvec.year))
 
-                start = np.where(np.diff(np.insert(filtered.values, 0, 1).astype(int)) ==  1)[0]
-                start = pd.Series(start, index = filtered.index[start])
-                start = start.groupby(start.index).agg('first')
-                end   = np.where(np.diff(np.insert(filtered.values, 0, 1).astype(int)) == -1)[0]
-                end   = pd.Series(end, index = filtered.index[end])
-                end   = end.groupby(end.index).agg('last')
+                for y in np.unique(tvec.year):
+                    """if y == tvec.year[0]:
+                        temp = np.concatenate((value.loc[y], value.loc[y+1][:100]))
+                        dayofyear = range(0, 365 + 100)
+                    elif y == tvec.year[-1]:
+                        temp = np.concatenate((value.loc[y-1][265:], value.loc[y]))
+                        dayofyear = range(-100, 365)
+                    else:
+                        temp = np.concatenate((value.loc[y-1][265:], value.loc[y], value.loc[y+1][:100]))
+                        dayofyear = range(-100, 365 + 100)
+                    temp = pd.Series(temp, index = dayofyear)
 
-                for ss,ee in zip(start, end):
-                    year = tvec.year[ss]
-                    data.loc[(chamber, year), 
+                    ind = np.where((temp > temp.shift(-1)) & (temp > temp.shift(1)))[0][0]
+                    val_max = temp.values[ind]
+
+                    ind2 = np.where((temp < temp.shift(-1)) & (temp <= temp.shift(1)))[0][0]
+                    val_min = temp.values[ind2]
+                    threshold = float(pct) * (val_max - val_min) / 100 + val_min
+                    filtered = ((temp - threshold) >= 0)
+                    start.loc[y] = dayofyear[np.where(np.diff(np.insert(filtered.values, 0, 0).astype(int)) == 1)[0][-1]]
+
+                    ind2 = np.where((temp <= temp.shift(-1)) & (temp < temp.shift(1)))[0][0]
+                    val_min = temp.values[ind2]
+                    threshold = float(pct) * (val_max - val_min) / 100 + val_min
+                    filtered = ((temp - threshold) >= 0)
+                    end.loc[y] = dayofyear[np.where(np.diff(np.insert(filtered.values, 0, 1).astype(int)) == -1)[0][-1]]
+                    """
+
+                    dayofyear = range(1, 366)
+                    val_max = value.loc[y].max()
+                    val_min = value.loc[y].min()
+                    threshold = float(pct) * (val_max - val_min) / 100 + val_min
+                    filtered = ((value.loc[y] - threshold) >= 0)
+                    try:
+                        start.loc[y] = dayofyear[np.where(np.diff(np.insert(filtered.values, 0, 0).astype(int)) == 1)[0][-1]]
+                        end.loc[y] = dayofyear[np.where(np.diff(np.insert(filtered.values, 0, 1).astype(int)) == -1)[0][-1]]
+                    except:
+                        import pdb; pdb.set_trace()
+
+                for year, ss,ee in zip(start.index, start, end):
+                    data.loc[(chamber, year), (model,'temperature')] = chamber_levels[f'{chamber:02d}'][0]
+                    data.loc[(chamber, year), (model,'CO2')] = chamber_levels[f'{chamber:02d}'][1]
+                    if ss > 240:
+                        data.loc[(chamber, year+1), (model,'SOS')] = ss - 365
+                    else:
+                        data.loc[(chamber, year), (model,'SOS')] = ss
+
+                    data.loc[(chamber, year),
                              (model,'temperature')] = chamber_levels[f'{chamber:02d}'][0]
                     data.loc[(chamber, year),
-                             (model,'CO2'        )] = chamber_levels[f'{chamber:02d}'][1]
-                    if tvec.dayofyear[ss] > 240:
-                        data.loc[(chamber, year+1),
-                                 (model,'SOS'      )] = tvec.dayofyear[ss] - 365
+                             (model,'CO2')] = chamber_levels[f'{chamber:02d}'][1]
+                    if ee < 120:
+                        data.loc[(chamber, year-1), (model,'EOS')] = ee + 365
                     else:
-                        data.loc[(chamber, year),
-                                 (model,'SOS'      )] = tvec.dayofyear[ss]
+                        data.loc[(chamber, year), (model,'EOS')] = ee
 
-                    year = tvec.year[ee]
-                    data.loc[(chamber, year),
-                             (model,'temperature')] = chamber_levels[f'{chamber:02d}'][0]
-                    data.loc[(chamber, year),
-                             (model,'CO2'        )] = chamber_levels[f'{chamber:02d}'][1]
-                    if tvec.dayofyear[ee] < 120:
-                        data.loc[(chamber, year-1),
-                                 (model,'EOS'        )] = tvec.dayofyear[ee] + 365
-                    else:
-                        data.loc[(chamber, year),
-                                 (model,'EOS'        )] = tvec.dayofyear[ee]
-
-        data.to_csv(os.path.join(path_out, 'temperature_sensitivity', 'fit_model_phenology_{}_{}.csv'.format(variable, pft)))
+        data.to_csv(os.path.join(path_out, 'fit_model_phenology_{}_{}.csv'.format(variable, pft)))
     else:
-        data = pd.read_csv(os.path.join(path_out, 'temperature_sensitivity', 'fit_model_phenology_{}_{}.csv'.format(variable, pft)),
+        data = pd.read_csv(os.path.join(path_out, 'fit_model_phenology_{}_{}.csv'.format(variable, pft)),
                            index_col = [1,2], header = [0,1])
     return data
 
@@ -119,18 +149,18 @@ def get_obs_dates(variable, pft):
 
 # for slides
 read = False
-mpl.rcParams['font.size'] = 16
-mpl.rcParams['axes.titlesize'] = 16
+mpl.rcParams['font.size'] = 14
+mpl.rcParams['axes.titlesize'] = 14
 
 
-sims_prefix = ['20221212', '20221231', '20230214']
-sims_names = ['Default', 'Evergreen', 'EvgrRoot']
-clist = ['#de2d26', '#feb24c', '#3182bd']
+sims_prefix = ['20221212', '20230120', '20230122', '20230505']  # 20230121
+sims_names = ['Default', 'Optim', 'Optim Evgr', 'Optim EvgrRoot'] # 'Optim EvgrRoot'
+clist = ['#0000ff', '#800080', '#20b2aa', '#ff4040']
 co2_levels    = {'ambient' : [6, 20, 13, 8, 17],
                  'elevated': [19, 11, 4, 16, 10]}
 pft_list = [2, 3, 11]
-pft_list_names = ['Pima', 'Lala', 'Shrub']
-for variable in ['TLAI', 'GPP', 'FROOTC']:
+pft_list_names = ['spruce', 'larch', 'shrub']
+for variable in ['TLAI', 'GPP']:
     for co2 in ['ambient','elevated']:
         fig, axes = plt.subplots(nrows = 2, ncols = len(pft_list), figsize = (len(pft_list)*4, 6), sharex = True, sharey = False)
         fig.subplots_adjust(hspace = 0.1, wspace = 0.1)        
@@ -263,9 +293,9 @@ for variable in ['TLAI', 'GPP', 'FROOTC']:
                     ax.set_xlabel(r'$\Delta$ Warming ($^o$C)')
 
         if variable == 'GPP':
-            ax.legend([h1, h2] + h3, ['Sapflow','GCC'] + sims_names, ncol = 5, loc = (-2.2,-0.5))
+            ax.legend([h1, h2] + h3, ['Sapflow','GCC'] + sims_names, ncol = 5, loc = (-2.2,-0.5), columnspacing = 1)
         else:
-            ax.legend([h1] + h3, ['Ground obs'] + sims_names, ncol = 5, loc = (-2.2,-0.5))
-        fig.savefig(os.path.join(path_out, 'temperature_sensitivity', 'temperature_sensitivity_{}_{}.png'.format(variable,co2)),
+            ax.legend([h1] + h3, ['Ground obs'] + sims_names, ncol = 5, loc = (-2.2,-0.5), columnspacing = 1)
+        fig.savefig(os.path.join(path_out, 'phenology_temperature_sensitivity_{}_{}.png'.format(variable,co2)),
                     dpi = 600., bbox_inches = 'tight')
         plt.close(fig)

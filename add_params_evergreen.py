@@ -2,9 +2,9 @@ import xarray as xr
 import numpy as np
 import os
 
+prefix = os.path.join(os.environ['PROJDIR'], 'E3SM', 'inputdata', 'atm', 'datm7', 'CLM1PT_data', 'SPRUCE_data')
 
-hr = xr.open_dataset('clm_params.nc_yang_dmr_02242021', decode_times = False)
-# hr = xr.open_dataset(os.environ['PROJDIR'] + '/E3SM/output/UQ/UQ_default_US-SPR_ICB20TRCNPRDCTCBC/g00012/clm_params_00012.nc', decode_times = False)
+hr = xr.open_dataset(os.path.join(prefix, 'clm_params.nc_yang_dmr_02242021'), decode_times = False)
 
 # hr['fcur'][2] = 0.5 // transferring litterfall "storage" means old leaves dying to give to new leaves?
 hr['crit_gdd1'][2] = 5.92009
@@ -32,5 +32,4 @@ for data_var in hr.data_vars:
     else:
         encoding[data_var] = {'_FillValue': None}
 
-hr.to_netcdf('clm_params.nc_yang_dmr_yw_12312022', encoding = encoding, format = 'NETCDF3_CLASSIC')
-# hr.to_netcdf('clm_params.nc_yang_dmr_yw_01202023_leaf', encoding = encoding, format = 'NETCDF3_CLASSIC')
+hr.to_netcdf(os.path.join(prefix, 'clm_params.nc_yang_dmr_yw_20221231'), encoding = encoding, format = 'NETCDF3_CLASSIC')

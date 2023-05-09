@@ -5,6 +5,7 @@ import os
 from glob import glob
 import xarray as xr
 from .constants import *
+from .paths import *
 
 
 def get_treatment_string(chamber):
@@ -184,50 +185,191 @@ def kge(simulations, evaluation):
     return np.vstack((kge_, r, alpha, beta))
 
 
-def extract_sim_one(prefix, var_list = {'pft': [], 'col': []}):
+def extract_sims(prefix, var_list = {'pft': [], 'col': [], 'const': []}):
     tvec = pd.date_range('2015-01-01', '2020-12-31', freq = '1D')
     tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
 
     pft_list = [2, 3, 11, 12]
     hol_add = 17
 
-    var_tuples = [(i, j) for i in var_list['pft'] for j in pft_list]
-    var_tuples = var_tuples + [(i, 0) for i in var_list['col']]
-
-    colnames = pd.MultiIndex.from_tuples([(i, j[0], j[1], k) for i in chamber_list_complete for j in var_tuples for k in ['hummock', 'hollow']])
-    collection = pd.DataFrame(np.nan, index = tvec, columns = colnames)
+    collection_ts = {}
+    collection_const = pd.DataFrame(np.nan, index = ['hummock', 'hollow'], columns = var_list['const'])
 
     for plot in chamber_list_complete:
+        print(plot)
         path_data = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', f'{prefix}_plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+        flist_pft = sorted(glob(os.path.join(path_data, '*.h2.*.nc')))[:-1]
+        flist_col = sorted(glob(os.path.join(path_data, '*.h1.*.nc')))[:-1]
+        flist_const = sorted(glob(os.path.join(path_data, '*.h0.*.nc')))[:-1]
 
         var_list_pft = var_list['pft']
-        flist = sorted(glob(os.path.join(path_data, '*.h2.*.nc')))[:-1]
-        hr = xr.open_mfdataset(flist, decode_times = False)
+        hr = xr.open_mfdataset(flist_pft, decode_times = False)
         for var in var_list_pft:
             for pft in pft_list:
-                collection.loc[:, (plot, var, pft, 'hummock')] = hr[var][:, pft].values
-                collection.loc[:, (plot, var, pft, 'hollow')] = hr[var][:, pft + hol_add].values
+                if var == 'TSOI_AVG':
+                    rootfr = hr['ROOTFR'][:, :, pft].values
+                    hr2 = xr.open_mfdataset(flist_col)
+                    collection_ts[(plot, var, pft, 'hummock')] = np.sum((hr2['TSOI'][:, :, 0].values - 273.15) * rootfr, axis = 1)
+                    collection_ts[(plot, var, pft, 'hollow')] = np.sum((hr2['TSOI'][:, :, 1].values - 273.15) * rootfr, axis = 1)
+                    hr2.close()
+                elif var == 'SWC_AVG':
+                    rootfr = hr['ROOTFR'][:, :, pft].values
+                    hr2 = xr.open_dataset(flist_const[0])
+                    dzsoi = hr2['DZSOI'].values
+                    hr2.close()
+                    hr2 = xr.open_mfdataset(flist_col)
+                    collection_ts[(plot, var, pft, 'hummock')] = np.sum(hr2['SOILLIQ'][:, :, 0].values / dzsoi[:, 0].reshape(1, -1) / 1000 * rootfr, axis = 1)
+                    collection_ts[(plot, var, pft, 'hollow')] = np.sum(hr2['SOILLIQ'][:, :, 1].values / dzsoi[:, 1].reshape(1, -1) / 1000 * rootfr, axis = 1)
+                    hr2.close()
+                else:
+                    collection_ts[(plot, var, pft, 'hummock')] = hr[var][:, pft].values
+                    collection_ts[(plot, var, pft, 'hollow')] = hr[var][:, pft + hol_add].values
         hr.close()
 
-        var_list_col  = var_list['pft']
-        flist = sorted(glob(os.path.join(path_data, '*.h1.*.nc')))[:-1]
-        hr = xr.open_mfdataset(flist, decode_times = False)
+        var_list_col  = var_list['col']
+        hr = xr.open_mfdataset(flist_col, decode_times = False)
         for var in var_list_col:
-            if var == 'TSOI_3':
-                pass
-            elif var == 'TSOI_AVG':
-                pass
-            elif var == 'SWC_3':
-                pass
-            elif var == 'SWC_AVG':
-                pass
-            elif var == 'SOIPSI_3':
-                pass
-            elif var == 'SOIPSI_AVG':
-                pass
+            if var.startswith('TSOI_'):
+                layer = int(var.split('_')[1])
+                collection_ts[(plot, var, 0, 'hummock')] = hr['TSOI'][:, layer - 1, 0].values - 273.15
+                collection_ts[(plot, var, 0, 'hollow')] = hr['TSOI'][:, layer - 1, 1].values - 273.15
+            elif var.startswith('SWC_'):
+                layer = int(var.split('_')[1])
+                hr2 = xr.open_dataset(flist_const[0])
+                dzsoi = hr2['DZSOI'].values
+                hr2.close()
+                collection_ts[(plot, var, 0, 'hummock')] = hr['SOILLIQ'][:, layer - 1, 0].values / dzsoi[layer - 1, 0] / 1000
+                collection_ts[(plot, var, 0, 'hollow')] = hr['SOILLIQ'][:, layer - 1, 1].values / dzsoi[layer -1, 1] / 1000
+            elif var.startswith('H2OSOI_'):
+                layer = int(var.split('_')[1])
+                collection_ts[(plot, var, 0, 'hummock')] = hr['H2OSOI'][:, layer - 1, 0].values
+                collection_ts[(plot, var, 0, 'hollow')] = hr['H2OSOI'][:, layer - 1, 1].values
+            elif var == 'SMP_MAX':
+                collection_ts[(plot, var, 0, 'hummock')] = np.nanmax(hr['SMP'][:, :, 0].values, axis = 1) # mm
+                collection_ts[(plot, var, 0, 'hollow')] = np.nanmax(hr['SMP'][:, :, 1].values, axis = 1)
             else:
-                collection.loc[:, (plot, var, 0, 'hummock')] = hr[var][:, 0].values
-                collection.loc[:, (plot, var, 0, 'hollow')] = hr[var][:, 1].values
+                collection_ts[(plot, var, 0, 'hummock')] = hr[var][:, 0].values
+                collection_ts[(plot, var, 0, 'hollow')] = hr[var][:, 1].values
         hr.close()
 
-    return collection
+        # some time-constant variables are in the h0 files
+        var_list_const  = var_list['const']
+        hr = xr.open_mfdataset(flist_const, decode_times = False)
+        for var in var_list_const:
+            if var == 'SUCSAT':
+                collection_const.loc[:, 'SUCSAT'] = pd.Series(hr['SUCSAT'][2, :].values, index = ['hummock', 'hollow'])
+            elif var == 'WATSAT':
+                collection_const.loc[:, 'WATSAT'] = pd.Series(hr['WATSAT'][2, :].values, index = ['hummock', 'hollow'])
+            elif var == 'BSW':
+                collection_const.loc[:, 'BSW'] = pd.Series(hr['BSW'][2, :].values, index = ['hummock', 'hollow'])
+            else:
+                raise Exception('Not implemented')
+        hr.close()
+
+    collection_ts = pd.DataFrame(collection_ts)
+    collection_ts.index = tvec
+    collection_ts.columns.names = ['plot', 'variable', 'pft', 'topo']
+
+    return collection_ts, collection_const
+
+
+def read_extract_sims_ts(prefix):
+    collection_ts = pd.read_csv(os.path.join(path_out, 'extract', prefix, 'analysis_ts.csv'), index_col = 0, header = [0, 1, 2, 3], parse_dates = True)
+    indices = collection_ts.columns.to_list()
+    indices = [(int(i), j, int(k), l) for i, j, k, l in indices]
+    collection_ts.columns = pd.MultiIndex.from_tuples(indices, names = collection_ts.columns.names)
+    return collection_ts
+
+
+def read_sims_tair_daily():
+    prefix = '20221212' # identical for any
+    collection_ts = read_extract_sims_ts(prefix)
+    temperature = 0.64 * collection_ts.loc[:, (slice(None), 'TBOT', 0, 'hummock')] + \
+                  0.36 * collection_ts.loc[:, (slice(None), 'TBOT', 0, 'hollow')].values
+    temperature.columns = temperature.columns.droplevel([1,2,3])
+    return temperature - 273.15
+
+
+def read_sims_tair_annual():
+    temperature = read_sims_tair_daily()
+    temperature = temperature.groupby(temperature.index.year).mean()
+    return temperature
+
+
+def read_leaf_sos():
+    pheno_obs = {}
+    for var in ['EN', 'DN', 'SH']:
+        hr = xr.open_dataset(os.path.join(path_intrim, 'spruce_validation_data.nc'))
+        temp = hr['pheno_dates_lai'].loc[:, 'SOS', :, var]
+        temp = pd.DataFrame(temp.values,
+                            index = temp['year'],
+                            columns = ['%02d' % i for i in temp['chamber']])
+        pheno_obs[var] = temp.dropna(axis = 1, how = 'all').dropna(axis = 0, how = 'all').sort_index(axis = 1)
+        hr.close()
+    return pheno_obs
+
+
+def read_obs_tsoi_daily():
+    tvec = pd.date_range('2015-01-01', '2021-12-31', freq = '1D')
+    tvec = tvec[~((tvec.month == 2) & (tvec.day == 29))]
+
+    annt2m = {}
+    tsoi_collect = {} # '2m', '10cm'
+    for fid in chamber_levels.keys():
+        env       = pd.read_csv(os.path.join(path_input, 'WEW_Complete_Environ_20220518',
+                                             'WEW PLOT_{}_Complete_Environ_20220518.csv'.format(fid)))
+        env       = env.loc[(env['Year'] >= 2015) & (env['Year'] <= 2021), :]
+        env.index = pd.DatetimeIndex(env['TIMESTAMP'])
+        env       = env.replace(to_replace = '^\s+', value = np.nan, regex = True).sort_index()
+        env       = env.loc[~env.index.duplicated(keep = 'first'), :]
+
+        # These do not match ELM input, use ELM input
+        tseries     = (env['TA_2_0__1'].astype(float) + env['TA_2_0__2'].astype(float))/2
+        ##tmax      = tseries.groupby(env.index.year * 1000 + env.index.month * 100 + env.index.day).max()
+        ##tmin      = tseries.groupby(env.index.year * 1000 + env.index.month * 100 + env.index.day).min()
+        ##tavg      = tseries.groupby(env.index.year * 1000 + env.index.month * 100 + env.index.day).mean()
+        annt2m[fid] = tseries.groupby(env.index.year).mean()
+        tseries     = tseries.resample('1d').mean()
+        tseries     = tseries.loc[~((tseries.index.month == 2) & (tseries.index.day == 29))]
+
+        # Average hollow & hummock @ 10cm below surface
+        temp            = env.loc[:, ['TS_ 10__A3', 'TS_ 10__B3', 'TS_ 10__C3']].mean(axis = 1) * 0.64 + \
+                          env.loc[:, ['TS_Hummock_A2', 'TS_Hummock_B2']].mean(axis = 1).values * 0.36
+        temp = temp.astype(float)
+        # has NaNs if keep hourly level
+        temp = temp.resample('1d').mean()
+        temp = temp.loc[~((temp.index.month == 2) & (temp.index.day == 29))]
+
+        tsoi = pd.DataFrame(np.nan, index = tvec, columns = ['2m', '10cm'])
+        tsoi.loc[temp.index, '10cm'] = temp.values
+
+        # check: tseries.loc[(tsoi.index[0] - timedelta(days = 119, hours = 23, minutes = 30)):(tsoi.index[0])].mean()
+        tair = tseries.rolling('21d').mean()
+        tsoi.loc[tair.index, '2m'] = tair.values
+
+        # fill NaNs
+        for col in tsoi.columns:
+            tsoi.loc[:, col] = tsoi.loc[:, col].interpolate(limit = 5, limit_direction = 'both')
+
+        # skip NaNs in the beginning
+        tsoi = tsoi.loc[tsoi.index >= datetime(2015, 11, 1), :]
+
+        narows = np.where(tsoi.isna().any(axis = 1))[0]
+        if len(narows) > 0:
+            print(fid, tsoi['10cm'][narows])
+            import pdb; pdb.set_trace()
+            raise Exception('check')
+
+        tsoi = dict(tsoi.dropna(axis = 0, how = 'any'))
+
+        for k in tsoi.keys():
+            if k not in tsoi_collect:
+                tsoi_collect[k] = pd.DataFrame({fid: tsoi[k]})
+            else:
+                tsoi_collect[k][fid] = tsoi[k]
+    annt2m = pd.DataFrame(annt2m)
+    annt2m = annt2m.sort_index(axis = 1)
+    for k in tsoi_collect.keys():
+        tsoi_collect[k] = tsoi_collect[k].sort_index(axis = 1)
+
+    return tsoi_collect, annt2m

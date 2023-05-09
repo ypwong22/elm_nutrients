@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 from glob import glob
 
 
-"""
 expr_list = ['20221212', '20221231', '20230101']
 var_list = ['ANPPtree', 'ANPPshrub', 'NPPmoss', 'BNPP', 'HR', 'NEE']
 
@@ -30,7 +29,7 @@ for expr in expr_list:
 
     for plot, plot_name in zip(chamber_list, chamber_list_names):
 
-        data = pd.read_csv(os.path.join(path_out_elm, expr, f'plot{plot}_ts_extract.csv'), parse_dates = True, index_col = 0, header = [0, 1])
+        data = pd.read_csv(os.path.join(path_out, expr, f'plot{plot}_ts_extract.csv'), parse_dates = True, index_col = 0, header = [0, 1])
 
         for var in var_list:
             if var == 'ANPPtree': 
@@ -133,7 +132,6 @@ for i, metric in enumerate(['Bias (%)', 'uRMSE (%)', 'Corr']):
 
 fig.savefig(os.path.join(path_out, 'validation_metrics.png'), dpi = 600., bbox_inches = 'tight')
 plt.close(fig)
-"""
 
 
 
