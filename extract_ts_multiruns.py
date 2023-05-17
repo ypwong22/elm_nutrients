@@ -25,7 +25,7 @@ collection_ts.to_csv(os.path.join(path_out_2, 'for_root_ts.csv'))
 collection_const.to_csv(os.path.join(path_out_2, 'for_root_const.csv'))
 """
 
-for prefix in ['20230512']: # ['20221212', '20230120', '20230121', '20230122']:
+for prefix in ['20230510']: # ['20221212', '20230120', '20230121', '20230122']:
     var_list = {}
     var_list['pft'] = ['TLAI', 'GPP', 'AGNPP', 'BGNPP', 'NPP', 'QVEGE', 'QVEGT', 'LEAFC', 'FROOTC', 'FROOTC_STORAGE', 'FROOTC_STORAGE_TO_XFER', 'FROOTC_XFER', 
                        'AR', 'FROOT_MR', 'CPOOL_FROOT_GR',  'CPOOL_FROOT_STORAGE_GR', 'TOTVEGC', 'FROOTC_ALLOC', 'LEAF_MR', 'CPOOL_LEAF_GR', 

@@ -31,7 +31,8 @@ def get_observation():
 
 
     # Soren's minirhizotron data
-    minirhizotron = pd.read_csv(os.path.join(path_input, 'soren_root_prod_mort_growth_20230316.csv'))
+    # minirhizotron = pd.read_csv(os.path.join(path_input, 'soren_root_prod_mort_growth_20230316.csv'))
+    minirhizotron = pd.read_csv(os.path.join(path_input, 'soren_root_prod_mort_growth_20230511.csv'))
     minirhizotron['end_date'] = pd.DatetimeIndex(minirhizotron['end_date']) 
     minirhizotron['start_date'] = pd.DatetimeIndex(minirhizotron['start_date'])
     minirhizotron = minirhizotron.loc[minirhizotron['pft'] != 'sedge']
@@ -48,6 +49,7 @@ def get_observation():
 
     minirhizotron = minirhizotron.drop(['temp', 'co2', 'year', 'time_step', 'npp_km_d', 'm_km_d', 'g_km_d', 'npp_g_d', 'tube'],
                                         axis = 1).set_index(['plot', 'topo', 'pft', 'start_date', 'end_date'])
+    minirhizotron = minirhizotron.dropna(axis = 0, how = 'all')
 
     # 2014-2017 ingrowth core data
     # winter data is near zero
@@ -68,6 +70,7 @@ def get_observation():
     ingrowth.index.names = ['topo', 'plot', 'start_date', 'end_date', 'pft']
 
     return minirhizotron, ingrowth
+
 
 
 def hh_average(x):
@@ -128,7 +131,7 @@ def convert_observation(minirhizotron, ingrowth):
     annual_minirhizotron = annual_minirhizotron.drop(21, axis = 1, level = 2)
 
     # (2) seasonal cycle in 2018
-    minirhizotron_2018 = minirhizotron.loc[minirhizotron.index.get_level_values('start_date').year == 2018, :]
+    minirhizotron_2018 = minirhizotron.loc[minirhizotron.index.get_level_values('start_date').year == 2015, :]
     minirhizotron_2018_mean = minirhizotron_2018.groupby(['variable', 'pft'], axis = 1).mean()
     minirhizotron_2018_std = minirhizotron_2018.groupby(['variable', 'pft'], axis = 1).std()
     minirhizotron_2018_std = minirhizotron_2018_std / minirhizotron_2018_mean.sum(axis = 0, skipna = False)
@@ -189,7 +192,19 @@ def convert_sims(prefix):
             annual_minirhizotron.loc[y, ('g_g_d', 'shrub', cha)] = temp.sum() * 86400
 
     minirhizotron_2018_mean = pd.DataFrame(0.,
-                                           index = pd.MultiIndex.from_tuples([(datetime(2018, 3, 10), datetime(2018, 4,  4)), 
+                                           index = pd.MultiIndex.from_tuples([(datetime(2015, 5, 26), datetime(2015, 6,  2)),
+                                                                              (datetime(2015, 6,  2), datetime(2015, 6, 11)),
+                                                                              (datetime(2015, 6, 11), datetime(2015, 6, 15)),
+                                                                              (datetime(2015, 6, 15), datetime(2015, 7,  1)),
+                                                                              (datetime(2015, 7,  1), datetime(2015, 7,  6)),
+                                                                              (datetime(2015, 7,  6), datetime(2015, 7, 13)),
+                                                                              (datetime(2015, 7, 13), datetime(2015, 7, 27)),
+                                                                              (datetime(2015, 7, 27), datetime(2015, 8,  4)),
+                                                                              (datetime(2015, 8,  4), datetime(2015, 8, 25)),
+                                                                              (datetime(2015, 8, 25), datetime(2015, 9, 10)),
+                                                                              (datetime(2015, 9, 10), datetime(2015,11, 25)),
+                                                                              (datetime(2015,11, 25), datetime(2015,12,  3)),
+                                                                              (datetime(2018, 3, 10), datetime(2018, 4,  4)), 
                                                                               (datetime(2018, 4,  4), datetime(2018, 5,  3)), 
                                                                               (datetime(2018, 5,  3), datetime(2018, 6, 13)),
                                                                               (datetime(2018, 6, 13), datetime(2018, 7, 22)),
@@ -209,21 +224,26 @@ def convert_sims(prefix):
             temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
             m_g_d_tree.append(temp.sum() * 86400)
 
-            temp =  0.36 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 2)] + \
-                                      collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 2)], 1 / 3600) * \
-                           collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 2)] + \
-                    0.14 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 3)] + \
-                                      collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 3)], 1 / 3600) * \
-                           collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 3)]
-            temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
-            g_g_d_tree.append(temp.sum() * 86400)
+            #temp =  0.36 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 2)] + \
+            #                          collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 2)], 1 / 3600) * \
+            #               collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 2)] + \
+            #        0.14 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 3)] + \
+            #                          collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 3)], 1 / 3600) * \
+            #               collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 3)]
+            filt2 = np.where(filt)[0]
+            temp2 = 0.36 * collection_ts.loc[collection_ts.index[filt2[-1]], (cha, 'FROOTC', 2)] + \
+                   0.14 * collection_ts.loc[collection_ts.index[filt2[-1]], (cha, 'FROOTC', 3)] - \
+                   0.36 * collection_ts.loc[collection_ts.index[filt2[0]-1], (cha, 'FROOTC', 2)] - \
+                   0.14 * collection_ts.loc[collection_ts.index[filt2[0]-1], (cha, 'FROOTC', 3)]
+            temp2 = temp2['hummock'] * 0.64 + temp2['hollow'] * 0.36
+            g_g_d_tree.append(( temp2.sum() + temp.sum() )* 86400)
 
             temp = collection_ts.loc[filt, (cha, 'FROOTC_TO_LITTER', 11)] * 0.25
             temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
             m_g_d_shrub.append(temp.sum() * 86400)
 
             temp =  0.25 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 11)] + \
-                                    collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 11)], 1 / 3600) * \
+                                      collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 11)], 1 / 3600) * \
                            collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 11)]
             temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
             g_g_d_shrub.append(temp.sum() * 86400)

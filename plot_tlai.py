@@ -69,10 +69,12 @@ mpl.rcParams['font.size'] = 14
 mpl.rcParams['axes.titlesize'] = 14
 
 
-#sims_prefix = ['20221212', '20230120', '20230122', '20230505']  # 20230121
-#sims_names = ['Default', 'Optim', 'Optim Evgr', 'Optim EvgrRoot'] # 'Optim EvgrRoot'
-sims_prefix = ['20230122', '20230505', '20230509', '20230510', '20230512']
-sims_names = ['Optim Evgr', 'A', 'E', 'F', 'H']
+#sims_prefix = ['20221212', '20230120', '20230505']  # '20230122', 20230121
+#sims_names = ['Default', 'Optim', 'Optim EvgrRoot'] # 'Optim Evgr', 'Optim EvgrRoot'
+#sims_prefix = ['20230510', '20230122', '20230505', '20230509', '20230512']
+#sims_names = ['Optim Scheme2', 'Optim Evgr', 'A', 'E', 'H']
+sims_prefix = ['20221212', '20230120', '20230510']
+sims_names = ['Default', 'Optim', 'Optim Scheme 2']
 clist = ['#de2d26', '#fcfc00', '#3182bd']
 co2_levels    = {'ambient' : [6, 20, 13, 8, 17],
                  'elevated': [19, 11, 4, 16, 10]}
@@ -130,8 +132,7 @@ for i, (pft, pftname, pftname2) in enumerate(zip(pft_list, pft_names, ["EN", "DN
         if i == 0:
             ax.set_title(sims_names[j])
 
-        if j == 2 and i == 2:
-            ax.legend(h, ['OBS_ACO2', 'MOD ACO2', 'OBS ECO2', 'MOD ECO2'], ncol = 2, columnspacing = 1)
+ax.legend(h, ['OBS_ACO2', 'MOD ACO2', 'OBS ECO2', 'MOD ECO2'], ncol = 4, columnspacing = 1, loc = [-1, -0.5])
 fig.savefig(os.path.join(path_out, f'plot_tlai.png'), dpi = 600., bbox_inches = 'tight')
 plt.close(fig)
 hr.close()

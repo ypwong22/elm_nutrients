@@ -1,11 +1,9 @@
 """ HR parameters that were found to work well in Xiaoying's simulations, plus a couple others """
-
 import xarray as xr
 import numpy as np
 import os
 from utils.paths import *
 from utils.analysis import *
-
 
 parm_best = os.path.join(os.environ['HOME'], 'models', 'OLMT', 'UQ_output', 'UQ_default_US-SPR_ICB20TRCNPRDCTCBC', 'MCMC_output', 'parms_best.txt')
 
