@@ -73,8 +73,8 @@ mpl.rcParams['axes.titlesize'] = 14
 #sims_names = ['Default', 'Optim', 'Optim EvgrRoot'] # 'Optim Evgr', 'Optim EvgrRoot'
 #sims_prefix = ['20230510', '20230122', '20230505', '20230509', '20230512']
 #sims_names = ['Optim Scheme2', 'Optim Evgr', 'A', 'E', 'H']
-sims_prefix = ['20221212', '20230120', '20230510']
-sims_names = ['Default', 'Optim', 'Optim Scheme 2']
+sims_prefix = ['20221212', '20230120', '20230510', '20230518']
+sims_names = ['Default', 'Optim', 'Optim Scheme 2', 'Optim Scheme 2 Correct input']
 clist = ['#de2d26', '#fcfc00', '#3182bd']
 co2_levels    = {'ambient' : [6, 20, 13, 8, 17],
                  'elevated': [19, 11, 4, 16, 10]}
@@ -120,7 +120,7 @@ for i, (pft, pftname, pftname2) in enumerate(zip(pft_list, pft_names, ["EN", "DN
                 t.set_bbox(dict(facecolor = clist[k], alpha = 0.2, edgecolor = clist[k]))
             else:
                 t.set_bbox(dict(facecolor = 'w', alpha = 0.2, edgecolor = clist[k]))
-        ax.set_ylim([-3, 10.5])
+        #ax.set_ylim([-3, 10.5])
         ax.set_yticks([0, 2, 4, 6, 8, 10])
 
         if j == 0:

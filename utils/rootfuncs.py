@@ -49,7 +49,7 @@ def get_observation():
 
     minirhizotron = minirhizotron.drop(['temp', 'co2', 'year', 'time_step', 'npp_km_d', 'm_km_d', 'g_km_d', 'npp_g_d', 'tube'],
                                         axis = 1).set_index(['plot', 'topo', 'pft', 'start_date', 'end_date'])
-    minirhizotron = minirhizotron.dropna(axis = 0, how = 'all')
+    minirhizotron = minirhizotron.dropna(axis = 0, how = 'all').sort_index(axis = 0)
 
     # 2014-2017 ingrowth core data
     # winter data is near zero
@@ -102,17 +102,18 @@ def convert_observation(minirhizotron, ingrowth):
 
     date_latest_start = []
     date_earliest_end = []
-    for year in [2018, 2019, 2020]:
+    for year in [2015, 2018, 2019, 2020]:
         start = pd.DatetimeIndex(date_pairs.loc[pd.DatetimeIndex(date_pairs['start_date']).year == year, 'start_date']).min()
         date_latest_start.append(start.month * 100 + start.day)
         end = pd.DatetimeIndex(date_pairs.loc[pd.DatetimeIndex(date_pairs['end_date']).year == year, 'end_date']).max()
         date_earliest_end.append(end.month * 100 + end.day)
     date_latest_start = max(date_latest_start)
     date_earliest_end = min(date_earliest_end)
+    print(date_latest_start, date_earliest_end)
 
-    # (1) annual total growth during 6/19-9/14
-    annual_minirhizotron = pd.DataFrame(0., index = [2018, 2019, 2020], columns = minirhizotron.columns)
-    for y in [2018, 2019, 2020]:
+    # (1) annual total growth during 6/19-8/28
+    annual_minirhizotron = pd.DataFrame(0., index = [2015, 2018, 2019, 2020], columns = minirhizotron.columns)
+    for y in [2015, 2018, 2019, 2020]:
         temp = minirhizotron.loc[pd.DatetimeIndex(date_pairs['start_date']).year == y, :]
         for ind, row in temp.iterrows():
             date_start = max(ind[0].month * 100 + ind[0].day, date_latest_start)
@@ -122,7 +123,7 @@ def convert_observation(minirhizotron, ingrowth):
                          datetime(y, int(date_start/100), np.mod(date_start, 100))).days + 1
                 annual_minirhizotron.loc[y, :] = annual_minirhizotron.loc[y, :] + row.values * ndays
     # merge chamber 7 and chamber 21 to chamber 7, because both are TAMB
-    for v, pft, y in it.product(['m_g_d', 'g_g_d'], ['shrub', 'tree'], [2018, 2019, 2020]):
+    for v, pft, y in it.product(['m_g_d', 'g_g_d'], ['shrub', 'tree'], [2015, 2018, 2019, 2020]):
         if ~np.isnan(annual_minirhizotron.loc[y, (v, pft, 21)]):
             if np.isnan(annual_minirhizotron.loc[y, (v, pft, 7)]):
                 annual_minirhizotron.loc[y, (v, pft, 7)] = annual_minirhizotron.loc[y, (v, pft, 21)]
@@ -130,12 +131,15 @@ def convert_observation(minirhizotron, ingrowth):
                 annual_minirhizotron.loc[y, (v, pft, 7)] = 0.5 * (annual_minirhizotron.loc[y, (v, pft, 7)] + annual_minirhizotron.loc[y, (v, pft, 21)])
     annual_minirhizotron = annual_minirhizotron.drop(21, axis = 1, level = 2)
 
-    # (2) seasonal cycle in 2018
-    minirhizotron_2018 = minirhizotron.loc[minirhizotron.index.get_level_values('start_date').year == 2015, :]
-    minirhizotron_2018_mean = minirhizotron_2018.groupby(['variable', 'pft'], axis = 1).mean()
-    minirhizotron_2018_std = minirhizotron_2018.groupby(['variable', 'pft'], axis = 1).std()
-    minirhizotron_2018_std = minirhizotron_2018_std / minirhizotron_2018_mean.sum(axis = 0, skipna = False)
-    minirhizotron_2018_mean = minirhizotron_2018_mean / minirhizotron_2018_mean.sum(axis = 0, skipna = False)
+    # (2) seasonal cycle in 2015 and 2018
+    minirhizotron_cycle = minirhizotron.stack().stack().reset_index()
+    minirhizotron_cycle['year'] = [t.year for t in minirhizotron_cycle['start_date']]
+    minirhizotron_cycle['month'] = [t.month for t in minirhizotron_cycle['start_date']]
+    minirhizotron_cycle = minirhizotron_cycle.drop(['start_date', 'end_date'], axis = 1).set_index(['year', 'month', 'plot', 'pft'])
+    minirhizotron_cycle_mean = minirhizotron_cycle.groupby(['month', 'pft']).mean().unstack()
+    minirhizotron_cycle_std = minirhizotron_cycle.groupby(['month', 'pft']).std().unstack()
+    minirhizotron_cycle_std = minirhizotron_cycle_std / minirhizotron_cycle_mean.sum(axis = 0, skipna = False)
+    minirhizotron_cycle_mean = minirhizotron_cycle_mean / minirhizotron_cycle_mean.sum(axis = 0, skipna = False)
 
     ###############
     # ingrowth
@@ -153,19 +157,19 @@ def convert_observation(minirhizotron, ingrowth):
     ingrowth_2014_2017_mean = (ingrowth * ndays).mean(axis = 0).unstack()
     ingrowth_2014_2017_std = (ingrowth * ndays).std(axis = 0).unstack()
 
-    return annual_minirhizotron, minirhizotron_2018_mean, minirhizotron_2018_std, ingrowth_2014_2017_mean, ingrowth_2014_2017_std
+    return annual_minirhizotron, minirhizotron_cycle_mean, minirhizotron_cycle_std, ingrowth_2014_2017_mean, ingrowth_2014_2017_std
 
 
 def convert_sims(prefix):
     collection_ts = read_extract_sims_ts(prefix)
 
-    annual_minirhizotron = pd.DataFrame(np.nan, index = [2018, 2019, 2020], 
+    # (1) annual total growth during 6/19-8/28
+    annual_minirhizotron = pd.DataFrame(np.nan, index = [2015, 2018, 2019, 2020], 
                                         columns = pd.MultiIndex.from_product([['m_g_d', 'g_g_d'], ['shrub', 'tree'], chamber_list_complete], names = ['variable', 'pft', 'plot']))
     for cha in chamber_list_complete:
-        for start, end in [(datetime(2018, 3, 10), datetime(2018, 10, 18)), 
-                           (datetime(2019, 5, 1), datetime(2019, 9, 14)),
-                           (datetime(2020, 6, 19), datetime(2020, 8, 28))]:
-            y = start.year
+        for y in [2015, 2018, 2019, 2020]:
+            start = datetime(y, 6, 19)
+            end = datetime(y, 8, 28)
             filt = (collection_ts.index >= start) & (collection_ts.index <= end)
 
             temp = (collection_ts.loc[filt, (cha, 'FROOTC_TO_LITTER', 2)] * 0.36 + collection_ts.loc[filt, (cha, 'FROOTC_TO_LITTER', 3)] * 0.14)
@@ -173,10 +177,10 @@ def convert_sims(prefix):
             annual_minirhizotron.loc[y, ('m_g_d', 'tree', cha)] = temp.sum() * 86400
 
             temp =  0.36 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 2)] + \
-                                    collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 2)], 1 / 3600) * \
+                                      collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 2)], 1 / 3600) * \
                         collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 2)] + \
                     0.14 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 3)] + \
-                                    collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 3)], 1 / 3600) * \
+                                      collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 3)], 1 / 3600) * \
                         collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 3)]
             temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
             annual_minirhizotron.loc[y, ('g_g_d', 'tree', cha)] = temp.sum() * 86400
@@ -191,38 +195,36 @@ def convert_sims(prefix):
             temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
             annual_minirhizotron.loc[y, ('g_g_d', 'shrub', cha)] = temp.sum() * 86400
 
-    minirhizotron_2018_mean = pd.DataFrame(0.,
-                                           index = pd.MultiIndex.from_tuples([(datetime(2015, 5, 26), datetime(2015, 6,  2)),
-                                                                              (datetime(2015, 6,  2), datetime(2015, 6, 11)),
-                                                                              (datetime(2015, 6, 11), datetime(2015, 6, 15)),
-                                                                              (datetime(2015, 6, 15), datetime(2015, 7,  1)),
-                                                                              (datetime(2015, 7,  1), datetime(2015, 7,  6)),
-                                                                              (datetime(2015, 7,  6), datetime(2015, 7, 13)),
-                                                                              (datetime(2015, 7, 13), datetime(2015, 7, 27)),
-                                                                              (datetime(2015, 7, 27), datetime(2015, 8,  4)),
-                                                                              (datetime(2015, 8,  4), datetime(2015, 8, 25)),
-                                                                              (datetime(2015, 8, 25), datetime(2015, 9, 10)),
-                                                                              (datetime(2015, 9, 10), datetime(2015,11, 25)),
-                                                                              (datetime(2015,11, 25), datetime(2015,12,  3)),
-                                                                              (datetime(2018, 3, 10), datetime(2018, 4,  4)), 
-                                                                              (datetime(2018, 4,  4), datetime(2018, 5,  3)), 
-                                                                              (datetime(2018, 5,  3), datetime(2018, 6, 13)),
-                                                                              (datetime(2018, 6, 13), datetime(2018, 7, 22)),
-                                                                              (datetime(2018, 7, 22), datetime(2018, 7, 28)),
-                                                                              (datetime(2018, 7, 28), datetime(2018, 10,18))], names = ['start_date', 'end_date']),
-                                           columns = pd.MultiIndex.from_product([['m_g_d', 'g_g_d'], ['shrub', 'tree']], names = ['variable', 'pft']))
-    minirhizotron_2018_std = minirhizotron_2018_mean.copy()
-    for start, end in minirhizotron_2018_mean.index:
+    minirhizotron_cycle = pd.DataFrame(0.,
+                                       index = pd.MultiIndex.from_tuples([(datetime(2015, 5, 26), datetime(2015, 6,  2)),
+                                                                        (datetime(2015, 6,  2), datetime(2015, 6, 11)),
+                                                                        (datetime(2015, 6, 11), datetime(2015, 6, 15)),
+                                                                        (datetime(2015, 6, 15), datetime(2015, 7,  1)),
+                                                                        (datetime(2015, 7,  1), datetime(2015, 7,  6)),
+                                                                        (datetime(2015, 7,  6), datetime(2015, 7, 13)),
+                                                                        (datetime(2015, 7, 13), datetime(2015, 7, 27)),
+                                                                        (datetime(2015, 7, 27), datetime(2015, 8,  4)),
+                                                                        (datetime(2015, 8,  4), datetime(2015, 8, 25)),
+                                                                        (datetime(2015, 8, 25), datetime(2015, 9, 10)),
+                                                                        (datetime(2015, 9, 10), datetime(2015,11, 25)),
+                                                                        (datetime(2015,11, 25), datetime(2015,12,  3)),
+                                                                        (datetime(2018, 3, 10), datetime(2018, 4,  4)), 
+                                                                        (datetime(2018, 4,  4), datetime(2018, 5,  3)), 
+                                                                        (datetime(2018, 5,  3), datetime(2018, 6, 13)),
+                                                                        (datetime(2018, 6, 13), datetime(2018, 7, 22)),
+                                                                        (datetime(2018, 7, 22), datetime(2018, 7, 28)),
+                                                                        (datetime(2018, 7, 28), datetime(2018, 10,18))],
+                                                                        names = ['start_date', 'end_date']),
+                                       columns = pd.MultiIndex.from_product([['m_g_d', 'g_g_d'], ['shrub', 'tree'],
+                                                                             chamber_list_complete],
+                                                                            names = ['variable', 'pft', 'plot']))
+    for start, end in minirhizotron_cycle.index:
         filt = (collection_ts.index >= start) & (collection_ts.index <= end)
 
-        m_g_d_tree = []
-        g_g_d_tree = []
-        m_g_d_shrub = []
-        g_g_d_shrub = []
         for cha in chamber_list_complete:
             temp = (collection_ts.loc[filt, (cha, 'FROOTC_TO_LITTER', 2)] * 0.36 + collection_ts.loc[filt, (cha, 'FROOTC_TO_LITTER', 3)] * 0.14)
             temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
-            m_g_d_tree.append(temp.sum() * 86400)
+            minirhizotron_cycle.loc[(start, end), ('m_g_d', 'tree', cha)] = temp.sum() * 86400
 
             #temp =  0.36 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 2)] + \
             #                          collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 2)], 1 / 3600) * \
@@ -232,35 +234,36 @@ def convert_sims(prefix):
             #               collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 3)]
             filt2 = np.where(filt)[0]
             temp2 = 0.36 * collection_ts.loc[collection_ts.index[filt2[-1]], (cha, 'FROOTC', 2)] + \
-                   0.14 * collection_ts.loc[collection_ts.index[filt2[-1]], (cha, 'FROOTC', 3)] - \
-                   0.36 * collection_ts.loc[collection_ts.index[filt2[0]-1], (cha, 'FROOTC', 2)] - \
-                   0.14 * collection_ts.loc[collection_ts.index[filt2[0]-1], (cha, 'FROOTC', 3)]
+                    0.14 * collection_ts.loc[collection_ts.index[filt2[-1]], (cha, 'FROOTC', 3)] - \
+                    0.36 * collection_ts.loc[collection_ts.index[filt2[0]-1], (cha, 'FROOTC', 2)] - \
+                    0.14 * collection_ts.loc[collection_ts.index[filt2[0]-1], (cha, 'FROOTC', 3)]
             temp2 = temp2['hummock'] * 0.64 + temp2['hollow'] * 0.36
-            g_g_d_tree.append(( temp2.sum() + temp.sum() )* 86400)
+            minirhizotron_cycle.loc[(start, end), ('g_g_d', 'tree', cha)] = temp2.sum() + temp.sum() * 86400
 
             temp = collection_ts.loc[filt, (cha, 'FROOTC_TO_LITTER', 11)] * 0.25
             temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
-            m_g_d_shrub.append(temp.sum() * 86400)
+            minirhizotron_cycle.loc[(start, end), ('m_g_d', 'shrub', cha)] = temp.sum() * 86400
 
-            temp =  0.25 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 11)] + \
-                                      collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 11)], 1 / 3600) * \
-                           collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 11)]
-            temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
-            g_g_d_shrub.append(temp.sum() * 86400)
+            #temp =  0.25 * np.minimum(collection_ts.loc[filt, (cha, 'ONSET_RATE_FROOT', 11)] + \
+            #                        collection_ts.loc[filt, (cha, 'COMPS_RATE_FROOT', 11)], 1 / 3600) * \
+            #            collection_ts.loc[filt, (cha, 'FROOTC_STORAGE', 11)]
+            #temp = temp['hummock'] * 0.64 + temp['hollow'] * 0.36
+            temp2 = 0.25 * collection_ts.loc[collection_ts.index[filt2[-1]], (cha, 'FROOTC', 11)] - \
+                    0.25 * collection_ts.loc[collection_ts.index[filt2[0]-1], (cha, 'FROOTC', 11)]
+            temp2 = temp2['hummock'] * 0.64 + temp2['hollow'] * 0.36
+            minirhizotron_cycle.loc[(start, end), ('g_g_d', 'shrub', cha)] = temp2.sum() + temp.sum() * 86400
 
-        minirhizotron_2018_mean.loc[(start, end), ('m_g_d', 'tree')] = np.mean(m_g_d_tree)
-        minirhizotron_2018_std.loc[(start, end), ('m_g_d', 'tree')] = np.std(m_g_d_tree)
+    minirhizotron_cycle = minirhizotron_cycle.stack().stack().reset_index()
+    minirhizotron_cycle['year'] = [t.year for t in minirhizotron_cycle['start_date']]
+    minirhizotron_cycle['month'] = [t.month for t in minirhizotron_cycle['start_date']]
+    minirhizotron_cycle = minirhizotron_cycle.drop(['start_date', 'end_date'], axis = 1)
+    minirhizotron_cycle = minirhizotron_cycle.set_index(['year', 'month', 'plot', 'pft'])
+    minirhizotron_cycle_mean = minirhizotron_cycle.groupby(['month', 'pft']).mean().unstack()
+    minirhizotron_cycle_std = minirhizotron_cycle.groupby(['month', 'pft']).std().unstack()
 
-        minirhizotron_2018_mean.loc[(start, end), ('g_g_d', 'tree')] = np.mean(g_g_d_tree)
-        minirhizotron_2018_std.loc[(start, end), ('g_g_d', 'tree')] = np.std(g_g_d_tree)
+    minirhizotron_cycle_std = minirhizotron_cycle_std / minirhizotron_cycle_mean.sum(axis = 0, skipna = False)
+    minirhizotron_cycle_mean = minirhizotron_cycle_mean / minirhizotron_cycle_mean.sum(axis = 0, skipna = False)
 
-        minirhizotron_2018_mean.loc[(start, end), ('m_g_d', 'shrub')] = np.mean(m_g_d_shrub)
-        minirhizotron_2018_std.loc[(start, end), ('m_g_d', 'shrub')] = np.std(m_g_d_shrub)
-
-        minirhizotron_2018_mean.loc[(start, end), ('g_g_d', 'shrub')] = np.mean(g_g_d_shrub)
-        minirhizotron_2018_std.loc[(start, end), ('g_g_d', 'shrub')] = np.std(g_g_d_shrub)
-    minirhizotron_2018_std = minirhizotron_2018_std / minirhizotron_2018_mean.sum(axis = 0, skipna = False)
-    minirhizotron_2018_mean = minirhizotron_2018_mean / minirhizotron_2018_mean.sum(axis = 0, skipna = False)
 
     ingrowth_2014_2017_mean = pd.DataFrame(0., index = ['larch', 'shrub', 'spruce'], columns = chamber_list_complete)
     ingrowth_2014_2017_std = pd.DataFrame(0., index = ['larch', 'shrub', 'spruce'], columns = chamber_list_complete)
@@ -281,7 +284,7 @@ def convert_sims(prefix):
             ingrowth_2014_2017_mean.loc[name, cha] = np.mean(ingrowth[name])
             ingrowth_2014_2017_std.loc[name, cha] = np.std(ingrowth[name])
 
-    return annual_minirhizotron, minirhizotron_2018_mean, minirhizotron_2018_std, ingrowth_2014_2017_mean, ingrowth_2014_2017_std
+    return annual_minirhizotron, minirhizotron_cycle_mean, minirhizotron_cycle_std, ingrowth_2014_2017_mean, ingrowth_2014_2017_std
 
 
 """

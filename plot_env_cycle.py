@@ -34,10 +34,12 @@ hr.close()
 mpl.rcParams['font.size'] = 14
 mpl.rcParams['axes.titlesize'] = 14
 
-sims_prefix = ['20221212', '20230120', '20230122', '20230121']
-sims_names = ['Default', 'Optim', 'Optim Evgr', 'Optim EvgrRoot']
+#sims_prefix = ['20221212', '20230120', '20230122', '20230121']
+#sims_names = ['Default', 'Optim', 'Optim Evgr', 'Optim EvgrRoot']
+sims_prefix = ['20221212', '20230512']
+sims_names = ['Default', 'Optim EvgrRoot 2']
 clist = ['#0000ff', '#800080', '#20b2aa', '#ff4040']
-var_list = ['TBOT', 'TSOI_3', 'TSOI_4', 'SWC', 'H2OSOI', 'NET_NMIN'] # 'BTRAN'
+var_list = ['TBOT', 'TSOI_3', 'TSOI_4', 'SWC', 'H2OSOI'] # , 'NET_NMIN'] # 'BTRAN'
 unit_list = ['$^o$C', '$^o$C', '$^o$C', '', '', '', '']
 
 
@@ -87,6 +89,9 @@ for k, (varname, unit) in enumerate(zip(var_list, unit_list)):
             ax.set_xlabel('Month')
         else:
             ax.set_xticklabels([])
+        # 5 degrees cutoff
+        if 'TSOI' in varname:
+            ax.axhline(5, color = 'k', ls = '--', lw = 0.5)
 
         ax = axes[k, 1]
         ax.plot(range(2015,2021), var_annual, '-', color = clist[j], label = sims_names[j])

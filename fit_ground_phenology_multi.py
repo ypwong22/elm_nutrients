@@ -16,6 +16,19 @@ pheno_obs = read_leaf_sos()['EN']
 tsoi_collect, _ = read_obs_tsoi_daily()
 soil_layer_list = ['2m', '10cm']
 
+
+# Because ELM starts accumulation on winter solstice, 
+# roll the dates 12.21 -> 1.1: add 11 days
+pheno_obs = pheno_obs + 11
+for lyr in soil_layer_list:
+    temp = tsoi_collect[lyr]
+    temp.loc['2016-02-29', :] = 0.5 * (temp.loc['2016-02-28', :].values + temp.loc['2016-03-01', :].values)
+    temp.loc['2020-02-29', :] = 0.5 * (temp.loc['2020-02-28', :].values + temp.loc['2020-03-01', :].values)
+    tsoi_collect[lyr] = pd.DataFrame(temp.iloc[:-11, :].values, 
+                                     index = temp.index[11:],
+                                     columns = temp.columns)
+
+
 observations = pheno_obs.stack().to_frame('doy')
 observations.index.names = ['year', 'site_id']
 observations = observations.reset_index()
@@ -23,8 +36,6 @@ observations = observations.reset_index()
 predictors = {}
 for lyr in soil_layer_list:
     temp = tsoi_collect[lyr].loc[:, pheno_obs.columns]
-    temp.loc['2016-02-29', :] = 0.5 * (temp.loc['2016-02-28', :].values + temp.loc['2016-03-01', :].values)
-    temp.loc['2020-02-29', :] = 0.5 * (temp.loc['2020-02-28', :].values + temp.loc['2020-03-01', :].values)
     temp = temp.sort_index(axis = 0)
 
     temp = temp.stack().to_frame('temperature')
@@ -33,11 +44,14 @@ for lyr in soil_layer_list:
 
     temp['year'] = pd.DatetimeIndex(temp['time']).year
     temp['doy'] = pd.DatetimeIndex(temp['time']).dayofyear
-    temp['daylength'] = [daylength_simple(doy, lat = 47.563) for  doy in temp['doy'].values]
+
+    # shift back 11 days to get the correct daylength
+    doy_list_correct = (pd.DatetimeIndex(temp['time']) - timedelta(days = 11)).dayofyear
+    temp['daylength'] = [daylength_simple(doy, lat = 47.563) for doy in doy_list_correct]
 
     predictors[lyr] = temp.drop('time', axis = 1)
 
-models_to_test = ['ThermalTime', 'M1', 'Uniforc', 'Sequential', 'Unichill', 'Alternating']
+models_to_test = ['ThermalTime', 'M1', 'Alternating'] # 'Uniforc', 'Sequential', 'Unichill', 'Alternating']
 
 np.random.seed(100)
 test = np.random.rand(observations.shape[0]) >= 0.85
@@ -85,34 +99,40 @@ if find_best:
         print(best_model.get_params())
 
     # 2m
-    # model ThermalTime got an aic of 40.1959427138737 rmse of 5.981452814975453
-    # model M1 got an aic of 40.97017082797774 rmse of 5.587684871413403
+    # model ThermalTime got an aic of 38.677197400638 rmse of 5.497474167490214
+    # model M1 got an aic of 42.1959427138737 rmse of 5.981452814975453
     # model Uniforc got an aic of 41.09738142639188 rmse of 5.627314338711377
-    # model Sequential got an aic of 51.3274140896035 rmse of 7.118052168020874
-    # model Unichill got an aic of 49.19162312519754 rmse of 5.656854249492381
-    # model Alternating got an aic of 43.25390711079871 rmse of 5.676462121975467
+    # model Sequential got an aic of 51.732627221969096 rmse of 7.280109889280518
+    # model Unichill got an aic of 51.44650585471845 rmse of 6.411794687223781
+    # model Alternating got an aic of 45.59128109448307 rmse of 6.4635731432217725
 
     # 10cm
-    # model ThermalTime got an aic of 52.531744018948565 rmse of 11.86966254317657
+    # model ThermalTime got an aic of 49.545980199572085 rmse of 10.055402085998905
     # model M1 got an aic of 54.531744018948565 rmse of 11.86966254317657
-    # model Uniforc got an aic of 51.74164007929974 rmse of 10.16530045465127
-    # model Sequential got an aic of 63.55898012115967 rmse of 14.043582955293932
+    # model Uniforc got an aic of 51.70284691578964 rmse of 10.143416036468626
+    # model Sequential got an aic of 62.764346656848566 rmse of 13.437096247164249
     # model Unichill got an aic of 60.52877382725702 rmse of 10.619688214715994
-    # model Alternating got an aic of 52.112351485622995 rmse of 9.285592184789413
-
+    # model Alternating got an aic of 52.14707821681076 rmse of 9.303523824635242
 
 
 lyr_select = '2m'
 
+# Note t1 - the start accumulation date, is counted from 12.21
 
 Model = utils.load_model('ThermalTime')
 model = Model()
 model.fit(observations_train, predictors[lyr_select], optimizer_params='practical')
 print(model.get_params())
-# {'t1': 82.89828273347462, 'T': 0.001321356324646139, 'F': 590.7274692372864}
+# {'t1': 88.96680755982837, 'T': -6.210506141223593, 'F': 995.5839297751559}
 
 Model = utils.load_model('Alternating')
 model = Model()
 model.fit(observations_train, predictors[lyr_select], optimizer_params='practical')
 print(model.get_params())
-# {'a': 281.3048492792021, 'b': 2249.8346532974097, 'c': -0.02412355913509323, 'threshold': 5, 't1': 1}
+# {'a': 199.30927021132482, 'b': 3751.8473351447456, 'c': -0.03728095348592797, 'threshold': 5, 't1': 1}
+
+Model = utils.load_model('Uniforc')
+model = Model()
+model.fit(observations_train, predictors[lyr_select], optimizer_params='practical')
+print(model.get_params())
+# {'t1': 83.27265975501095, 'F': 37.17482725282362, 'b': -0.13936174741659002, 'c': 7.587839240505523}

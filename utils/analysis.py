@@ -309,6 +309,19 @@ def read_leaf_sos():
     return pheno_obs
 
 
+def read_leaf_eos():
+    pheno_obs = {}
+    for var in ['EN', 'DN', 'SH']:
+        hr = xr.open_dataset(os.path.join(path_intrim, 'spruce_validation_data.nc'))
+        temp = hr['pheno_dates_lai'].loc[:, 'EOS', :, var]
+        temp = pd.DataFrame(temp.values,
+                            index = temp['year'],
+                            columns = ['%02d' % i for i in temp['chamber']])
+        pheno_obs[var] = temp.dropna(axis = 1, how = 'all').dropna(axis = 0, how = 'all').sort_index(axis = 1)
+        hr.close()
+    return pheno_obs
+
+
 def read_obs_tsoi_daily():
     tvec = pd.date_range('2015-01-01', '2021-12-31', freq = '1D')
     tvec = tvec[~((tvec.month == 2) & (tvec.day == 29))]

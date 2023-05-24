@@ -6,13 +6,14 @@ from utils.paths import *
 from utils.analysis import *
 
 
-parm_best = os.path.join(os.environ['HOME'], 'models', 'OLMT', 'UQ_output', 'UQ_default_US-SPR_ICB20TRCNPRDCTCBC', 'MCMC_output', 'parms_best.txt')
+parm_best = os.path.join(os.environ['HOME'], 'models', 'OLMT', 'UQ_output', 'UQ_default2_US-SPR_ICB20TRCNPRDCTCBC', 'MCMC_output', 'parms_best.txt')
 
 prefix = os.path.join(os.environ['PROJDIR'], 'E3SM', 'inputdata', 'atm', 'datm7', 'CLM1PT_data', 'SPRUCE_data')
 
-suffix_new = '20230510_UQ_default_XGBClassifier_MLPRegressor'
+suffix_new = '20230518_UQ_default2_XGBClassifier_MLPRegressor'
 
-for file in ['clm_params.nc_yang_dmr_02242021']: # ['clm_params.nc_yang_dmr_yw_20230212', 'clm_params.nc_yang_dmr_02242021', 'clm_params.nc_yang_dmr_yw_20221231']
+#for file in ['clm_params.nc_yang_dmr_02242021']: # ['clm_params.nc_yang_dmr_yw_20230212', 'clm_params.nc_yang_dmr_02242021', 'clm_params.nc_yang_dmr_yw_20221231']
+for file in ['clm_params.nc_yang_dmr_20230509']:
     hr = xr.open_dataset(os.path.join(prefix, file), decode_times = False)
 
     f = open(parm_best, 'r')

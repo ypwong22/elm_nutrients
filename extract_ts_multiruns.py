@@ -25,14 +25,14 @@ collection_ts.to_csv(os.path.join(path_out_2, 'for_root_ts.csv'))
 collection_const.to_csv(os.path.join(path_out_2, 'for_root_const.csv'))
 """
 
-for prefix in ['20230510']: # ['20221212', '20230120', '20230121', '20230122']:
+for prefix in ['20230518']: # ['20221212', '20230120', '20230121', '20230122']:
     var_list = {}
     var_list['pft'] = ['TLAI', 'GPP', 'AGNPP', 'BGNPP', 'NPP', 'QVEGE', 'QVEGT', 'LEAFC', 'FROOTC', 'FROOTC_STORAGE', 'FROOTC_STORAGE_TO_XFER', 'FROOTC_XFER', 
                        'AR', 'FROOT_MR', 'CPOOL_FROOT_GR',  'CPOOL_FROOT_STORAGE_GR', 'TOTVEGC', 'FROOTC_ALLOC', 'LEAF_MR', 'CPOOL_LEAF_GR', 
                        'LEAFC', 'LEAFC_XFER', 'LEAFC_STORAGE', 'DOWNREG', 'ONSET_FLAG', 'ONSET_FLAG_ROOT', 'DORMANT_FLAG_ROOT', 
                        'ONSET_RATE_FROOT', 'COMPS_RATE_FROOT', 'BGLFR_FROOT', 'LEAFC_TO_LITTER', 'FROOTC_TO_LITTER']
     # 1 = near surface, 5 = 20 cm, 4 = 10 cm, 3 = 6 cm
-    var_list['col'] = ['TBOT', 'TSOI_3', 'TSOI_4', 'H2OSOI_1', 'H2OSOI_5', 'SWC_1', 'SWC_5', 'HR', 'NEE'] # , 'BTRAN', 'LEAFC_STORAGE_TO_XFER',
+    var_list['col'] = ['TBOT', 'TSOI_3', 'TSOI_4', 'H2OSOI_1', 'H2OSOI_5', 'SWC_1', 'SWC_5', 'HR', 'NEE']
     var_list['const'] = []
 
     collection_ts, collection_const = extract_sims(prefix, var_list)
