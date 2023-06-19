@@ -127,8 +127,9 @@ for pft, pft_name, frac in zip([2, 3, 11], ['EN', 'DN', 'SH'], [0.36, 0.14, 0.25
     # pima: 0.36, lala: 0.14, shrub: 0.25, sphagnum: 0.25
     # but do not calibrate the LAI of Sphagnum
     for chamber in chamber_list:
-        # done when creating the validation file: factor = frac * 66.4 / 114.8 # make the modeled result compatible with observation
-        factor = frac
+        # done when creating the validation file: factor = frac * 66.4 / 114.8 / PFT_frac 
+        # , which makes the observation compatible with the modeled LAI per patch area
+        factor = 1
 
         obs = float(hr['annual_lai'].loc[year_list, chamber, pft_name].mean())
 

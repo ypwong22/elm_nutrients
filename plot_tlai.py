@@ -71,10 +71,8 @@ mpl.rcParams['axes.titlesize'] = 14
 
 #sims_prefix = ['20221212', '20230120', '20230505']  # '20230122', 20230121
 #sims_names = ['Default', 'Optim', 'Optim EvgrRoot'] # 'Optim Evgr', 'Optim EvgrRoot'
-#sims_prefix = ['20230510', '20230122', '20230505', '20230509', '20230512']
-#sims_names = ['Optim Scheme2', 'Optim Evgr', 'A', 'E', 'H']
-sims_prefix = ['20221212', '20230120', '20230510', '20230518']
-sims_names = ['Default', 'Optim', 'Optim Scheme 2', 'Optim Scheme 2 Correct input']
+sims_prefix = ['20221212', '20230120', '20230526', '20230601']
+sims_names = ['Default', 'Optim XYS', 'Optim Scheme 2 Correct', 'Optim EvgrRoot']
 clist = ['#de2d26', '#fcfc00', '#3182bd']
 co2_levels    = {'ambient' : [6, 20, 13, 8, 17],
                  'elevated': [19, 11, 4, 16, 10]}

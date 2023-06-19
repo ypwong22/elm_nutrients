@@ -34,12 +34,12 @@ hr.close()
 mpl.rcParams['font.size'] = 14
 mpl.rcParams['axes.titlesize'] = 14
 
-#sims_prefix = ['20221212', '20230120', '20230122', '20230121']
-#sims_names = ['Default', 'Optim', 'Optim Evgr', 'Optim EvgrRoot']
-sims_prefix = ['20221212', '20230512']
-sims_names = ['Default', 'Optim EvgrRoot 2']
+#sims_prefix = ['20221212', '20230120', '20230505']  # '20230122', 20230121
+#sims_names = ['Default', 'Optim', 'Optim EvgrRoot'] # 'Optim Evgr', 'Optim EvgrRoot'
+sims_prefix = ['20221212', '20230120', '20230526', '20230601']
+sims_names = ['Default', 'Optim XYS', 'Optim Scheme 2 Correct', 'Optim EvgrRoot']
 clist = ['#0000ff', '#800080', '#20b2aa', '#ff4040']
-var_list = ['TBOT', 'TSOI_3', 'TSOI_4', 'SWC', 'H2OSOI'] # , 'NET_NMIN'] # 'BTRAN'
+var_list = ['TBOT', 'TSOI_3', 'TSOI_4', 'SWC', 'H2OSOI', 'NET_NMIN', 'BTRAN']
 unit_list = ['$^o$C', '$^o$C', '$^o$C', '', '', '', '']
 
 

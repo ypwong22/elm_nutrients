@@ -170,15 +170,16 @@ if __name__ == '__main__':
     mpl.rcParams['font.size'] = 14
     mpl.rcParams['axes.titlesize'] = 14
 
-    #sims_prefix = ['20221212', '20230120', '20230122', '20230505']  # 20230121
-    #sims_names = ['Default', 'Optim', 'Optim Evgr', 'Optim EvgrRoot'] # 'Optim EvgrRoot'
-    sims_prefix = ['20230505', '20230509', '20230510', '20230511']
-    sims_names = ['A', 'E', 'F', 'G']
+    #sims_prefix = ['20221212', '20230120', '20230505']  # '20230122', 20230121
+    #sims_names = ['Default', 'Optim', 'Optim EvgrRoot'] # 'Optim Evgr', 'Optim EvgrRoot'
+    sims_prefix = ['20221212', '20230120', '20230526', '20230601']
+    sims_names = ['Default', 'Optim XYS', 'Optim Scheme 2 Correct', 'Optim EvgrRoot']
     clist = ['#0000ff', '#800080', '#20b2aa', '#ff4040'] 
 
-    var_list = ['TLAI', 'LEAFC_STORAGE', 'FROOTC', 'FROOTC_STORAGE', 'ONSET_RATE_FROOT', 'COMPS_RATE_FROOT', 'BGLFR_FROOT']  # 'LEAFC', 'LEAFC_XFER', 
-    unit_list = ['ratio to annual\naverage', 'ratio to annual\naverage', 'ratio to annual\naverage',  'gC m-2', 's-1', 's-1', 's-1'] # 'gC m-2', 'gC m-2', 
-    minmax_list = [[-0.3, 3.2], [0.5, 1.5], [-0.3, 3.2], [], [-0.5e-8, 3e-7], [-0.5e-9, 9e-9], [-0.1e-8, 5e-8]]
+    var_list = ['TLAI', 'LEAFC', 'LEAFC_STORAGE', 'FROOTC', 'FROOTC_STORAGE', 'BGLFR_FROOT']
+    unit_list = ['ratio to annual\naverage', 'ratio to annual\naverage', 'ratio to annual\naverage',  'gC m-2', 'gC m-2', 's-1'] 
+    # minmax_list = [[-0.3, 3.2], [0.5, 1.5], [0.5, 1.5], [-0.3, 3.2], [-0.5e-9, 9e-9], [-0.1e-8, 5e-8]]
+    minmax_list = [[], [], [], [], [], []]
     plotter_monthly(var_list, unit_list, minmax_list, 'plot_root_cycle_lai.png')
 
     """
@@ -186,12 +187,14 @@ if __name__ == '__main__':
     unit_list = ['g g-1 day-1','g g-1 day-1','g g-1 day-1', ''] # 'g g-1 day-1', 'g g-1'
     minmax_list = [[-1e-4, 0.004], [-1e-8, 1.5e-7], [0, 0.013], [-0.05, 0.75]]
     plotter_monthly(var_list, unit_list, minmax_list, 'plot_root_cycle.png')
+    """
 
-    var_list = ['ONSET_FLAG', 'ONSET_FLAG_ROOT'] # 'CPOOL_FROOT_GR/FROOTC', 'FROOTC/FROOTC_STORAGE', 
+    var_list = ['ONSET_FLAG', 'OFFSET_FLAG',  'ONSET_FLAG_ROOT'] # 'CPOOL_FROOT_GR/FROOTC', 'FROOTC/FROOTC_STORAGE', 
     unit_list = ['', '']
     minmax_list = [[], []]
     plotter_monthly(var_list, unit_list, minmax_list, 'plot_root_cycle_pheno.png')
 
+    """
     # Annual ratio of AR/GPP, CPOOL_FROOT_GR/FROOTC_ALOC
     var_list = ['AR/GPP', 'CPOOL_FROOT_GR/FROOTC_ALLOC']
     unit_list = ['g g-1 day-1', 'g g-1 day-1']

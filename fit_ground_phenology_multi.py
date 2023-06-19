@@ -51,7 +51,8 @@ for lyr in soil_layer_list:
 
     predictors[lyr] = temp.drop('time', axis = 1)
 
-models_to_test = ['ThermalTime', 'M1', 'Alternating'] # 'Uniforc', 'Sequential', 'Unichill', 'Alternating']
+#models_to_test = ['ThermalTime', 'M1', 'Alternating']
+models_to_test = ['Uniforc', 'Sequential', 'Unichill']
 
 np.random.seed(100)
 test = np.random.rand(observations.shape[0]) >= 0.85
@@ -78,7 +79,12 @@ if find_best:
 
         for model_name in models_to_test:
             Model = utils.load_model(model_name)
-            model = Model()
+            if model_name in ['ThermalTime', 'M1', 'Uniforc', 'Alternating']:
+                model = Model(parameters = {'t1': 1})
+            elif model_name in ['Sequential', 'Unichill']:
+                model = Model(parameters = {'t0': 1})
+            else:
+                raise Exception('Not implemented')
             model.fit(observations_train, predictors[lyr], optimizer_params='practical')
 
             obs = observations_test.doy.values
@@ -99,20 +105,20 @@ if find_best:
         print(best_model.get_params())
 
     # 2m
-    # model ThermalTime got an aic of 38.677197400638 rmse of 5.497474167490214
-    # model M1 got an aic of 42.1959427138737 rmse of 5.981452814975453
-    # model Uniforc got an aic of 41.09738142639188 rmse of 5.627314338711377
-    # model Sequential got an aic of 51.732627221969096 rmse of 7.280109889280518
-    # model Unichill got an aic of 51.44650585471845 rmse of 6.411794687223781
-    # model Alternating got an aic of 45.59128109448307 rmse of 6.4635731432217725
+    # model ThermalTime got an aic of 44.22816521661635 rmse of 7.483314773547883
+    # model M1 got an aic of 46.22816521661635 rmse of 7.483314773547883
+    # model Uniforc got an aic of 42.47119352422242 rmse of 6.073622386096199
+    # model Sequential got an aic of 50.69378132429378 rmse of 6.871842709362768
+    # model Unichill got an aic of 48.54386162857173 rmse of 5.456901847914967
+    # model Alternating got an aic of 46.03495068808412 rmse of 6.624868971450597
 
     # 10cm
-    # model ThermalTime got an aic of 49.545980199572085 rmse of 10.055402085998905
-    # model M1 got an aic of 54.531744018948565 rmse of 11.86966254317657
-    # model Uniforc got an aic of 51.70284691578964 rmse of 10.143416036468626
+    # model ThermalTime got an aic of 60.632388253444255 rmse of 18.61600267392427
+    # model M1 got an aic of 62.632388253444255 rmse of 18.61600267392427
+    # model Uniforc got an aic of 52.59062974084688 rmse of 10.656244908763854
     # model Sequential got an aic of 62.764346656848566 rmse of 13.437096247164249
-    # model Unichill got an aic of 60.52877382725702 rmse of 10.619688214715994
-    # model Alternating got an aic of 52.14707821681076 rmse of 9.303523824635242
+    # model Unichill got an aic of 59.780266748033604 rmse of 10.187137859957417
+    # model Alternating got an aic of 64.72425507978949 rmse of 18.711256267581582
 
 
 lyr_select = '2m'
@@ -120,19 +126,22 @@ lyr_select = '2m'
 # Note t1 - the start accumulation date, is counted from 12.21
 
 Model = utils.load_model('ThermalTime')
-model = Model()
+model = Model(parameters = {'t1': 1})
 model.fit(observations_train, predictors[lyr_select], optimizer_params='practical')
 print(model.get_params())
-# {'t1': 88.96680755982837, 'T': -6.210506141223593, 'F': 995.5839297751559}
+# {'T': 4.08239397438806, 'F': 388.89698143143914, 't1': 1}
+# {'T': 4.113410776245213, 'F': 386.9374360874435, 't1': 1}
 
 Model = utils.load_model('Alternating')
-model = Model()
+model = Model(parameters = {'t1': 1})
 model.fit(observations_train, predictors[lyr_select], optimizer_params='practical')
 print(model.get_params())
-# {'a': 199.30927021132482, 'b': 3751.8473351447456, 'c': -0.03728095348592797, 'threshold': 5, 't1': 1}
+# {'a': 349.6277253204969, 'b': 3169.8267073240854, 'c': -0.05347986748356126, 'threshold': 5, 't1': 1}
+# {'a': 195.28932107981944, 'b': 3138.652468114228, 'c': -0.03495823449748503, 'threshold': 5, 't1': 1}
 
 Model = utils.load_model('Uniforc')
-model = Model()
+model = Model(parameters = {'t1': 1})
 model.fit(observations_train, predictors[lyr_select], optimizer_params='practical')
 print(model.get_params())
-# {'t1': 83.27265975501095, 'F': 37.17482725282362, 'b': -0.13936174741659002, 'c': 7.587839240505523}
+# {'F': 66.94329645213861, 'b': -0.04412234589076469, 'c': 6.848386620467728, 't1': 1}
+# {'F': 53.305745769355205, 'b': -0.03781848702688784, 'c': 17.92139941787829, 't1': 1}
