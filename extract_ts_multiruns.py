@@ -26,7 +26,7 @@ collection_const.to_csv(os.path.join(path_out_2, 'for_root_const.csv'))
 """
 
 for prefix in [
-    "20230601"
+    "20230623"
 ]:  # ['20221212', '20230120', '20230121', '20230122', '20230526']:
     var_list = {}
     var_list["pft"] = [

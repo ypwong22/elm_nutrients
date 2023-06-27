@@ -233,7 +233,7 @@ def convert_observation(minirhizotron, ingrowth):
                 )
     annual_minirhizotron = annual_minirhizotron.drop(21, axis=1, level=2)
 
-    # (2) seasonal cycle in 2015 and 2018
+    # (2) normalized seasonal cycle in 2015 and 2018
     minirhizotron_cycle = minirhizotron.stack().stack().reset_index()
     minirhizotron_cycle["year"] = [t.year for t in minirhizotron_cycle["start_date"]]
     minirhizotron_cycle["month"] = [t.month for t in minirhizotron_cycle["start_date"]]
@@ -371,7 +371,7 @@ def convert_sims(prefix):
             )
             temp = temp["hummock"] * 0.64 + temp["hollow"] * 0.36
             minirhizotron_cycle.loc[(start, end), ("m_g_d", "tree", cha)] = (
-                temp.sum() * 86400
+                temp.mean() * 86400
             )
 
             temp2 = (
@@ -379,19 +379,21 @@ def convert_sims(prefix):
                 + 0.14 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 3)]
             )
             temp2 = temp2["hummock"] * 0.64 + temp2["hollow"] * 0.36
-            minirhizotron_cycle.loc[(start, end), ("g_g_d", "tree", cha)] = (temp2.sum() + temp.sum()) * 86400
+            minirhizotron_cycle.loc[(start, end), ("g_g_d", "tree", cha)] = (
+                temp2.mean() # + temp.mean()
+            ) * 86400
 
             temp = collection_ts.loc[filt, (cha, "FROOTC_TO_LITTER", 11)] * 0.25
             temp = temp["hummock"] * 0.64 + temp["hollow"] * 0.36
             minirhizotron_cycle.loc[(start, end), ("m_g_d", "shrub", cha)] = (
-                temp.sum() * 86400
+                temp.mean() * 86400
             )
 
             temp2 = 0.25 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 11)]
             temp2 = temp2["hummock"] * 0.64 + temp2["hollow"] * 0.36
             minirhizotron_cycle.loc[(start, end), ("g_g_d", "shrub", cha)] = (
-                (temp2.sum() + temp.sum())*86400
-            )
+                temp2.mean() # + temp.mean()
+            ) * 86400
 
     minirhizotron_cycle = minirhizotron_cycle.stack().stack().reset_index()
     minirhizotron_cycle["year"] = [t.year for t in minirhizotron_cycle["start_date"]]
