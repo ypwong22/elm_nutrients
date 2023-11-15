@@ -1,4 +1,4 @@
-""" Plot the sensitivity of PH's variables to temperature. """
+""" Plot the sensitivity of leaf area index (per area chamber, not per area patch) to temperature. """
 import pandas as pd
 import os
 import numpy as np
@@ -22,24 +22,21 @@ def plotter(ax, tbot, obs, sims):
     corr = np.full(4, np.nan)
     pval = np.full(4, np.nan)
 
-    # drop year 2020
-    tbot = tbot.drop(2020, axis=0)
-    obs = obs.drop(2020, axis=0)
-    sims = sims.drop(2020, axis=0)
-
     a = tbot.loc[:, co2_levels["ambient"]].values.reshape(-1)
     b = obs.loc[:, co2_levels["ambient"]].values.reshape(-1)
     c = sims.loc[:, co2_levels["ambient"]].values.reshape(-1)
 
+    filt = ~np.isnan(b)
+
     (h[0],) = ax.plot(a, b, "ob", markerfacecolor="b")
     (h[1],) = ax.plot(a, c, "or", markerfacecolor="r")
 
-    res = linregress(a[~np.isnan(b)], b[~np.isnan(b)])
+    res = linregress(a[filt], b[filt])
     corr[0] = res.slope
     pval[0] = res.pvalue
     ax.plot([4, 17], res.intercept + res.slope * np.array([4, 17]), "-b")
 
-    res = linregress(a, c)
+    res = linregress(a[filt], c[filt])
     corr[1] = res.slope
     pval[1] = res.pvalue
     ax.plot([4, 17], res.intercept + res.slope * np.array([4, 17]), "-r")
@@ -65,14 +62,16 @@ def plotter(ax, tbot, obs, sims):
 
 
 # for slides
-mpl.rcParams["font.size"] = 14
-mpl.rcParams["axes.titlesize"] = 14
+mpl.rcParams["font.size"] = 10
+mpl.rcParams["axes.titlesize"] = 10
 
 
 # sims_prefix = ['20221212', '20230120', '20230505']  # '20230122', 20230121
 # sims_names = ['Default', 'Optim', 'Optim EvgrRoot'] # 'Optim Evgr', 'Optim EvgrRoot'
-sims_prefix = ["20221212", "20230120", "20230526", "20230623"]
-sims_names = ["Default", "Optim XYS", "Optim Scheme 2 Correct", "Optim EvgrRoot"]
+# sims_prefix = ["20221212", "20230120", "20230526", "20230623"]
+# sims_names = ["Default", "Optim XYS", "Optim Scheme 2 Correct", "Optim EvgrRoot"]
+sims_prefix = ["20221212", "20230720"]
+sims_names = ["Default", "Optim Scheme 2 Correct"]
 clist = ["#de2d26", "#fcfc00", "#3182bd"]
 co2_levels = {"ambient": [6, 20, 13, 8, 17], "elevated": [19, 11, 4, 16, 10]}
 pft_list = [2, 3, 11]
@@ -83,7 +82,11 @@ collect_tbot = read_sims_tair_annual()
 hr = xr.open_dataset(os.path.join(path_intrim, "spruce_validation_data.nc"))
 
 fig, axes = plt.subplots(
-    nrows=3, ncols=len(sims_prefix), figsize=(15, 8), sharex=True, sharey=True
+    nrows=3,
+    ncols=len(sims_prefix),
+    figsize=(3.5 * len(sims_names), 8),
+    sharex=True,
+    sharey=False,
 )
 fig.subplots_adjust(hspace=0.1, wspace=0.05)
 
@@ -119,8 +122,17 @@ for i, (pft, pftname, pftname2) in enumerate(
             ).mean()
             collect_sim.loc[:, plot] = sim.groupby(sim.index.year).max()
 
+        if pft == 2:
+            frac = 0.14
+        elif pft == 3:
+            frac = 0.36
+        else:
+            frac = 0.25
+
         ax = axes[i, j]
-        h, corr, pval = plotter(ax, collect_tbot, collect_obs, collect_sim)
+        h, corr, pval = plotter(
+            ax, collect_tbot, collect_obs * frac, collect_sim * frac
+        )
 
         clist = ["b", "r", "b", "r"]
         for k in range(4):
@@ -141,8 +153,6 @@ for i, (pft, pftname, pftname2) in enumerate(
                 t.set_bbox(dict(facecolor=clist[k], alpha=0.2, edgecolor=clist[k]))
             else:
                 t.set_bbox(dict(facecolor="w", alpha=0.2, edgecolor=clist[k]))
-        # ax.set_ylim([-3, 10.5])
-        ax.set_yticks([0, 2, 4, 6, 8, 10])
 
         if j == 0:
             ax.set_ylabel(pftname)
@@ -152,6 +162,16 @@ for i, (pft, pftname, pftname2) in enumerate(
 
         if i == 0:
             ax.set_title(sims_names[j])
+
+        if i == 0:
+            ax.set_ylim([-0.056, 1.82])
+        if i == 1:
+            ax.set_ylim([-0.144, 4.68])
+        if i == 2:
+            ax.set_ylim([-0.1, 6])  #  5.25])
+
+        if j == 1:
+            ax.set_yticklabels([])
 
 ax.legend(
     h,

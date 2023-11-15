@@ -26,8 +26,8 @@ collection_const.to_csv(os.path.join(path_out_2, 'for_root_const.csv'))
 """
 
 for prefix in [
-    "20230623"
-]:  # ['20221212', '20230120', '20230121', '20230122', '20230526', '20230601', '20230623']:
+    "20230720"
+]:  # ['20221212', '20230120', '20230121', '20230122', '20230526', '20230623', "20230720"]:
     var_list = {}
     var_list["pft"] = [
         "TLAI",
@@ -35,14 +35,11 @@ for prefix in [
         "AGNPP",
         "BGNPP",
         "NPP",
-        "QVEGE",
-        "QVEGT",
+        "AR",
         "TOTVEGC",
         "DOWNREG",
-        "ONSET_FLAG",
-        "OFFSET_FLAG",
-        "DORMANT_FLAG",
-    ]
+    ]  # "ONSET_FLAG", "OFFSET_FLAG", "DORMANT_FLAG", "QVEGE", "QVEGT"
+    # "PSNSUN", "PSNSHA",
 
     for pool in ["LEAF", "FROOT", "LIVESTEM", "DEADSTEM", "LIVECROOT", "DEADCROOT"]:
         var_list["pft"] = var_list["pft"] + [
@@ -64,7 +61,7 @@ for prefix in [
 
     var_list["pft"].extend(["GRESP_XFER", "GRESP_STORAGE"])
 
-    if prefix == "20230623":
+    if prefix in ["20230623"]:
         var_list["pft"] = var_list["pft"] + [
             "BGLFR_LEAF",
             "BGLFR_FROOT",
@@ -92,6 +89,7 @@ for prefix in [
         "NEE",
         "NET_NMIN",
         "BTRAN",
+        "ZWT",
     ]
     var_list["const"] = []
 

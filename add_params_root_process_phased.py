@@ -16,7 +16,8 @@ path_parameter = os.path.join(
 orgfile = (
     "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor"
 )
-newfile = "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor_root_phased_refactored"
+# newfile = "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor_root_phased_refactored"
+newfile = "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor_root_phased_refactored_NP"
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
@@ -294,7 +295,7 @@ hr["wt_scale"] = xr.DataArray(
 )
 
 hr["mort_tsoi"] = xr.DataArray(
-    [273.15 - 10],
+    [10 + 273.15],
     dims=["allpft"],
     attrs={
         "units": "K",
@@ -524,6 +525,79 @@ hr["off_tbase"] = xr.DataArray(
     dims=["pft"],
     attrs={"units": "", "long_name": "Paramter for deciduous offset"},
 )
+
+if newfile.endswith("_NP"):
+    """Relative demand allocation by fine root biomass"""
+    hr["VMAX_PLANT_N_RD"] = xr.DataArray(
+        [
+            np.nan,
+            np.nan,
+            1e-7,
+            1e-7,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            1e-7,
+            1e-7,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+        ],
+        coords={"pft": hr["pft"]},
+        dims=["pft"],
+        attrs={
+            "units": "gN gC-1 s-1",
+            "long_name": "Paramter for plant uptake of nitrogen proportional to fine root biomass",
+        },
+    )
+    hr["VMAX_PLANT_P_RD"] = xr.DataArray(
+        [
+            np.nan,
+            np.nan,
+            1e-7,
+            1e-7,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            1e-7,
+            1e-7,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+        ],
+        coords={"pft": hr["pft"]},
+        dims=["pft"],
+        attrs={
+            "units": "gP gC-1 s-1",
+            "long_name": "Paramter for plant uptake of phosphorus proportional to fine root biomass",
+        },
+    )
 
 encoding = {}
 for data_var in hr.data_vars:
