@@ -38,7 +38,7 @@ chamber_list_names = [
 ]
 year_list = [2016, 2017, 2018, 2019, 2020]
 
-####################################################################################################################
+
 hr = xr.open_dataset(os.path.join(path_intrim, "spruce_validation_data.nc"))
 
 
@@ -46,8 +46,11 @@ hr = xr.open_dataset(os.path.join(path_intrim, "spruce_validation_data.nc"))
 # Simulated = Factor[1] x pft[1] + Factor[2] x pft[2] + ... + add offset
 
 
+####################################################################################################
+# To calibrate PFT related parameters, use tree NPP, shrub NPP, individual PFT's belowground NPP, 
+# and individual PFT's TLAI
+####################################################################################################
 line = ""
-
 
 # (1) hr['annual_anpp_tree'][7, 21, 6, 19, 20, 11, 13, 4, 8, 16, 17, 10]
 for chamber in chamber_list:
@@ -79,23 +82,6 @@ for chamber in chamber_list:
     line += f"AGNPP\t{year_list[0]}\t{year_list[-1]}\t1\t365\t{ndays}\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.25}\t{treatment}\n"
 
 
-"""
-# (3) hr['annual_npp_moss']
-for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
-    obs = float(hr['annual_npp_moss'].loc[year, chamber])
-    treatment = get_treatment_string(chamber)
-    mossfrac = get_mossfrac(year, treatment)
-
-    # hummock: 0.64, hollow: 0.36
-    pairs = (
-        (12, mossfrac * 86400 * 365),
-    )
-    pft_list = ','.join([str(x[0]) for x in pairs])
-    factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
-
-    line += f'NPP\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
-"""
-
 # (4) hr['annual_bnpp']
 for chamber in chamber_list:
     pairs = (
@@ -110,38 +96,6 @@ for chamber in chamber_list:
     ndays = 365 * len(year_list)
 
     line += f"BGNPP\t{year_list[0]}\t{year_list[-1]}\t1\t365\t{ndays}\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.25}\t{treatment}\n"
-
-
-"""
-# This is irrelevant to the vegetation growth.
-# (5) hr['annual_rh']
-for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
-    # flip the simulation's sign
-    pairs = (
-        (0, - 86400 * 365),
-    )
-    pft_list = ','.join([str(x[0]) for x in pairs])
-    factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
-    obs = float(hr['annual_rh'].loc[year, chamber])
-    treatment = get_treatment_string(chamber)
-
-    line += f'HR\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
-
-# (6) hr['annual_nee']
-for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
-    # flip the simulation's sign
-    pairs = (
-        (0, - 86400 * 365),
-    )
-    pft_list = ','.join([str(x[0]) for x in pairs])
-    factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
-    obs = float(hr['annual_nee'].loc[year, chamber])
-    treatment = get_treatment_string(chamber)
-
-    line += f'NEE\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
-
-hr.close()
-"""
 
 
 # (7) hr['annual_lai'][7, 21, 6, 19, 20, 11, 13, 4, 8, 16, 17, 10]
@@ -175,7 +129,47 @@ for pft, pft_name, frac in zip(
             line += f"TLAI\t{year_list[0]}\t{year_list[-1]}\t213\t243\t{ndays}\t{factor}\t0\t{pft}\t{obs}\t{obs*0.25}\t{treatment}\n"
 
 
-f = open(os.path.join("./temp/postproc_vars_SPRUCE"), "w")
+f = open(os.path.join("./calibration_files/postproc_vars_SPRUCE"), "w")
+f.write("#" + "\t".join(header) + "\n")
+f.write(line)
+f.close()
+
+
+
+####################################################################################################
+# To calibrate PFT related parameters, use total NEE, and total HR
+####################################################################################################
+line = ""
+
+# (5) hr['annual_rh']
+for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
+    # flip the simulation's sign
+    pairs = (
+        (0, - 86400 * 365),
+    )
+    pft_list = ','.join([str(x[0]) for x in pairs])
+    factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
+    obs = float(hr['annual_rh'].loc[year, chamber])
+    treatment = get_treatment_string(chamber)
+
+    line += f'HR\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
+
+# (6) hr['annual_nee']
+for year, chamber in it.product([2016, 2017, 2018, 2019, 2020], chamber_list):
+    # flip the simulation's sign
+    pairs = (
+        (0, - 86400 * 365),
+    )
+    pft_list = ','.join([str(x[0]) for x in pairs])
+    factor_list = ','.join([f'{x[1]:.2f}' for x in pairs])
+    obs = float(hr['annual_nee'].loc[year, chamber])
+    treatment = get_treatment_string(chamber)
+
+    line += f'NEE\t{year}\t{year}\t1\t365\t365\t{factor_list}\t0\t{pft_list}\t{obs}\t{obs*0.5}\t{treatment}\n'
+
+hr.close()
+
+f = open(os.path.join("./calibration_files/postproc_vars_SPRUCE_HR"), "w")
 f.write("#" + "\t".join(header) + "\n")
 f.write(line)
 f.close()

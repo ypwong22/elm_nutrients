@@ -13,17 +13,21 @@ path_parameter = os.path.join(
     "SPRUCE_data",
 )
 
-orgfile = (
-    "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor"
-)
+#orgfile = (
+#    "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor"
+#)
+# orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc'
+orgfile = 'clm_params_SPRUCE_20231120_spruceroot_eca.nc'
 # newfile = "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor_root_phased_refactored"
-newfile = "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor_root_phased_refactored_NP"
+#newfile = "clm_params.nc_yang_dmr_20230518_UQ_default2_optimized_XGBClassifier_MLPRegressor_root_phased_refactored_NP"
+#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_root_process_phased_refactor'
+newfile = 'clm_params_SPRUCE_20231120_spruceroot_eca.nc_root_process_phased_refactor'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
 
-hr["rf_scale"] = -0.0441
-hr["rf_tbase"] = xr.DataArray(
+hr["uf_scale"] = -0.0441
+hr["uf_tbase"] = xr.DataArray(
     [6.848 + 273.15],
     dims=["allpft"],
     attrs={
@@ -31,7 +35,7 @@ hr["rf_tbase"] = xr.DataArray(
         "long_name": "Base temperature in uniforc model",
     },
 )
-hr["crit_onset_rf"] = 66.943
+hr["crit_onset_uf"] = 66.943
 hr["ndays_on"] = xr.DataArray(
     [
         np.nan,
@@ -274,7 +278,7 @@ hr["crit_dayl"] = xr.DataArray(
     attrs={"units": "seconds", "long_name": "Critical day length for senescence"},
 )
 
-hr["crit_onset_rf_root"] = 42
+hr["crit_onset_uf_root"] = 42
 
 hr["nmin_scale"] = xr.DataArray(
     [1],
