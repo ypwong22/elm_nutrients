@@ -5,4 +5,4 @@ path_input = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'input')
 path_intrim = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'intermediate')
 path_out = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output')
 
-path_run = os.path.join(os.environ['SCRATCHDIR'], 'E3SM', 'output')
+path_run = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output')

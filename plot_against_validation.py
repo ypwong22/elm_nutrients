@@ -24,7 +24,7 @@ print(prefix + '_plot' + plot)
 """
 
 
-prefix = '20221231'
+prefix = '20231112'
 for plot in [4, 10, 11, 16, 19, 6, 8, 13, 17, 20]:
     #############################################################
     # Some constants
@@ -56,8 +56,8 @@ for plot in [4, 10, 11, 16, 19, 6, 8, 13, 17, 20]:
 
 
     # open the validation data file
-    folder = os.path.join(os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', f'{prefix}_plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run'))
-    validation_file = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'intermediate', 'spruce_validation_data.nc')
+    validation_file = os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'intermediate', 
+                                   'spruce_validation_data.nc')
     hrv = xr.open_dataset(validation_file)
 
 
@@ -67,7 +67,8 @@ for plot in [4, 10, 11, 16, 19, 6, 8, 13, 17, 20]:
     def get_run_co2():
         # gC m-2 day-1, whole grid
 
-        data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm', prefix, f'plot{plot}_ts_extract.csv'),
+        data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm',
+                                        prefix, f'plot{plot}_ts_extract.csv'),
                         index_col = 0, header = [0,1])
 
         rh = data.loc[:, (['hummock','hollow'], 'HR')]
@@ -139,7 +140,8 @@ for plot in [4, 10, 11, 16, 19, 6, 8, 13, 17, 20]:
     ax.set_ylabel('gC m-2 day-1')
     ax.text(0.05, 0.8, f'RMSE = {ch4_rmse:.04e}', transform = ax.transAxes)
     """
-    fig.savefig(os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm', prefix, f'plot{plot:02d}_daily_nee.png'), dpi = 600.,
+    fig.savefig(os.path.join(os.environ['PROJDIR'], 'Phenology_ELM', 'output_elm', prefix, 
+                             f'plot{plot:02d}_daily_nee.png'), dpi = 600.,
                 bbox_inches = 'tight')
     plt.close()
 

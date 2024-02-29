@@ -29,7 +29,8 @@ chamber_list_names = [
     "T9.00CO2",
 ]
 
-chamber_levels_complete = chamber_levels.update({"07": [0, 0], "21": [0, 500]})
+chamber_levels_complete = chamber_levels.copy()
+chamber_levels_complete.update({"07": [0, 0], "21": [0, 500]})
 # T: AMB, 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
 chamber_list_complete = [7, 6, 19, 20, 11, 13, 4, 8, 16, 17, 10]  # 21,
 chamber_list_names_complete = [
