@@ -265,6 +265,8 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
             'run'
         )
 
+        print(path_data)
+
         flist_pft = sorted(glob(os.path.join(path_data, "*.h2.*.nc")))[:-1]
         flist_col = sorted(glob(os.path.join(path_data, "*.h1.*.nc")))[:-1]
         flist_const = sorted(glob(os.path.join(path_data, "*.h0.*.nc")))[:-1]
@@ -560,7 +562,7 @@ def read_extract_sims_ts(prefix):
 
 
 def read_sims_tair_daily():
-    prefix = "20231112"  # identical for any
+    prefix = "20240304_3"  # identical for any
     collection_ts = read_extract_sims_ts(prefix)
     temperature = (
         0.64 * collection_ts.loc[:, (slice(None), "TBOT", 0, "hummock")]

@@ -15,7 +15,7 @@ def fit_line(x, y):
 
 #prefix = "20231112"
 #prefix = "20240227"
-prefix = "20240304"
+prefix = "20240305"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 
                       'extract', prefix)
 

@@ -34,7 +34,7 @@ zwt_growing_season = True
 
 #prefix = "20231112"
 #prefix = "20240227"
-prefix = "20240304"
+prefix = "20240305"
 collect = pd.DataFrame(
     np.nan,
     index = pd.MultiIndex.from_product([['hummock', 'hollow', 'average'],

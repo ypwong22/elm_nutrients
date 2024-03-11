@@ -24,9 +24,9 @@ if not os.path.exists(path_out_2):
 collection_ts.to_csv(os.path.join(path_out_2, 'for_root_ts.csv'))
 collection_const.to_csv(os.path.join(path_out_2, 'for_root_const.csv'))
 """
-
+rootphenology = True
 for prefix in [
-    "20231112"
+    "20240305"
 ]:  # ['20221212', '20230120', '20230121', '20230122', '20230526', '20230623', "20230720"]:
     var_list = {}
     var_list["pft"] = [
@@ -37,7 +37,7 @@ for prefix in [
         "NPP",
         "AR",
         "TOTVEGC",
-        "DOWNREG",
+        # "DOWNREG",
     ]  # "ONSET_FLAG", "OFFSET_FLAG", "DORMANT_FLAG", "QVEGE", "QVEGT"
     # "PSNSUN", "PSNSHA",
 
@@ -55,13 +55,12 @@ for prefix in [
                 f"{pool}_MR",
                 f"CPOOL_TO_{pool}C",
                 f"CPOOL_TO_{pool}C_STORAGE",
-                f"{pool}C_XFER_TO_{pool}C",
-            ]
+            ] # f"{pool}C_XFER_TO_{pool}C",
         )
 
-    var_list["pft"].extend(["GRESP_XFER", "GRESP_STORAGE"])
+    #var_list["pft"].extend(["GRESP_XFER", "GRESP_STORAGE"])
 
-    if prefix in ["20230623"]:
+    if rootphenology:
         var_list["pft"] = var_list["pft"] + [
             "BGLFR_LEAF",
             "BGLFR_FROOT",
@@ -87,8 +86,8 @@ for prefix in [
         "SWC_5",
         "HR",
         "NEE",
-        "NET_NMIN",
-        "BTRAN",
+        # "NET_NMIN",
+        #"BTRAN",
         "ZWT",
     ]
     var_list["const"] = []

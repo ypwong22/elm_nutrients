@@ -207,6 +207,18 @@ hr["fcur"][2] = 0.2
 hr["fcur"][3] = 0.0
 hr["fcur"][11] = 0.0
 
+hr["fcur_root"] = xr.DataArray(
+    [
+      np.nan, np.nan, 0.5, 0.8, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.8, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ], 
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={
+        "units": "",
+        "long_name": "Fraction of fine root new biomass allocated to display instead of storage",
+    },
+)
+
 hr["off_pstart"] = xr.DataArray(
     [
         np.nan, np.nan, np.nan, 46800.0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 54600.0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
