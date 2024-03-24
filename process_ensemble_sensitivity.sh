@@ -1,18 +1,11 @@
-#!/bin/csh -f
-#SBATCH --time=06:00:00
-#SBATCH -J process_ensemble_sensitivity
+#!/bin/csh
+#SBATCH --time=24:0:00
+#SBATCH -J ens_UQ_20240311_US-SPR_ICB20TRCNPRDCTCBC
 #SBATCH --nodes=2
+#SBATCH -A CLI185
 #SBATCH -p batch
-#SBATCH --mem=64G
-#SBATCH --ntasks-per-node 32
-#SBATCH --export=ALL
-#SBATCH -A ccsi
+#SBATCH --ntasks-per-node 128
 
-# Before running this script, in the external environment
-# module load PE-gnu
-# module load mpich
-# conda activate olmt
-
-echo `which python`
-cd ~/Git/phenology_elm
-/software/dev_tools/swtree/cs400_centos7.2_pe2016-08/openmpi/3.0.0/centos7.2_gnu5.3.0/bin/mpirun -np 32 python process_ensemble_sensitivity.py
+setenv LD_LIBRARY_PATH /sw/baseline/spack-envs/base/opt/linux-rhel8-zen3/gcc-12.2.0/netlib-lapack-3.11.0-lpwyqsehj7wuz2i45umfhwa5ymv2dz5b/lib64:/sw/baseline/spack-envs/base/opt/linux-rhel8-zen3/gcc-12.2.0/openmpi-4.0.4-bxes2wvty3q7v55qep7hiuud6rocd4bl/lib:/sw/baseline/gcc/12.2.0/lib64:/ccsopen/home/zdr/opt/lib:${HOME}/.conda/envs/olmt/lib
+cd ${HOME}/Git/phenology_elm
+srun -n 128 ${HOME}/.conda/envs/olmt/bin/python process_ensemble_sensitivity.py

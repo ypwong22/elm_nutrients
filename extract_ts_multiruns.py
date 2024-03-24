@@ -24,22 +24,13 @@ if not os.path.exists(path_out_2):
 collection_ts.to_csv(os.path.join(path_out_2, 'for_root_ts.csv'))
 collection_const.to_csv(os.path.join(path_out_2, 'for_root_const.csv'))
 """
-rootphenology = True
-for prefix in [
-    "20240305"
-]:  # ['20221212', '20230120', '20230121', '20230122', '20230526', '20230623', "20230720"]:
+rootphenology = False
+# for prefix in ["20231112", "20240311"]: 
+for prefix in ["20240315"]:
     var_list = {}
     var_list["pft"] = [
-        "TLAI",
-        "GPP",
-        "AGNPP",
-        "BGNPP",
-        "NPP",
-        "AR",
-        "TOTVEGC",
-        # "DOWNREG",
-    ]  # "ONSET_FLAG", "OFFSET_FLAG", "DORMANT_FLAG", "QVEGE", "QVEGT"
-    # "PSNSUN", "PSNSHA",
+        "TLAI","GPP","AGNPP","BGNPP","NPP","AR","TOTVEGC",
+        "QVEGE", "QVEGT"]
 
     for pool in ["LEAF", "FROOT", "LIVESTEM", "DEADSTEM", "LIVECROOT", "DEADCROOT"]:
         var_list["pft"] = var_list["pft"] + [
@@ -62,6 +53,7 @@ for prefix in [
 
     if rootphenology:
         var_list["pft"] = var_list["pft"] + [
+            "ONSET_FLAG", "OFFSET_FLAG", "DORMANT_FLAG",
             "BGLFR_LEAF",
             "BGLFR_FROOT",
             "LEAFC_TO_LITTER",
@@ -86,10 +78,12 @@ for prefix in [
         "SWC_5",
         "HR",
         "NEE",
-        # "NET_NMIN",
-        #"BTRAN",
+        "FPG",
+        "FPG_P", 
         "ZWT",
-    ]
+        "SMINN",
+        "SMINP"
+    ] # NET_NMIN, BTRAN
     var_list["const"] = []
 
     collection_ts, collection_const = extract_sims(prefix, var_list)

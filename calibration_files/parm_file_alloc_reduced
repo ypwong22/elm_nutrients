@@ -1,16 +1,16 @@
 # Lin Meng Table S3
-froot_leaf 2 0.15 2
+froot_leaf 2 1.4 3
 froot_leaf 3 0.15 2
-froot_leaf 11 0.15 2
+froot_leaf 11 0.1 1.5
 
 
 # Lin Meng Table S3
 # tbase_uptake & scale_uptake have similar effect to q10,
 # considering that the competition scalars below already
 # controls absolute differences between the PFTs
-q10_uptake 2 0.5 3
+q10_uptake 2 1.5 4
 q10_uptake 3 0.5 3
-q10_uptake 11 1  6
+q10_uptake 11 1.5 10
 
 
 # Siya Shao 2023 Table S1 => Zaehle & Friend (2010) GBC DOI:10.1029/2009GB003521
@@ -19,9 +19,9 @@ q10_uptake 11 1  6
 # SPRUCE SMINN column total on average/median both ~8 gN m-2
 #        SMINN_vr ~= 0.013760913 gN m-3 = 0.014 mgN L-1 in the top 0.42 meters (5 soil layers)
 #        (mismatch here ... ignore for now)
-kmin_nuptake 2 0.4 20
+kmin_nuptake 2 0.4 15
 kmin_nuptake 3 0.4 20
-kmin_nuptake 11 0.4 20
+kmin_nuptake 11 0.1 5
 
 
 # Wang et al. 2020 Coupling of Phosphorus Processes With Carbon and 
@@ -43,7 +43,7 @@ kmin_puptake 11 0.4 20
 # leading to compet_pft_sminn = 0.01 to 60
 compet_pft_sminn 2   0.01 100
 compet_pft_sminn 3   0.01 100
-compet_pft_sminn 11  0.01 100
+compet_pft_sminn 11  50   150
 
 
 # Siya Shao Table S1 value problematic => Kavka-Polle (2017)
@@ -75,7 +75,7 @@ cpool_pft_sminp 11 0.5 4
 
 
 # Sensitivity of froot_leaf to Michaelis-Menten function
-froot_leaf_slope 11 -0.5 -3
+froot_leaf_slope 11 -1 -4
 
 # Preliminary analysis shows they do not affect the objective very much
 # Set to constant = 3
@@ -83,3 +83,8 @@ froot_leaf_slope 11 -0.5 -3
 # and the function already drops to zero when FPG >= 0.6 when scalar is 8
 # alpha_fpg 0 0.5 8
 # alpha_fpg_p 0 0.5 8
+
+
+# Add range to adjust HR & NEE
+q10_mr   0      0.5    5
+q10_hr   0      0.5    5

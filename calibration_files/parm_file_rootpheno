@@ -1,0 +1,55 @@
+# Uniforc model for evergreen leaf out: fitted from data, do not tune
+# uf_scale, uf_tbase, crit_onset_uf
+
+# Number of days of leaf out: do not tune
+# ndays_on
+
+# Alternate model for deciduous leaf out: fitted from data, do not tune
+# gdd_tbase, crit_chil1, crit_chil2, crit_chil3
+
+# Offset date for evergreen: fitted from data, do not tune
+# maxday_off
+
+# Number of days of leaf offset: fitted from data for evergreen tree, do not tune
+# ndays_off
+
+# Parameters in Mengling's offset model: do not tune
+# crit_dayl, off_pstart, off_pend, off_tbase
+
+# Fine root threshold of onset growth, use +/- 50%
+crit_onset_uf_root 0 20 80
+crit_chil2_root 3 600 2400
+crit_chil2_root 11 200 800 
+
+# Nutrients and water controls on onset growth, use +/- 50%
+nmin_scale 0 0.5 1.5
+wt_scale 0 50 150
+
+# Length of fine root onset growth, changes the smoothness of the
+# spring peak, use -50% to +200%
+ndays_on_root 0 15 120
+
+# Days it takes for fcur_dyn from 1 to 0
+# No a huge need to tune since kinda constrained by Soren's data
+# ndays_off_fcur
+
+
+# Fine root mortality parameters
+# mort_b is confounded with froot_long, no need to tune
+mort_tsoi 0 5 20
+mort_a 0 0.00075 0.0175
+# mort_spi - psi at which fine root death is least
+mort_psi 0 0 100
+# mort_h2o - volumetric soil moisture threshold of anaerobic death of fine roots
+# wetland plants might have better tolerance
+mort_h2o 0 0.5 0.9
+
+# Freeze-death of root: not a huge need to tune
+# hardiness_root
+
+# Fraction of photosynthesis going to current leaf/root display
+# important
+fcur 2 0.2 0.8
+fcur_root 2 0.2 0.8
+fcur_root 3 0.2 0.8
+fcur_root 11 0.2 0.8

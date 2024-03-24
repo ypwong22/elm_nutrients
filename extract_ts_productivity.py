@@ -3,7 +3,7 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 from glob import glob
-
+from utils.constants import chamber_list_complete_dict
 
 mossfrac = pd.read_excel(
     "Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"
@@ -32,24 +32,40 @@ plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19
 growing_season = False
 zwt_growing_season = True
 
-#prefix = "20231112"
-#prefix = "20240227"
-prefix = "20240305"
+prefix = "20231112"
+#prefix = "20240315"
+#prefix = "20240315_1"
+#prefix = "20240316"
+#prefix  = "UQ_20240315"
+
+if "UQ" in prefix:
+    year_range = range(2015, 2022)
+else:
+    year_range = range(2015, 2021)
+
 collect = pd.DataFrame(
     np.nan,
     index = pd.MultiIndex.from_product([['hummock', 'hollow', 'average'],
                                         plot_list,
-                                        range(2015, 2021)], names = ['column', 'plot', 'year']),
-    columns = ['AGNPP_shrub', 'AGNPP_tree', 'BGNPP_tree_shrub', 'GPP_moss', 
-                'HR', 'NEE', 'NPP_moss', 'TBOT', 'ZWT']
+                                        year_range], names = ['column', 'plot', 'year']),
+    columns = ['AGNPP_shrub', 'AGNPP_tree', 'AGNPP_pima', 'AGNPP_lala', 
+               'BGNPP_tree_shrub', 'BGNPP_pima', 'BGNPP_lala', 'BGNPP_shrub',
+               'GPP_moss', 'HR', 'NEE', 'NPP_moss', 'TBOT', 'ZWT']
 )
 
 for plot in plot_list:
-    temp = plot.replace("P", '')
-    rundir = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', 
-                          f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC/spruce_treatments/plot{temp}_US-SPR_ICB20TRCNPRDCTCBC/run')
+    if not "UQ" in prefix:
+        temp = plot.replace("P", '')    
+        rundir = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', 
+                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC/spruce_treatments/plot{temp}_US-SPR_ICB20TRCNPRDCTCBC/run')
+    else:
+        temp = chamber_list_complete_dict[plot]
+        rundir = os.path.join(os.environ["PROJDIR"], "E3SM", "output", "UQ", 
+                              f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC", "g01000", temp)
 
     flist = sorted(glob(rundir + "/*.h2.*.nc"))
+    if "UQ" in prefix:
+        flist = flist[:-1]
     # if len(flist) == 0:
     #    continue
 
@@ -69,6 +85,8 @@ for plot in plot_list:
     for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
         collect.loc[(col, plot), 'AGNPP_tree'] = \
             temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14
+        collect.loc[(col, plot), 'AGNPP_pima'] = temp[:, 2 + add] * 0.36
+        collect.loc[(col, plot), 'AGNPP_lala'] = temp[:, 3 + add] * 0.14
         collect.loc[(col, plot), 'AGNPP_shrub'] = temp[:, 11 + add] * 0.25
 
     if growing_season:
@@ -80,6 +98,9 @@ for plot in plot_list:
     for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
         collect.loc[(col, plot), 'BGNPP_tree_shrub'] = \
             temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14 + temp[:, 11 + add] * 0.25
+        collect.loc[(col, plot), 'BGNPP_pima'] = temp[:, 2 + add] * 0.36
+        collect.loc[(col, plot), 'BGNPP_lala'] = temp[:, 3 + add] * 0.14
+        collect.loc[(col, plot), 'BGNPP_shrub'] = temp[:, 11 + add] * 0.25
 
     if growing_season:
         temp = hr['NPP'][filter, :].resample({'time': '1Y'}).mean()
@@ -89,7 +110,7 @@ for plot in plot_list:
     temp = temp * 365 * 86400
     for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
         collect.loc[(col, plot), 'NPP_moss'] = temp[:, 12 + add] * \
-            mossfrac.loc[plot_to_grid[plot], :].loc[range(2015,2021)] / 100.
+            mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
 
     if growing_season:
         temp = hr['GPP'][filter, :].resample({'time': '1Y'}).mean()
@@ -99,11 +120,13 @@ for plot in plot_list:
     temp = temp * 365 * 86400
     for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
         collect.loc[(col, plot), 'GPP_moss'] = temp[:, 12 + add] * \
-            mossfrac.loc[plot_to_grid[plot], :].loc[range(2015,2021)] / 100.
+            mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
 
     hr.close()
 
     flist = sorted(glob(rundir + "/*.h1.*.nc"))
+    if "UQ" in prefix:
+        flist = flist[:-1]
     hr = xr.open_mfdataset(flist)
 
     if growing_season or zwt_growing_season:
@@ -139,6 +162,11 @@ for plot in plot_list:
 temp = (collect.loc['hummock', :] * 0.64 + collect.loc['hollow' , :] * 0.36)
 for ind, row in temp.iterrows():
     collect.loc[('average', *ind), :] = row.values
+
+
+pathout = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
+if not os.path.exists(pathout):
+    os.mkdir(pathout)
 
 if growing_season:
     collect.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix, 'extract_ts_productivity_gs.csv'))

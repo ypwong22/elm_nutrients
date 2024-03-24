@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# /software/dev_tools/swtree/cs400_centos7.2_pe2016-08/openmpi/3.0.0/centos7.2_gnu5.3.0/bin/mpirun -np 64 python process_ensemble_sensitivity.py
 import sys, os, time
 import numpy as np
 from netCDF4 import Dataset
@@ -20,7 +18,9 @@ import pandas as pd
 
 # jobid = 4113489
 N = 2000
-PREFIX = "UQ_root"
+PREFIX = "UQ_20240315"
+if not  os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
+    os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
@@ -31,15 +31,11 @@ if np.mod(N, BLOCK) != 0:
 
 RUNROOT = os.path.join(os.environ["PROJDIR"], "E3SM", "output")
 VAR_LIST = ["ANPPtree", "ANPPshrub", "NPPmoss", "BGNPP", "NPP", "HR", "NEE"]
-YEAR_LIST = range(2016, 2021)  # skip 2015 and 2021 because no observation/no model data
+YEAR_LIST = range(2016, 2022)  # skip 2015 and 2021 because no observation/no model data
 
 
-MOSSFRAC = pd.read_excel(
-    os.path.join(path_input, "Sphagnum_fraction.xlsx"),
-    index_col=0,
-    skiprows=1,
-    engine="openpyxl",
-).drop(["plot", "Temp", "CO2"], axis=1)
+MOSSFRAC = pd.read_excel("Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"
+                         ).drop(["plot", "Temp", "CO2"], axis=1)
 MOSSFRAC[2015] = MOSSFRAC[2016]
 # MOSSFRAC = MOSSFRAC.drop(2021, axis=1)
 
@@ -64,24 +60,13 @@ def postproc(thisjob, collection):
             fname_pft = os.path.join(
                 baserundir,
                 folder,
-                f"{casename}.clm2.h1.{year}-01-01-00000.nc",
+                f"{casename}.elm.h2.{year}-01-01-00000.nc",
             )
             fname_col = os.path.join(
                 baserundir,
                 folder,
-                f"{casename}.clm2.h0.{year}-01-01-00000.nc",
+                f"{casename}.elm.h1.{year}-01-01-00000.nc",
             )
-
-            # DEBUG
-            ##fname_pft = os.path.join(
-            ##    baserundir,
-            ##    f"{casename}.clm2.h2.{year}-01-01-00000.nc",
-            ##)
-            ##fname_col = os.path.join(
-            ##    baserundir,
-            ##    f"{casename}.clm2.h1.{year}-01-01-00000.nc",
-            ##)
-            ##print(fname_pft, fname_col)
 
             # note some parameter combinations can fail
             if not (os.path.exists(fname_pft) or os.path.exists(fname_col)):

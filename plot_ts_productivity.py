@@ -13,9 +13,11 @@ def fit_line(x, y):
     return xnew, ynew, res.slope, res.intercept, r2
 
 
-#prefix = "20231112"
-#prefix = "20240227"
-prefix = "20240305"
+prefix = "20231112"
+#prefix = "20240315"
+#prefix = "20240315_1"
+#prefix = "20240316"
+#prefix = "UQ_20240315"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 
                       'extract', prefix)
 
@@ -31,8 +33,14 @@ sim_data = sim_data.loc[sim_data.index.get_level_values(0) != 2020, :]
 sim_varname = [
     "NEE",
     "AGNPP_tree",
+    "AGNPP_pima",
+    "AGNPP_lala",
     "AGNPP_shrub",
     "BGNPP_tree_shrub",
+    "BGNPP_pima",
+    "BGNPP_lala",
+    "BGNPP_shrub",
+    "BG_to_AG", # ratio of AGNPP to BGNPP of tree+shrub
     "NPP_moss",
     "HR",
 ]
@@ -47,22 +55,34 @@ obs_data = obs_data.loc[obs_data["Year"] != 2020, :]
 obs_varname = [
     "NCE",
     "ANPP Tree (~48%C)",
+    "ANPP Pima", # not yet implemented
+    "ANPP Lala", # not yet implemented
     "ANPP Shrub (~50%C)",
     "BNPP Tree & Shrub",
+    "BGNPP_pima", # not yet  implemented
+    "BGNPP_lala", # not yet  implemented
+    "BGNPP_shrub", # not yet  implemented
+    "BG_to_AG", # ratio of AGNPP to BGNPP of tree+shrub
     "NPP Sphag.",
     "RHCO2",
 ]
 title_list = [
     "NEE",
     "Tree ANPP",
+    "Spruce ANPP",
+    "Tamarack ANPP",
     "Shrub ANPP",
     "Tree & Shrub BNPP",
+    "Spruce BNPP",
+    "Tamarack BNPP",
+    "Shrub BNPP",
+    "BNPP:ANPP tree+shrub",
     "Sphagnum NPP",
     "HR",
 ]
 # clist = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a']
-clist = ["b", "r", "b", "r"]
-mlist = ["b", "r", "none", "none"]
+clist = ["r", "b", "r", "b"]
+mlist = ["r", "b", "none", "none"]
 llist = ["-", "-", "--", "--"]
 
 
@@ -72,13 +92,54 @@ for varname, ov, title in zip(sim_varname, obs_varname, title_list):
     count = 0
     h = [None] * 4
     for co2, CO2 in zip(["amb", "elev"], ["ACO2", "ECO2"]):
-        sim_temp = sim_data.loc[chamber_list[co2], varname]
-        if varname in ["NEE", "HR"]:
-            sim_temp = -1 * sim_temp
+        if varname == "BG_to_AG":
+            sim_temp = sim_data.loc[chamber_list[co2], "BGNPP_tree_shrub"] / \
+                (sim_data.loc[chamber_list[co2], "AGNPP_tree"] + \
+                 sim_data.loc[chamber_list[co2], "AGNPP_shrub"])
+                       
+        else:
+            sim_temp = sim_data.loc[chamber_list[co2], varname]
+            if varname in ["NEE", "HR"]:
+                sim_temp = -1 * sim_temp
 
         sim_T = sim_data.loc[chamber_list[co2], "TBOT"]
 
-        obs_temp = obs_data.loc[obs_data["Plot"].isin(chamber_list[co2]), ov]
+        (h[count],) = ax.plot(
+            sim_T, sim_temp, "o", color=clist[count], markerfacecolor=mlist[count]
+        )
+        xnew, ynew, slope, intercept, r2 = fit_line(sim_T, sim_temp)
+        ax.plot(
+            xnew,
+            ynew,
+            ls=llist[count],
+            color=clist[count],
+            markerfacecolor=mlist[count],
+        )
+        ax.text(
+            0.4,
+            0.65 + count * 0.08,
+            "y$_{MOD\_"
+            + CO2
+            + "}$="
+            + f"{slope:.2f}x+{intercept:.2f}  "
+            + "R$^2$="
+            + f"{r2:.3f}",
+            color=clist[count],
+            transform=ax.transAxes,
+        )
+        count = count + 1
+
+        if varname in ["AGNPP_pima",  "AGNPP_lala", "BGNPP_pima", 
+                       "BGNPP_lala", "BGNPP_shrub"]:
+            continue
+
+        if varname == "BG_to_AG":
+            filt = obs_data["Plot"].isin(chamber_list[co2])
+            obs_temp = obs_data.loc[filt, "BNPP Tree & Shrub"] / \
+                (obs_data.loc[filt, "ANPP Tree (~48%C)"] + \
+                 obs_data.loc[filt, "ANPP Shrub (~50%C)"])
+        else:
+            obs_temp = obs_data.loc[obs_data["Plot"].isin(chamber_list[co2]), ov]
         obs_T = obs_data.loc[
             obs_data["Plot"].isin(chamber_list[co2]), "Mean Annual Temp. at 2 m"
         ]
@@ -108,35 +169,10 @@ for varname, ov, title in zip(sim_varname, obs_varname, title_list):
         )
         count = count + 1
 
-        (h[count],) = ax.plot(
-            sim_T, sim_temp, "o", color=clist[count], markerfacecolor=mlist[count]
-        )
-        xnew, ynew, slope, intercept, r2 = fit_line(sim_T, sim_temp)
-        ax.plot(
-            xnew,
-            ynew,
-            ls=llist[count],
-            color=clist[count],
-            markerfacecolor=mlist[count],
-        )
-        ax.text(
-            0.4,
-            0.65 + count * 0.08,
-            "y$_{MOD\_"
-            + CO2
-            + "}$="
-            + f"{slope:.2f}x+{intercept:.2f}  "
-            + "R$^2$="
-            + f"{r2:.3f}",
-            color=clist[count],
-            transform=ax.transAxes,
-        )
-        count = count + 1
-
     ax.axhline(0.0, ls=":", color="k", lw=0.5)
 
     ax.legend(
-        h, ["OBS_ACO2", "MOD_ACO2", "OBS_ECO2", "MOD_ECO2"], ncol=4, loc=[-0.1, -0.25]
+        h, ["MOD_ACO2", "OBS_ACO2", "MOD_ECO2", "OBS_ECO2"], ncol=4, loc=[-0.1, -0.25]
     )
     ax.set_title(title)
 
