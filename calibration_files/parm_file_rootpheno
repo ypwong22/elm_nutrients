@@ -33,7 +33,6 @@ ndays_on_root 0 15 120
 # No a huge need to tune since kinda constrained by Soren's data
 # ndays_off_fcur
 
-
 # Fine root mortality parameters
 # mort_b is confounded with froot_long, no need to tune
 mort_tsoi 0 5 20

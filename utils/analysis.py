@@ -705,3 +705,37 @@ def read_obs_tsoi_daily():
         tsoi_collect[k] = tsoi_collect[k].sort_index(axis=1)
 
     return tsoi_collect, annt2m
+
+
+########################################
+# Combine Paul's and verity's observation
+########################################
+def get_spruce_carbonfluxes():
+    obs_paul = pd.read_excel(os.path.join(os.environ['HOME'],
+        'Git', 'phenology_elm', "SPRUCE C Budget Summary 28Apr2022EXP.xlsx"),
+        sheet_name="DataForPythonRead", skiprows=1,  engine="openpyxl")
+    obs_paul = obs_paul.loc[obs_paul["Year"] != 2020, :]
+    obs_paul = obs_paul.set_index(['Plot', 'Year']).sort_index()
+
+    obs_verity = pd.read_csv(os.path.join(os.environ['HOME'],
+        'Git', 'phenology_elm', 'SalmonSPRUCE_2016to2021_AbovegroundPFT_CNPbudget_20240208.csv'))
+    # match by plot and year to temperature
+    obs_verity['Plot'] = [f'P{p:02d}' for p in obs_verity['Plot']]
+    obs_verity = obs_verity.set_index(['Plot', 'Year', 'PFT']).unstack()
+    obs_verity = obs_verity.loc[:, (slice(None), 
+                                    ['Sphagnum', 'evergreen conifer', 'deciduous conifer',  
+                                     'shrub'])]
+    obs_verity2 = obs_verity.loc[:, ['ABGbiomass_gCperm2', 'ABGnpp_gCperm2peryear']]
+                                    # 'Pretrt_ABGbiomass_gCperm2', 'Pretrt_ABGnpp_gCperm2peryear']]
+
+    # subtract the pre-treatment level
+    for col in obs_verity2.columns:
+        obs_verity2.loc[:, ('Delta '+col[0],col[1])] = \
+            obs_verity.loc[:, col].values - \
+            obs_verity.loc[:, ('Pretrt_'+col[0], col[1])].values
+
+    obs_verity2.columns = ['_'.join(c[0].split('_')[:-1]) + ' ' + c[1] for c in obs_verity2.columns]
+
+    obs_data = pd.concat([obs_paul, obs_verity2], axis = 1, join = 'outer')
+    obs_data = obs_data.reset_index()
+    return obs_data

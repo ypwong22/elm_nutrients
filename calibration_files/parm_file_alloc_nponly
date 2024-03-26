@@ -1,0 +1,29 @@
+# Understand the influence of the nutrients competition and uptake parameters
+
+q10_uptake 2 0.5 3
+q10_uptake 3 0.5 3
+q10_uptake 11 0.5 3
+
+kmin_nuptake 2 20 100
+kmin_nuptake 3 20 100
+kmin_nuptake 11 20 100
+
+kmin_puptake 2 10 80
+kmin_puptake 3 10 80
+kmin_puptake 11 10 80
+
+compet_pft_sminn 2   0.1 10
+compet_pft_sminn 3   0.1 10
+compet_pft_sminn 11  0.1 10
+
+compet_pft_sminp 2   0.01 1
+compet_pft_sminp 3   0.01 1
+compet_pft_sminp 11  0.01 1
+
+cpool_pft_sminn 2 0.1 10
+cpool_pft_sminn 3 0.1 10
+cpool_pft_sminn 11 0.1 10
+
+cpool_pft_sminp 2 0.01 1
+cpool_pft_sminp 3 0.01 1
+cpool_pft_sminp 11 0.01 1

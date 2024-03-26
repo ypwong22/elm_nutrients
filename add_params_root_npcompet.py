@@ -20,29 +20,51 @@ hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 # (2) 2004 Dissertation says Tamarak root:leaf ratio > Spruce root:leaf ratio
 #     values taken from Fig. 6.4 for the second  growing season
 #     also see abstract, tamarak allocates more to the root
-hr['froot_leaf'][2] = 0.28
-hr['froot_leaf'][3] = 0.38
+hr['froot_leaf'][2] = 0.2
+hr['froot_leaf'][3] = 0.35
 hr['froot_leaf'][11] = 0.5
+
+# increase Q10 for now because microbes should also be inhibited during flooding
+# hr['q10_hr'] = 3
+
+# increase the productivity of spruce and let shrub be more than larch (of course that should be?)
+# https://www.nature.com/articles/s41467-021-25163-9/figures/1
+# in the boreal zone, flnr = 10-20%, but evergreen needleleaf forest sometimes reach 30%
+# leaf mass per area is strongly negatively correlated with flnr
+# so let's do a gradiet
+hr['flnr'][2] = 0.14
+hr['flnr'][3] = 0.28
+hr['flnr'][11] = 0.28
+# reduce SPRUCE's base maintenance respiration but increase Q10
+hr['br_mr_pft'][2] = 2e-06
+hr['q10_mr_pft'][2] = 2.5
+# reduce tamarack as an association
+hr['br_mr_pft'][3] = 2.2e-06
+# increase shrub's base maintenance respiration
+hr['br_mr_pft'][11] = 8e-06
 
 # sensitivity of fine root to leaf ratio to nutrient limitation
 # For ombrotrophic shrub, increasing mineral nutrient content means increasing
 # ease of extracting them using roots intead of mycorrhizae. Hence they reduce the 
 # belowground allocation. 
-# 2004 Dissertation p25: flooding reduces froot_leaf because roots cannot grow under hypoxia
-# But larch is slightly better at handling hypoxia so say larch slope = 1
+# 2004 Dissertation: observed increasing froot_leaf when nutrient becomes more abundant
+#                    (probably also related to flooding inhibiting root growth)
 hr['froot_leaf_slope'] = xr.DataArray(
     [
-        np.nan, np.nan, 2, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -2, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 2, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -2, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
     attrs={"units": "", "long_name": "Sensitivity of froot_leaf to Michaelis-Menten limitation"},
 )
 
-# multiplication scalars on the nutrients uptake
+# Multiplication scalars on the nutrients uptake
+# Those should be around 1, but we know larch is slightly more efficient at self-uptake than spruce.
+# Shrub is probably bad at self-uptake but ericoid mycorrhizae fungi is much better than
+# the ecto-fungi at uptake.
 hr['compet_pft_sminn'] = xr.DataArray(
     [
-        np.nan, np.nan, 15, 30, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 45, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 2, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -51,7 +73,7 @@ hr['compet_pft_sminn'] = xr.DataArray(
 
 hr['compet_pft_sminp'] = xr.DataArray(
     [
-        np.nan, np.nan, 15, 30, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 45, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -60,7 +82,7 @@ hr['compet_pft_sminp'] = xr.DataArray(
 
 hr['cpool_pft_sminn'] = xr.DataArray(
     [
-        np.nan, np.nan, 0.5, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 1.5, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -69,7 +91,7 @@ hr['cpool_pft_sminn'] = xr.DataArray(
 
 hr['cpool_pft_sminp'] = xr.DataArray(
     [
-        np.nan, np.nan, 0.5, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.7, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -85,20 +107,20 @@ hr['alpha_fpg_p'] = xr.DataArray(
 # Q10 equation from 
 # Ghimire et al. 2016 Representing leaf and root physiological traits in CLM 
 #                     improves global carbon and nitrogen cycling predictions
-# q10_uptake & scale_uptake from the same paper
+# q10_uptake & scale_uptake from the same pape○♥r
 # tbase_uptake from Shao et al. 2023 Ericoid mycorrhizal fungi mediate the 
 #                                    response of ombrotrophic peatlands to 
 #                                    fertilization: a modeling study
 hr['q10_uptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 3., 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 2, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
     attrs={"units": "", "long_name": "Q10 in root nutrients uptake Q10 function"},
 )
 hr['tbase_uptake'] = xr.DataArray(
-    [293.15], dims = ["allpft"], attrs = {"units": "K", "long_name": "Base temperature in root nutrients uptake Q10 function"})
+    [283.15], dims = ["allpft"], attrs = {"units": "K", "long_name": "Base temperature in root nutrients uptake Q10 function"})
 hr['scale_uptake'] = xr.DataArray(
     [10], dims=["allpft"],
     attrs={"units": "", "long_name": "Scale factor in root nutrients uptake Q10 function"},
@@ -113,7 +135,7 @@ hr['scale_uptake'] = xr.DataArray(
 #                    Systems, 12(10), e2020MS002123. https://doi.org/10.1029/2020MS002123
 hr['kmin_nuptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 10, 5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 20, 20, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 40, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -121,7 +143,7 @@ hr['kmin_nuptake'] = xr.DataArray(
 )
 hr['kmin_puptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 10, 5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 10, 10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],

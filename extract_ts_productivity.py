@@ -28,15 +28,25 @@ plot_to_grid = dict([(b,a) for a,b in grid_to_plot.items()])
 #pft_stride = 32
 pft_stride = 17
 plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19', 'P20']
+var_list = ['TOTVEGC_ABG_pima', 'TOTVEGC_ABG_lala', 'TOTVEGC_ABG_shrub', 
+            'AGNPP_shrub', 'AGNPP_pima', 'AGNPP_lala', 'AGNPP_tree',
+            'BGNPP_tree_shrub', 'BGNPP_pima', 'BGNPP_lala', 'BGNPP_shrub', 
+            'MR_pima', 'MR_lala', 'MR_shrub', 
+            'HR', 'NEE', 'NPP_moss', 'TBOT', 'ZWT']
+var_list_extra = ['FPG_pima', 'FPG_lala', 'FPG_shrub',
+                  'FPG_P_pima', 'FPG_P_lala', 'FPG_P_shrub', 'SMINN', 'SMINP',
+                  'FPI', 'FPI_P']
+var_list = var_list + var_list_extra
 
 growing_season = False
 zwt_growing_season = True
 
 prefix = "20231112"
 #prefix = "20240315"
-#prefix = "20240315_1"
-#prefix = "20240316"
+#prefix = "20240317"
+#prefix = "20240317_5"
 #prefix  = "UQ_20240315"
+extrafix = "" # "_alt_params"
 
 if "UQ" in prefix:
     year_range = range(2015, 2022)
@@ -48,16 +58,13 @@ collect = pd.DataFrame(
     index = pd.MultiIndex.from_product([['hummock', 'hollow', 'average'],
                                         plot_list,
                                         year_range], names = ['column', 'plot', 'year']),
-    columns = ['AGNPP_shrub', 'AGNPP_tree', 'AGNPP_pima', 'AGNPP_lala', 
-               'BGNPP_tree_shrub', 'BGNPP_pima', 'BGNPP_lala', 'BGNPP_shrub',
-               'GPP_moss', 'HR', 'NEE', 'NPP_moss', 'TBOT', 'ZWT']
-)
+    columns = var_list)
 
 for plot in plot_list:
     if not "UQ" in prefix:
         temp = plot.replace("P", '')    
         rundir = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', 
-                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC/spruce_treatments/plot{temp}_US-SPR_ICB20TRCNPRDCTCBC/run')
+                              f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC/spruce_treatments{extrafix}/plot{temp}_US-SPR_ICB20TRCNPRDCTCBC/run')
     else:
         temp = chamber_list_complete_dict[plot]
         rundir = os.path.join(os.environ["PROJDIR"], "E3SM", "output", "UQ", 
@@ -68,26 +75,34 @@ for plot in plot_list:
         flist = flist[:-1]
     # if len(flist) == 0:
     #    continue
-
     hr = xr.open_mfdataset(flist)
+
+    flist = sorted(glob(rundir + "/*.h1.*.nc"))
+    if "UQ" in prefix:
+        flist = flist[:-1]
+    hr2 = xr.open_mfdataset(flist)
 
     if growing_season or zwt_growing_season:
         filter = (hr['time'].to_index().month >= 5) & (hr['time'].to_index().month <= 10)
 
     # hummock: 0.64, hollow: 0.36
     # pima: 0.36, lala: 0.14
-    if growing_season:
-        temp = hr['AGNPP'][filter, :].resample({'time': '1Y'}).mean()
-    else:
-        temp = hr['AGNPP'][:-1, :].resample({'time': '1Y'}).mean()
-    # convert gC/m2/s to gC/m2/year
-    temp = temp * 365 * 86400
-    for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-        collect.loc[(col, plot), 'AGNPP_tree'] = \
-            temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14
-        collect.loc[(col, plot), 'AGNPP_pima'] = temp[:, 2 + add] * 0.36
-        collect.loc[(col, plot), 'AGNPP_lala'] = temp[:, 3 + add] * 0.14
-        collect.loc[(col, plot), 'AGNPP_shrub'] = temp[:, 11 + add] * 0.25
+    for var in ['AGNPP', 'MR', 'TOTVEGC_ABG', 'BGNPP']:
+        if growing_season:
+            temp = hr[var][filter, :].resample({'time': '1Y'}).mean()
+        else:
+            temp = hr[var][:-1, :].resample({'time': '1Y'}).mean()
+        if not var == 'TOTVEGC_ABG':
+            # convert gC/m2/s to gC/m2/year; otherwise gC m-2
+            temp = temp.values * 365 * 86400
+        else:
+            temp = temp.values
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            collect.loc[(col, plot), f'{var}_tree'] = \
+                temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14
+            collect.loc[(col, plot), f'{var}_pima'] = temp[:, 2 + add] * 0.36
+            collect.loc[(col, plot), f'{var}_lala'] = temp[:, 3 + add] * 0.14
+            collect.loc[(col, plot), f'{var}_shrub'] = temp[:, 11 + add] * 0.25
 
     if growing_season:
         temp = hr["BGNPP"][filter, :].resample({'time': '1Y'}).mean()
@@ -98,9 +113,6 @@ for plot in plot_list:
     for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
         collect.loc[(col, plot), 'BGNPP_tree_shrub'] = \
             temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14 + temp[:, 11 + add] * 0.25
-        collect.loc[(col, plot), 'BGNPP_pima'] = temp[:, 2 + add] * 0.36
-        collect.loc[(col, plot), 'BGNPP_lala'] = temp[:, 3 + add] * 0.14
-        collect.loc[(col, plot), 'BGNPP_shrub'] = temp[:, 11 + add] * 0.25
 
     if growing_season:
         temp = hr['NPP'][filter, :].resample({'time': '1Y'}).mean()
@@ -112,34 +124,56 @@ for plot in plot_list:
         collect.loc[(col, plot), 'NPP_moss'] = temp[:, 12 + add] * \
             mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
 
-    if growing_season:
-        temp = hr['GPP'][filter, :].resample({'time': '1Y'}).mean()
-    else:
-        temp = hr['GPP'][:-1, :].resample({'time': '1Y'}).mean()
-    # convert gC/m2/s to gC/m2/year
-    temp = temp * 365 * 86400
-    for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-        collect.loc[(col, plot), 'GPP_moss'] = temp[:, 12 + add] * \
-            mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
+    #if growing_season:
+    #    temp = hr['GPP'][filter, :].resample({'time': '1Y'}).mean()
+    #else:
+    #    temp = hr['GPP'][:-1, :].resample({'time': '1Y'}).mean()
+    ## convert gC/m2/s to gC/m2/year
+    #temp = temp * 365 * 86400
+    #for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+    #    collect.loc[(col, plot), 'GPP_moss'] = temp[:, 12 + add] * \
+    #        mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
 
-    hr.close()
-
-    flist = sorted(glob(rundir + "/*.h1.*.nc"))
-    if "UQ" in prefix:
-        flist = flist[:-1]
-    hr = xr.open_mfdataset(flist)
-
-    if growing_season or zwt_growing_season:
-        filter2 = (hr['time'].to_index().month >= 5) & (hr['time'].to_index().month <= 10)
-
-    for colvar in ['TBOT', 'NEE', 'HR']: # 'FCH4'
-        if growing_season:
-            temp = hr[colvar][filter2, :].resample({'time': '1Y'}).mean()
+    if 'FPI' in var_list:
+        # NP limitation should always focus on growing season
+        if 'FPG_PATCH' in hr.variables:
+            temp = hr['FPG_PATCH'][filter, :].resample({'time': '1Y'}).mean()
+            for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+                collect.loc[(col, plot), 'FPG_pima'] = temp[:, 2 + add]
+                collect.loc[(col, plot), 'FPG_lala'] = temp[:, 3 + add]
+                collect.loc[(col, plot), 'FPG_shrub'] = temp[:, 11 + add]
         else:
-            temp = hr[colvar][:-1, :].resample({'time': '1Y'}).mean()
+            temp = hr2['FPG'][filter, :].resample({'time': '1Y'}).mean()
+            for num, col in enumerate(['hummock', 'hollow']):
+                collect.loc[(col, plot), 'FPG_pima'] = temp[:, num]
+                collect.loc[(col, plot), 'FPG_lala'] = temp[:, num]
+                collect.loc[(col, plot), 'FPG_shrub'] = temp[:, num]
+
+        if 'FPG_PATCH' in hr.variables:
+            temp = hr['FPG_P_PATCH'][filter, :].resample({'time': '1Y'}).mean()
+            for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+                collect.loc[(col, plot), 'FPG_P_pima'] = temp[:, 2 + add]
+                collect.loc[(col, plot), 'FPG_P_lala'] = temp[:, 3 + add]
+                collect.loc[(col, plot), 'FPG_P_shrub'] = temp[:, 11 + add]
+        else:
+            temp = hr2['FPG_P'][filter, :].resample({'time': '1Y'}).mean()
+            for num, col in enumerate(['hummock', 'hollow']):
+                collect.loc[(col, plot), 'FPG_P_pima'] = temp[:, num]
+                collect.loc[(col, plot), 'FPG_P_lala'] = temp[:, num]
+                collect.loc[(col, plot), 'FPG_P_shrub'] = temp[:, num]
+
+    if 'FPI' in var_list:
+        col_list = ['TBOT', 'NEE', 'HR', 'FPI', 'FPI_P', 'SMINN', 'SMINP']
+    else:
+        col_list = ['TBOT', 'NEE', 'HR', 'SMINN', 'SMINP']
+    for colvar in col_list: # 'FCH4'
+        if growing_season:
+            temp = hr2[colvar][filter, :].resample({'time': '1Y'}).mean().values
+        else:
+            temp = hr2[colvar][:-1, :].resample({'time': '1Y'}).mean().values
         if colvar == 'TBOT':
             temp = temp - 273.15
-        else:
+        elif colvar not in ["FPI", "FPI_P", "SMINN", "SMINP"]:
             # convert gC/m2/s to gC/m2/year
             temp = temp * 365 * 86400
         for num, col in enumerate(['hummock', 'hollow']):
@@ -149,26 +183,30 @@ for plot in plot_list:
                 collect.loc[(col, plot), colvar] = temp[:, num]
 
     if growing_season or zwt_growing_season:
-        temp = hr['ZWT'][filter2, :].resample({'time': '1Y'}).mean()
-        h2osfc = hr['H2OSFC'][filter2, :].resample({'time': '1Y'}).mean()
+        temp = hr2['ZWT'][filter, :].resample({'time': '1Y'}).mean()
+        h2osfc = hr2['H2OSFC'][filter, :].resample({'time': '1Y'}).mean()
     else:
-        temp = hr['ZWT'][:-1, :].resample({'time': '1Y'}).mean()
-        h2osfc = hr['H2OSFC'][:-1, :].resample({'time': '1Y'}).mean()
+        temp = hr2['ZWT'][:-1, :].resample({'time': '1Y'}).mean()
+        h2osfc = hr2['H2OSFC'][:-1, :].resample({'time': '1Y'}).mean()
     collect.loc[('hummock', plot), 'ZWT'] = 0.3 - temp[:, 0]
     collect.loc[('hollow', plot), 'ZWT'] = h2osfc[:, 1] / 1000 - temp[:, 1]
 
     hr.close()
+    hr2.close()
 
 temp = (collect.loc['hummock', :] * 0.64 + collect.loc['hollow' , :] * 0.36)
 for ind, row in temp.iterrows():
     collect.loc[('average', *ind), :] = row.values
 
-
-pathout = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
-if not os.path.exists(pathout):
-    os.mkdir(pathout)
+path_out = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract')
+if len(extrafix) > 0:
+    path_out = os.path.join(path_out, prefix + extrafix)
+else:
+    path_out = os.path.join(path_out, prefix)
+if not os.path.exists(path_out):
+    os.mkdir(path_out)
 
 if growing_season:
-    collect.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix, 'extract_ts_productivity_gs.csv'))
+    collect.to_csv(os.path.join(path_out, 'extract_ts_productivity_gs.csv'))
 else:
-    collect.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix, 'extract_ts_productivity.csv'))
+    collect.to_csv(os.path.join(path_out, 'extract_ts_productivity.csv'))

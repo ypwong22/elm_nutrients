@@ -1,3 +1,5 @@
+
+
 ########################################
 # Filter EN (evergreen needleleaf sites)
 ########################################
@@ -6,3 +8,4 @@ get_EN_sites <- function(){
     EN_sites = unique(unlist(lapply(strsplit(EN_sites, "_"), "[[", 1)))
     return (EN_sites)
 }
+
