@@ -1,0 +1,57 @@
+# Change the organ CN & CP ratios 
+# => Reduce the maintenance respiration & nutrient requirement
+# => Change the competition outcome?
+
+# Might also be able to change HR
+
+###############################################################
+# Observational data points
+# 
+# (1) Boreal shrubs
+# Wang, S., Wang, X., Sun, X., Ma, G., Du, Y., & Jiang, J. (2022). Stoichiometry and stable isotopes of plants and their response to environmental factors in boreal peatland, Northeast China. Frontiers in Ecology and Evolution, 10, 1071947. https://doi.org/10.3389/fevo.2022.1071947
+# Leaf        : CN = 31      , CP = <250
+# Stem        : CN = 57-106  , CP = 310-450
+# Fine root   : CN = 62-88   , CP = 390
+# Coarse root : CN = 99-133  , CP = 436-580
+# 
+# (2) Boreal shrubs & moss, leaves only, use their two nutrient-poor fens (Poor & JACOS), 
+# Nwaishi, F., Morison, M., Plach, J., Macrae, M., & Petrone, R. (2022). Carbon and Nutrient Stoichiometric Relationships in the Soil–Plant Systems of Disturbed Boreal Forest Peatlands within Athabasca Oil Sands Region, Canada. Forests, 13(6), 865. https://doi.org/10.3390/f13060865
+# Vascular plants: CN = 41-46  , CP = 131-432
+# Moss           : CN = 38-50  , CP = 85-771
+# 
+# (3) Boreal shrubs & moss, leaves only, Mer Bleue bog
+# Wang, M., & Moore, T. R. (2014). Carbon, Nitrogen, Phosphorus, and Potassium Stoichiometry in an Ombrotrophic Peatland Reflects Plant Functional Type. Ecosystems, 17(4), 673–684. https://doi.org/10.1007/s10021-014-9752-x
+# Evergreen shrub: CN = 47, pretty stable during the year
+#                  CP = 750-1038, pretty stable throughout the year
+# Deciduous shrub: CN = 30, flctuates, >120 in October, <20 in May, but otherwise 30-40
+#                  CP = 500-673 excluding very early and very late growing seasons
+#
+# (4) Picea mariana & Larix laricina, convert from concentration (%) assuming 50% biomass is C
+# Greenway, K. J., Macdonald, S. E., & Lieffers, V. J. (1992). Is long-lived foliage in Picea mariana an adaptation to nutrient-poor conditions? Oecologia, 91(2), 184–191. https://doi.org/10.1007/BF00317782
+# Picea mariana, leaves: 0.6% N for 4-year leaves => CN: 83
+#                        0.065-0.075% N for 4-year leaves => CP: 666-769
+# 
+# Tilton, D. L. (1978). Comparative Growth and Foliar Element Concentrations of Larix Laricina Over a Range of Wetland Types in Minnesota. Journal of Ecology, 66(2), 499–512. https://doi.org/10.2307/2259148
+# Larix laricina, leaves: 1-2% N => CN: 25-50
+# 
+# Macdonald, S. E., & Lieffers, V. J. (1990). Photosynthesis, water relations, and foliar nitrogen of Picea mariana and Larix laricina from drained and undrained peatlands. Canadian Journal of Forest Research, 20(7), 995–1000. https://doi.org/10.1139/x90-133
+# Picea mariana, leaves: 0.8-1.15% N => CN: 43-62.5, 0.15% P => CP: 333.33
+# Larix laricina, leaves: 1.54-2.12% N => CN: 24-32, 0.19-0.2%P => CP: 250-263
+# 
+# Bares, R. H., & Wali, M. K. (1979). Chemical relations and litter production of Picea mariana and Larix laricina stands on an alkaline peatland in Northern Minnesota. Vegetatio, 40(2), 79–94. https://doi.org/10.1007/BF00055837
+# (is a litter study but the values suggest L. laricina is 145-180% that of P. mariana,
+#  and leave concentrations ~50% higher than woody => woody ratios 33% higher)
+###############################################################
+
+# note leaf CN does affect photosynthesis
+leafcn  2   40 80
+leafcn  3   25 60
+leafcn  11  25 60
+
+livewdcn  2   50 140
+livewdcn  3   50 140
+livewdcn  11  50 140
+
+frootcn   2   50 100
+frootcn   3   50 100
+frootcn   11  50 100

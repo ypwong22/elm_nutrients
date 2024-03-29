@@ -29,21 +29,21 @@ plot_to_grid = dict([(b,a) for a,b in grid_to_plot.items()])
 pft_stride = 17
 plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19', 'P20']
 var_list = ['TOTVEGC_ABG_pima', 'TOTVEGC_ABG_lala', 'TOTVEGC_ABG_shrub', 
-            'AGNPP_shrub', 'AGNPP_pima', 'AGNPP_lala', 'AGNPP_tree',
+            'AGNPP_shrub', 'AGNPP_pima', 'AGNPP_lala', 'AGNPP_tree', 'AGNPP_tree_shrub', 
             'BGNPP_tree_shrub', 'BGNPP_pima', 'BGNPP_lala', 'BGNPP_shrub', 
             'MR_pima', 'MR_lala', 'MR_shrub', 
-            'HR', 'NEE', 'NPP_moss', 'TBOT', 'ZWT']
+            'HR', 'NEE', 'NPP_moss', 'TBOT', 'ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30']
 var_list_extra = ['FPG_pima', 'FPG_lala', 'FPG_shrub',
-                  'FPG_P_pima', 'FPG_P_lala', 'FPG_P_shrub', 'SMINN', 'SMINP',
+                  'FPG_P_pima', 'FPG_P_lala', 'FPG_P_shrub', 
                   'FPI', 'FPI_P']
 var_list = var_list + var_list_extra
 
 growing_season = False
 zwt_growing_season = True
 
-prefix = "20231112"
-#prefix = "20240315"
-#prefix = "20240317"
+
+prefix = "20231113_2"
+
 #prefix = "20240317_5"
 #prefix  = "UQ_20240315"
 extrafix = "" # "_alt_params"
@@ -88,6 +88,7 @@ for plot in plot_list:
     # hummock: 0.64, hollow: 0.36
     # pima: 0.36, lala: 0.14
     for var in ['AGNPP', 'MR', 'TOTVEGC_ABG', 'BGNPP']:
+        # temporary fix until better values become available
         if growing_season:
             temp = hr[var][filter, :].resample({'time': '1Y'}).mean()
         else:
@@ -98,21 +99,19 @@ for plot in plot_list:
         else:
             temp = temp.values
         for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-            collect.loc[(col, plot), f'{var}_tree'] = \
-                temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14
             collect.loc[(col, plot), f'{var}_pima'] = temp[:, 2 + add] * 0.36
             collect.loc[(col, plot), f'{var}_lala'] = temp[:, 3 + add] * 0.14
             collect.loc[(col, plot), f'{var}_shrub'] = temp[:, 11 + add] * 0.25
 
-    if growing_season:
-        temp = hr["BGNPP"][filter, :].resample({'time': '1Y'}).mean()
-    else:
-        temp = hr["BGNPP"][:-1, :].resample({'time': '1Y'}).mean() # hr['NPP'] - hr['AGNPP']
-    # convert gC/m2/s to gC/m2/year
-    temp = temp * 365 * 86400
-    for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-        collect.loc[(col, plot), 'BGNPP_tree_shrub'] = \
-            temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14 + temp[:, 11 + add] * 0.25
+    for var in ['AGNPP', 'BGNPP']:
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            collect.loc[(col, plot), f'{var}_tree'] = \
+                collect.loc[(col, plot), f'{var}_pima'].values + \
+                collect.loc[(col, plot), f'{var}_lala'].values
+            collect.loc[(col, plot), f'{var}_tree_shrub'] = \
+                collect.loc[(col, plot), f'{var}_pima'].values + \
+                collect.loc[(col, plot), f'{var}_lala'].values + \
+                collect.loc[(col, plot), f'{var}_shrub'].values
 
     if growing_season:
         temp = hr['NPP'][filter, :].resample({'time': '1Y'}).mean()
@@ -163,9 +162,9 @@ for plot in plot_list:
                 collect.loc[(col, plot), 'FPG_P_shrub'] = temp[:, num]
 
     if 'FPI' in var_list:
-        col_list = ['TBOT', 'NEE', 'HR', 'FPI', 'FPI_P', 'SMINN', 'SMINP']
+        col_list = ['TBOT', 'NEE', 'HR', 'TOTSOMC', 'FPI', 'FPI_P']
     else:
-        col_list = ['TBOT', 'NEE', 'HR', 'SMINN', 'SMINP']
+        col_list = ['TBOT', 'NEE', 'HR', 'TOTSOMC']
     for colvar in col_list: # 'FCH4'
         if growing_season:
             temp = hr2[colvar][filter, :].resample({'time': '1Y'}).mean().values
@@ -173,7 +172,7 @@ for plot in plot_list:
             temp = hr2[colvar][:-1, :].resample({'time': '1Y'}).mean().values
         if colvar == 'TBOT':
             temp = temp - 273.15
-        elif colvar not in ["FPI", "FPI_P", "SMINN", "SMINP"]:
+        elif colvar not in ["FPI", "FPI_P", "TOTSOMC"]:
             # convert gC/m2/s to gC/m2/year
             temp = temp * 365 * 86400
         for num, col in enumerate(['hummock', 'hollow']):
@@ -181,7 +180,33 @@ for plot in plot_list:
                 collect.loc[(col, plot), 'CH4'] = temp[:, num]
             else:
                 collect.loc[(col, plot), colvar] = temp[:, num]
+    
+    # soil N & P in plant accessible layers
+    for colvar, thisvar in zip(['SMINN_30','SOLUTIONP_30'], ['SMINN_vr', 'SOLUTIONP_vr']):
+        LEVGRND = np.array([0.007100635, 0.027925, 0.06225858, 0.1188651, 0.2121934,
+                            0.3660658, 0.6197585, 1.038027, 1.727635, 2.864607, 4.739157,
+                            7.829766, 12.92532, 21.32647, 35.17762])
+        LEVGRND_I = np.append(np.insert(
+            (LEVGRND[1:] + LEVGRND[:-1])*0.5, 0, 0
+        ), LEVGRND[-1] + 0.5 * (LEVGRND[-1] - LEVGRND[-2]))
+        THICKNESS = np.diff(LEVGRND_I)
+        depth = 0.30 # 30 cm
+        maxlayer = np.where(LEVGRND_I < depth)[0][-1]
 
+        if growing_season:
+            temp = hr2[thisvar][filter, :].resample({'time': '1Y'}).mean().values
+        else:
+            temp = hr2[thisvar][:-1, :].resample({'time': '1Y'}).mean().values
+        data = 0.
+        for i in range(maxlayer - 1):
+            data = temp[:, i, :] * THICKNESS[i]
+        last_depth = min(THICKNESS[i], depth - LEVGRND_I[maxlayer])
+        data = temp[:, maxlayer, :] * last_depth
+        data = data / depth
+        for num, col in enumerate(['hummock', 'hollow']):
+            collect.loc[(col, plot), colvar] = data[:, num]
+
+    # ZWT needs special calculations
     if growing_season or zwt_growing_season:
         temp = hr2['ZWT'][filter, :].resample({'time': '1Y'}).mean()
         h2osfc = hr2['H2OSFC'][filter, :].resample({'time': '1Y'}).mean()

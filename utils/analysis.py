@@ -254,18 +254,11 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
     )
 
     for plot in chamber_list_complete:
-        print(plot)
-        path_data = os.path.join(
-            os.environ["PROJDIR"],
-            "E3SM",
-            "output",
-            f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC",
-            "spruce_treatments",
-            f'plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 
-            'run'
-        )
+        path_data = os.path.join(os.environ["PROJDIR"], "E3SM",
+            "output", f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC",
+            "spruce_treatments", f'plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
 
-        print(path_data)
+        print(f'Plot {plot}', path_data)
 
         flist_pft = sorted(glob(os.path.join(path_data, "*.h2.*.nc")))[:-1]
         flist_col = sorted(glob(os.path.join(path_data, "*.h1.*.nc")))[:-1]
@@ -287,24 +280,11 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                     hr2.close()
                 elif var == "SWC_AVG":
                     rootfr = hr["ROOTFR"][:, :, pft].values
-                    hr2 = xr.open_dataset(flist_const[0])
-                    dzsoi = hr2["DZSOI"].values
-                    hr2.close()
                     hr2 = xr.open_mfdataset(flist_col)
                     collection_ts[(plot, var, pft, "hummock")] = np.sum(
-                        hr2["SOILLIQ"][:, :, 0].values
-                        / dzsoi[:, 0].reshape(1, -1)
-                        / 1000
-                        * rootfr,
-                        axis=1,
-                    )
+                        hr2["H2OSOI"][:, :, 0].values * rootfr, axis=1)
                     collection_ts[(plot, var, pft, "hollow")] = np.sum(
-                        hr2["SOILLIQ"][:, :, 1].values
-                        / dzsoi[:, 1].reshape(1, -1)
-                        / 1000
-                        * rootfr,
-                        axis=1,
-                    )
+                        hr2["H2OSOI"][:, :, 1].values * rootfr, axis=1)
                     hr2.close()
                 elif var == "ZWT":
                     hr2 = xr.open_mfdataset(flist_col)
@@ -325,33 +305,42 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
         var_list_col = var_list["col"]
         hr = xr.open_mfdataset(flist_col, decode_times=False)
         for var in var_list_col:
-            if var.startswith("TSOI_"):
-                layer = int(var.split("_")[1])
-                collection_ts[(plot, var, 0, "hummock")] = (
-                    hr["TSOI"][:, layer - 1, 0].values - 273.15
-                )
-                collection_ts[(plot, var, 0, "hollow")] = (
-                    hr["TSOI"][:, layer - 1, 1].values - 273.15
-                )
-            elif var.startswith("SWC_"):
-                layer = int(var.split("_")[1])
-                hr2 = xr.open_dataset(flist_const[0])
-                dzsoi = hr2["DZSOI"].values
-                hr2.close()
-                collection_ts[(plot, var, 0, "hummock")] = (
-                    hr["SOILLIQ"][:, layer - 1, 0].values / dzsoi[layer - 1, 0] / 1000
-                )
-                collection_ts[(plot, var, 0, "hollow")] = (
-                    hr["SOILLIQ"][:, layer - 1, 1].values / dzsoi[layer - 1, 1] / 1000
-                )
-            elif var.startswith("H2OSOI_"):
-                layer = int(var.split("_")[1])
-                collection_ts[(plot, var, 0, "hummock")] = hr["H2OSOI"][
-                    :, layer - 1, 0
-                ].values
-                collection_ts[(plot, var, 0, "hollow")] = hr["H2OSOI"][
-                    :, layer - 1, 1
-                ].values
+            if 'TSOI_' in var or 'H2OSOI_' in var or 'SMINN_' in var or 'SOLUTIONP_' in var:
+
+                LEVGRND = np.array([0.007100635, 0.027925, 0.06225858, 0.1188651, 0.2121934,
+                                    0.3660658, 0.6197585, 1.038027, 1.727635, 2.864607, 4.739157,
+                                    7.829766, 12.92532, 21.32647, 35.17762])
+                LEVGRND_I = np.append(np.insert(
+                    (LEVGRND[1:] + LEVGRND[:-1])*0.5, 0, 0
+                ), LEVGRND[-1] + 0.5 * (LEVGRND[-1] - LEVGRND[-2]))
+                THICKNESS = np.diff(LEVGRND_I)
+
+                depth = float(var.split('_')[1]) / 100.
+                maxlayer = np.where(LEVGRND_I < depth)[0][-1]
+
+                if 'TSOI_' in var:
+                    thisvar = 'TSOI'
+                elif 'H2OSOI_' in var:
+                    thisvar = 'H2OSOI'
+                elif 'SMINN_' in var:
+                    thisvar = 'SMINN_vr'
+                elif 'SOLUTIONP_' in var:
+                    thisvar = 'SOLUTIONP_vr'
+
+                data = 0.
+                for i in range(maxlayer - 1):
+                    data = hr[thisvar][:, i, :] * THICKNESS[i]
+                last_depth = min(THICKNESS[i], depth - LEVGRND_I[maxlayer])
+                data = hr[thisvar][:, maxlayer, :] * last_depth
+                data = data / depth
+
+                collection_ts[(plot, var, 0, "hummock")] = data.values[:, 0]
+                collection_ts[(plot, var, 0, "hollow")] = data.values[:, 1]
+
+                if 'TSOI' in var:
+                    collection_ts[(plot, var, 0, "hummock")] -= 273.15
+                    collection_ts[(plot, var, 0, "hollow")] -= 273.15
+
             elif var == "SMP_MAX":
                 collection_ts[(plot, var, 0, "hummock")] = np.nanmax(
                     hr["SMP"][:, :, 0].values, axis=1
@@ -359,9 +348,13 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                 collection_ts[(plot, var, 0, "hollow")] = np.nanmax(
                     hr["SMP"][:, :, 1].values, axis=1
                 )
+
             else:
                 collection_ts[(plot, var, 0, "hummock")] = hr[var][:, 0].values
                 collection_ts[(plot, var, 0, "hollow")] = hr[var][:, 1].values
+                if var == 'TBOT':
+                    collection_ts[(plot, var, 0, "hummock")] -= 273.15
+                    collection_ts[(plot, var, 0, "hollow")] -= 273.15
         hr.close()
 
         # some time-constant variables are in the h0 files

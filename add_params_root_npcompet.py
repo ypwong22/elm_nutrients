@@ -9,38 +9,28 @@ from utils.paths import *
 path_parameter = os.path.join(os.environ["PROJDIR"], "E3SM", "inputdata", "atm", "datm7",
                               "CLM1PT_data", "SPRUCE_data")
 
-orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno'
-newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno_npcompet'
-#orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc'
-#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
+#orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno'
+#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno_npcompet'
+orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
+newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
-
-# (1) based on the observations, the ratios mustn't exceed 1 and is on avg. ~0.5
-# (2) 2004 Dissertation says Tamarak root:leaf ratio > Spruce root:leaf ratio
-#     values taken from Fig. 6.4 for the second  growing season
-#     also see abstract, tamarak allocates more to the root
-hr['froot_leaf'][2] = 0.2
-hr['froot_leaf'][3] = 0.35
-hr['froot_leaf'][11] = 0.5
-
-# increase Q10 for now because microbes should also be inhibited during flooding
-# hr['q10_hr'] = 3
 
 # increase the productivity of spruce and let shrub be more than larch (of course that should be?)
 # https://www.nature.com/articles/s41467-021-25163-9/figures/1
 # in the boreal zone, flnr = 10-20%, but evergreen needleleaf forest sometimes reach 30%
 # leaf mass per area is strongly negatively correlated with flnr
 # so let's do a gradiet
-hr['flnr'][2] = 0.14
+hr['flnr'][2] = 0.10
 hr['flnr'][3] = 0.28
 hr['flnr'][11] = 0.28
-# reduce SPRUCE's base maintenance respiration but increase Q10
+## reduce SPRUCE's base maintenance respiration but increase Q10
+hr['leaf_long'][2] = 5 # according to Paul's assumption
 hr['br_mr_pft'][2] = 2e-06
 hr['q10_mr_pft'][2] = 2.5
-# reduce tamarack as an association
+## reduce tamarack as an association
 hr['br_mr_pft'][3] = 2.2e-06
-# increase shrub's base maintenance respiration
+## increase shrub's base maintenance respiration
 hr['br_mr_pft'][11] = 8e-06
 
 # sensitivity of fine root to leaf ratio to nutrient limitation
@@ -98,12 +88,6 @@ hr['cpool_pft_sminp'] = xr.DataArray(
     attrs={"units": "", "long_name": "Multiplicative factor on the CPOOL-drive mycorrhizae P uptake"},
 )
 
-hr['alpha_fpg'] = xr.DataArray(
-    [3], dims = ["allpft"], attrs = {"units": "", "long_name": "adjust the rate of decreasing dependence on mycorrhizae-driven uptake as soil N content increase"})
-
-hr['alpha_fpg_p'] = xr.DataArray(
-    [3], dims = ["allpft"], attrs = {"units": "", "long_name": "adjust the rate of decreasing dependence on mycorrhizae-driven uptake as soil P content increase"})
-
 # Q10 equation from 
 # Ghimire et al. 2016 Representing leaf and root physiological traits in CLM 
 #                     improves global carbon and nitrogen cycling predictions
@@ -126,28 +110,22 @@ hr['scale_uptake'] = xr.DataArray(
     attrs={"units": "", "long_name": "Scale factor in root nutrients uptake Q10 function"},
 )
 
-# Michaelis-Menten parameters
-# N-value taken from Ghimire et al. 2016 Representing leaf and root physiological traits in CLM
-#                    improves global carbon and nitrogen cycling predictions
-# P-value taken from Wang et al. (2020). Coupling of Phosphorus Processes With Carbon and Nitrogen 
-#                    Cycles in the Dynamic Land Ecosystem Model: Model Structure, Parameterization,
-#                    and Evaluation in Tropical Forests. Journal of Advances in Modeling Earth 
-#                    Systems, 12(10), e2020MS002123. https://doi.org/10.1029/2020MS002123
+# Michaelis-Menten parameters: set to about the average N&P concentration in my simulations
 hr['kmin_nuptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 20, 20, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 40, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 0.05, 0.05, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.05, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "gN m-2", "long_name": "Half saturation point of nitrogen uptake"},
+    attrs={"units": "gN m-3", "long_name": "Half saturation point of nitrogen uptake"},
 )
 hr['kmin_puptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 10, 10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, 1e-3, 1e-3, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-3, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "gP m-2", "long_name": "Half saturation point of phosphorus uptake"},
+    attrs={"units": "gP m-3", "long_name": "Half saturation point of phosphorus uptake"},
 )
 
 encoding = {}

@@ -6,7 +6,7 @@ from utils.paths import *
 path_parameter = os.path.join(os.environ["PROJDIR"], "E3SM", "inputdata", "atm", "datm7",
                               "CLM1PT_data", "SPRUCE_data")
 
-orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc'
+orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
 #orgfile = 'clm_params_SPRUCE_20231120_spruceroot_eca.nc'
 newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno'
 #newfile = 'clm_params_SPRUCE_20231120_spruceroot_eca.nc_rootpheno'

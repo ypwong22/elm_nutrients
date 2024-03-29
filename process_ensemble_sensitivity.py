@@ -6,7 +6,14 @@ from mpi4py import MPI
 from utils.paths import *
 from utils.constants import chamber_list_names_complete
 import pandas as pd
+import time
 
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+
+workdir = os.getcwd()
 
 # number of simulations
 # N = 1000
@@ -18,8 +25,9 @@ import pandas as pd
 
 # jobid = 4113489
 N = 2000
-PREFIX = "UQ_20240315"
-if not  os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
+PREFIX = "UQ_20240316_1"
+time.sleep(0.3*rank)
+if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
 # number of ensembles to save in each bin file
@@ -28,16 +36,18 @@ BLOCK = 200
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
-
 RUNROOT = os.path.join(os.environ["PROJDIR"], "E3SM", "output")
-VAR_LIST = ["ANPPtree", "ANPPshrub", "NPPmoss", "BGNPP", "NPP", "HR", "NEE"]
+VAR_LIST = ["TOTVEGC_ABG_pima", "TOTVEGC_ABG_lala", "TOTVEGC_ABG_shrub",
+            "ANPP_pima", "ANPP_lala", "ANPP_tree", "ANPP_shrub", 
+            "NPP_moss", "BGNPP", "HR", "NEE"]
 YEAR_LIST = range(2016, 2022)  # skip 2015 and 2021 because no observation/no model data
-
 
 MOSSFRAC = pd.read_excel("Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"
                          ).drop(["plot", "Temp", "CO2"], axis=1)
 MOSSFRAC[2015] = MOSSFRAC[2016]
 # MOSSFRAC = MOSSFRAC.drop(2021, axis=1)
+
+niter = int(N / BLOCK)
 
 
 # Define function to perform ensemble member post-processing
@@ -77,30 +87,38 @@ def postproc(thisjob, collection):
             hr2 = Dataset(fname_col)
 
             for k, varname in enumerate(VAR_LIST):
-                if varname in ["NPPmoss", "ANPPtree", "ANPPshrub", "BGNPP"]:
-                    if varname == "NPPmoss":
-                        var = (
-                            hr["NPP"][:, :].mean(axis=0)
-                            * MOSSFRAC.loc[folder, year]
-                            / 100
-                        )
-                        values[i, j, k] = var[12] * 0.64 + var[12 + 17] * 0.36
-                    elif varname == "ANPPtree":
-                        var = hr["AGNPP"][:, :].mean(axis=0)
-                        values[i, j, k] = (
-                            var[2] * 0.64 + var[2 + 17] * 0.36
-                        ) * 0.36 + (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
-                    elif varname == "ANPPshrub":
-                        var = hr["AGNPP"][:, :].mean(axis=0)
-                        values[i, j, k] = (var[11] * 0.64 + var[11 + 17] * 0.36) * 0.25
-                    elif varname == "BGNPP":
-                        # tree and shrub only
-                        var = hr["BGNPP"][:, :].mean(axis=0)
-                        values[i, j, k] = (
-                            (var[2] * 0.64 + var[2 + 17] * 0.36) * 0.36
-                            + (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
-                            + (var[11] * 0.64 + var[11 + 17] * 0.36) * 0.25
-                        )
+                if varname == "NPP_moss":
+                    var = (hr["NPP"][:, :].mean(axis=0) * MOSSFRAC.loc[folder, year] / 100)
+                    values[i, j, k] = var[12] * 0.64 + var[12 + 17] * 0.36
+                elif varname == "ANPP_tree":
+                    var = hr["AGNPP"][:, :].mean(axis=0)
+                    values[i, j, k] = (var[2] * 0.64 + var[2 + 17] * 0.36) * 0.36 + (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
+                elif varname == "ANPP_shrub":
+                    var = hr["AGNPP"][:, :].mean(axis=0)
+                    values[i, j, k] = (var[11] * 0.64 + var[11 + 17] * 0.36) * 0.25
+                elif varname == "ANPP_pima":
+                    var = hr["AGNPP"][:, :].mean(axis=0)
+                    values[i, j, k] = (var[2] * 0.64 + var[2 + 17] * 0.36) * 0.36
+                elif varname == "ANPP_lala":
+                    var = hr["AGNPP"][:, :].mean(axis=0)
+                    values[i, j, k] = (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
+                elif "TOTVEGC_ABG_" in varname:
+                    if "pima" in varname:
+                        pft = 2; frac = 0.36
+                    elif "lala" in varname:
+                        pft = 3; frac = 0.14
+                    elif "shrub" in varname:
+                        pft = 11; frac = 0.25
+                    var = hr["TOTVEGC_ABG"][:, :].mean(axis=0)
+                    values[i, j, k] = (var[pft] * 0.64 + var[pft + 17] * 0.36) * frac
+                elif varname == "BGNPP":
+                    # tree and shrub only
+                    var = hr["BGNPP"][:, :].mean(axis=0)
+                    values[i, j, k] = (
+                        (var[2] * 0.64 + var[2 + 17] * 0.36) * 0.36
+                         + (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
+                         + (var[11] * 0.64 + var[11 + 17] * 0.36) * 0.25
+                    )
                 else:
                     var = hr2[varname][:, :].mean(axis=0)
                     values[i, j, k] = var[0] * 0.64 + var[1] * 0.36
@@ -133,14 +151,6 @@ def postproc(thisjob, collection):
 
     return ierr
 
-
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-
-workdir = os.getcwd()
-
-niter = int(N / BLOCK)
 
 for b in range(niter):
     print("rank = ", rank, "b = ", b)

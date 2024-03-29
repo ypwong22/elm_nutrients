@@ -1,0 +1,33 @@
+# Test microbial related parameters from Table 3 of
+# Ricciuto et al.2018 DOI: 10.1002/2017MS000962
+
+# Also consider the peat CN ratio are 25-50 (higher at the top)
+# higher values = less mobilization
+# make sure cn_s3 & cn_s4 < cn_s1 & cn_s2
+
+cn_s1 0 8 25
+cn_s2 0 8 25
+cn_s3 0 6 25
+cn_s4 0 6 25
+rf_l1s1 0 0.2 0.58
+rf_l2s2 0 0.275 0.82
+rf_l3s3 0 0.15 0.43
+rf_s1s2 0 0.14 0.42
+rf_s2s3 0 0.23 0.69
+rf_s3s4 0 0.28 0.83
+
+# those values are larger range because previous test by XYS
+# suggested smaller decomposition rates
+k_l1 0 0.09 1.8
+k_l2 0 0.0036 0.112
+k_l3 0 0.0003 0.021
+
+k_s1 0 0.036 0.112
+k_s2 0 0.007 0.021
+k_s3 0 0.0007 0.0021
+k_s4 0 5e-5 1.5e-4
+k_frag 5e-4 1.5e-3
+
+decomp_depth_efolding 0 0.3 1.0
+q10_hr   0      1.4    2.5
+mino2lim 0      0.0001  0.05

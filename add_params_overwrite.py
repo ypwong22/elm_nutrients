@@ -6,23 +6,13 @@ from utils.paths import *
 from utils.analysis import *
 
 
-prefix = os.path.join(
-    os.environ["PROJDIR"],
-    "E3SM",
-    "inputdata",
-    "atm",
-    "datm7",
-    "CLM1PT_data",
-    "SPRUCE_data",
-)
+prefix = os.path.join(os.environ["PROJDIR"],"E3SM","inputdata","atm",
+                      "datm7","CLM1PT_data","SPRUCE_data")
 
 #experiment = "UQ_default2_1_optimized"
 experiment = "UQ_default3"
 
-parm_best = os.path.join(
-    os.environ["HOME"],
-    "models",
-    "OLMT",
+parm_best = os.path.join(os.environ["HOME"],"models","OLMT",
     "UQ_output",
     f"{experiment}_US-SPR_ICB20TRCNPRDCTCBC",
     "MCMC_output",
