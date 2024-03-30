@@ -24,22 +24,24 @@ workdir = os.getcwd()
 # PREFIX = "UQ_default2"
 
 # jobid = 4113489
-N = 2000
-PREFIX = "UQ_20240316_1"
+N = 768
+#N = 2000
+PREFIX = "UQ_20231113_2c"
 time.sleep(0.3*rank)
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
-BLOCK = 200
+BLOCK = 192
+#BLOCK = 200
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
 RUNROOT = os.path.join(os.environ["PROJDIR"], "E3SM", "output")
 VAR_LIST = ["TOTVEGC_ABG_pima", "TOTVEGC_ABG_lala", "TOTVEGC_ABG_shrub",
             "ANPP_pima", "ANPP_lala", "ANPP_tree", "ANPP_shrub", 
-            "NPP_moss", "BGNPP", "HR", "NEE"]
+            "NPP_moss", "BGNPP", "HR", "NEE", "TOTSOMC"]
 YEAR_LIST = range(2016, 2022)  # skip 2015 and 2021 because no observation/no model data
 
 MOSSFRAC = pd.read_excel("Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"

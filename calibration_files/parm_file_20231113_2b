@@ -1,0 +1,8 @@
+# Vegetation growth related parameters
+# partially based on 
+# Griffiths, N. A., Hanson, P. J., Ricciuto, D. M., Iversen, C. M., Jensen, A. M., Malhotra, A., et al. (2017). Temporal and Spatial Variation in Peatland Carbon Cycling and Implications for Interpreting Responses of an Ecosystem-Scale Warming Experiment. Soil Science Society of America Journal, 81(6), 1668–1688. https://doi.org/10.2136/sssaj2016.12.0422
+flnr         11   0.05    0.30
+br_mr_pft    11   1e-6    1e-5
+froot_leaf   11   0.1     1.0
+stem_leaf    11   0.05    0.5
+croot_stem   11   0.05    0.8

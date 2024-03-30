@@ -1,0 +1,6 @@
+# Test parameters that may influence HR
+rf_l3s3 0 0.15 0.43
+rf_s3s4 0 0.28 0.83
+k_s3 0 0.0007 0.0021
+k_s4 0 5e-5 1.5e-4
+decomp_depth_efolding 0 0.1 1.0

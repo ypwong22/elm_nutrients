@@ -296,10 +296,17 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                     )
                     hr2.close()
                 else:
-                    collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values
-                    collection_ts[(plot, var, pft, "hollow")] = hr[var][
-                        :, pft + hol_add
-                    ].values
+                    if var == 'TOTVEGC':
+                        # need to subtract out CPOOL to be comparable to obs
+                        collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values - \
+                            hr['CPOOL'][:, pft].values
+                        collection_ts[(plot, var, pft, "hollow")] = \
+                            hr[var][:, pft + hol_add].values - \
+                            hr['CPOOL'][:, pft + hol_add].values
+                    else:
+                        collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values
+                        collection_ts[(plot, var, pft, "hollow")] = hr[var][:, pft + hol_add].values
+
         hr.close()
 
         var_list_col = var_list["col"]

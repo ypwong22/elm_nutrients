@@ -16,7 +16,8 @@ newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
-# increase the productivity of spruce and let shrub be more than larch (of course that should be?)
+# Wait on this for parameter optimization
+"""# increase the productivity of spruce and let shrub be more than larch (of course that should be?)
 # https://www.nature.com/articles/s41467-021-25163-9/figures/1
 # in the boreal zone, flnr = 10-20%, but evergreen needleleaf forest sometimes reach 30%
 # leaf mass per area is strongly negatively correlated with flnr
@@ -32,6 +33,7 @@ hr['q10_mr_pft'][2] = 2.5
 hr['br_mr_pft'][3] = 2.2e-06
 ## increase shrub's base maintenance respiration
 hr['br_mr_pft'][11] = 8e-06
+"""
 
 # sensitivity of fine root to leaf ratio to nutrient limitation
 # For ombrotrophic shrub, increasing mineral nutrient content means increasing
@@ -41,7 +43,7 @@ hr['br_mr_pft'][11] = 8e-06
 #                    (probably also related to flooding inhibiting root growth)
 hr['froot_leaf_slope'] = xr.DataArray(
     [
-        np.nan, np.nan, 2, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -2, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -54,7 +56,7 @@ hr['froot_leaf_slope'] = xr.DataArray(
 # the ecto-fungi at uptake.
 hr['compet_pft_sminn'] = xr.DataArray(
     [
-        np.nan, np.nan, 2, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.1, 0.2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -63,7 +65,7 @@ hr['compet_pft_sminn'] = xr.DataArray(
 
 hr['compet_pft_sminp'] = xr.DataArray(
     [
-        np.nan, np.nan, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+        0, np.nan, 1e-8, 1e-8, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-8, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -72,7 +74,7 @@ hr['compet_pft_sminp'] = xr.DataArray(
 
 hr['cpool_pft_sminn'] = xr.DataArray(
     [
-        np.nan, np.nan, 1.5, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.4, 0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.7, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -81,7 +83,7 @@ hr['cpool_pft_sminn'] = xr.DataArray(
 
 hr['cpool_pft_sminp'] = xr.DataArray(
     [
-        np.nan, np.nan, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.7, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.4, 0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.7, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -97,7 +99,7 @@ hr['cpool_pft_sminp'] = xr.DataArray(
 #                                    fertilization: a modeling study
 hr['q10_uptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 2, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        1, np.nan, 1, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -113,7 +115,7 @@ hr['scale_uptake'] = xr.DataArray(
 # Michaelis-Menten parameters: set to about the average N&P concentration in my simulations
 hr['kmin_nuptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 0.05, 0.05, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.05, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        1e20, np.nan, 0.2, 0.2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -121,7 +123,7 @@ hr['kmin_nuptake'] = xr.DataArray(
 )
 hr['kmin_puptake'] = xr.DataArray(
     [
-        np.nan, np.nan, 1e-3, 1e-3, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-3, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        1e20, np.nan, 2e-6, 2e-6, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2e-6, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],

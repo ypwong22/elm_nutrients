@@ -24,19 +24,6 @@ hr['froot_leaf'][11] = 0.3 # try to start low to match observation
 # Salmon, V. G., Brice, D. J., Bridgham, S., Childs, J., Graham, J., Griffiths, N. A., et al. (2021). Nitrogen and phosphorus cycling in an ombrotrophic peatland: a benchmark for assessing change. Plant and Soil, 466(1–2), 649–674. https://doi.org/10.1007/s11104-021-05065-x
 hr['leaf_long'][2] = 5
 
-# attempted parameter fixes
-hr['br_mr_pft'][3] = 8e-06 # increase the MR of tamarack to bring down biomass
-hr['flnr'][2] = 0.284240288420581 # increase the photosynthesis of shrub to increase AGNPP
-hr['br_mr_pft'][3] = 8e-06 # increase the MR of shrub to bring down biomass
-
-## reduce SPRUCE's base maintenance respiration but increase Q10
-hr['leaf_long'][2] = 5 # according to Paul's assumption
-hr['br_mr_pft'][2] = 2e-06
-hr['q10_mr_pft'][2] = 2.5
-## reduce tamarack as an association
-## increase shrub's base maintenance respiration
-hr['br_mr_pft'][11] = 8e-06
-
 # (3) based on fine root CN ratio observations
 # @ Iversen2013RootIngrowthCoresS1Bog_RootTraits.csv (.xlsx)
 # https://doi.org/10.25581/spruce.091/1782483
@@ -57,13 +44,24 @@ hr['leafcp'][3] = 655.78
 hr['leafcp'][11] = 594.72 # use Chaemodaphe because it's the largest fraction
 
 # (5) Match the 3rd & 4th pool to the deep peat CN ratio. The
-# 1st and 2nd pool should have higher CN ratios. Set to 25.
-hr['cn_s1'] = 25 # 21-25
-hr['cn_s2'] = 25 # 21-25
+# 1st and 2nd pool should have higher CN ratios. Set to 22.
+hr['cn_s1'] = 22 # 21-25
+hr['cn_s2'] = 22 # 21-25
 hr['cn_s3'] = 20
 hr['cn_s4'] = 20
 
-hr['rf_s3s4'] = 0.83 # increase the fraction lost to CO2 to better match HR
+# (6) Edits based on parameter optimization outcomes 20231113_2a and 20231113_2b
+hr['flnr'][3] = 1.541807362373865953e-01
+hr['br_mr_pft'][3] = 8.275866311697777393e-06
+hr['froot_leaf'][3] = 4.891957834556074358e-01
+hr['stem_leaf'][3] = -3.076457295690046001e-01
+hr['croot_stem'][3] = 7.389691614435485167e-01
+
+hr['flnr'][3] = 2.083813227331323681e-01
+hr['br_mr_pft'][3] = 4.995466990066244512e-06
+hr['froot_leaf'][3] = 1.228784812082149847e-01
+hr['stem_leaf'][3] = 1.509871452260563018e-01
+hr['croot_stem'][3] = 1.678106396067260975e-01
 
 encoding = {}
 for data_var in hr.data_vars:
