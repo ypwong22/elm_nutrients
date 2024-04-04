@@ -9,27 +9,31 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20231113_2'
-rootpheno = False
-npcompet = False
+prefix = '20240316'
+rootpheno = True
+npcompet = True
 
 #for prefix,rootpheno,npcompet in zip(['20231113', '20240311', '20240316'],
 #                                     [False, False, True],  [False, True, True]):
 
 var_list = {}
-var_list['pft'] = ['TLAI','GPP','NPP','TOTVEGC','TOTVEGC_ABG','MR','GR','XR','LITFALL',
+var_list['pft'] = ['TLAI','GPP','NPP','AGNPP','BGNPP',
+                   'TOTVEGC','TOTVEGC_ABG','MR','GR','XR','LITFALL',
                     'SMINN_TO_NPOOL', 'SMINP_TO_PPOOL', 'CPOOL', 'NPOOL', 'PPOOL']
 for pool in ['LEAF', 'FROOT', 'LIVESTEM', 'DEADSTEM', 'LIVECROOT', 'DEADCROOT']:
-    var_list['pft'] = var_list['pft'] + [f'{pool}C']
+    var_list['pft'] = var_list['pft'] + [f'{pool}C',f'{pool}C_STORAGE',f'{pool}C_XFER',
+                                         f'CPOOL_TO_{pool}C', f'{pool}C_XFER_TO_{pool}C']
     if not 'DEAD' in pool:
         var_list['pft'] = var_list['pft'] + [f'{pool}_MR']
 for pool in ['LEAF', 'FROOT']:
     var_list['pft'].extend([f'{pool}C_TO_LITTER'])
 if npcompet:
-    var_list['pft'].extend(['FPG_PATCH', 'FPG_P_PATCH'])
+    var_list['pft'].extend(['FPG_PATCH', 'FPG_P_PATCH','PLANT_NDEMAND','PLANT_PDEMAND',
+                            'PLANT_NABSORB','PLANT_PABSORB','PLANT_NFUNGI_PATCH',
+                            'PLANT_PFUNGI_PATCH'])
 if rootpheno:
     var_list['pft'] = var_list['pft'] + [
-        'ONSET_FLAG', 'OFFSET_FLAG', # 'DORMANT_FLAG',
+        'ONSET_FLAG', 'OFFSET_FLAG', 'DORMANT_FLAG',
         'BGLFR_LEAF', 'BGLFR_FROOT', 'ONSET_FLAG_ROOT',
         'OFFSET_FLAG_ROOT', 'DORMANT_FLAG_ROOT',
         'FCUR_DYN', 'ONSET_FROOT_FNMIN', 'ONSET_FROOT_FW',

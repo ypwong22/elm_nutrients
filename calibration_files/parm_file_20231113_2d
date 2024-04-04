@@ -1,0 +1,5 @@
+# Q10 to see if can fix NPP sensitivity
+# Range taken from 
+# Griffiths, N. A., Hanson, P. J., Ricciuto, D. M., Iversen, C. M., Jensen, A. M., Malhotra, A., et al. (2017). Temporal and Spatial Variation in Peatland Carbon Cycling and Implications for Interpreting Responses of an Ecosystem-Scale Warming Experiment. Soil Science Society of America Journal, 81(6), 1668–1688. https://doi.org/10.2136/sssaj2016.12.0422
+q10_mr_pft   2   1.2   3.8
+q10_mr_pft  11   1.2   3.8

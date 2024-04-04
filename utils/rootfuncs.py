@@ -316,10 +316,19 @@ def convert_sims(prefix):
             temp = temp["hummock"] * 0.64 + temp["hollow"] * 0.36
             annual_minirhizotron.loc[y, ("m_g_d", "tree", cha)] = temp.sum() * 86400
 
-            temp = (
-                0.36 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 2)]
-                + 0.14 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 3)]
-            )
+            if 'FROOTC_ALLOC' in collection_ts.columns.levels[1]:
+                temp = (
+                    0.36 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 2)]
+                    + 0.14 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 3)]
+                )
+            else:
+                temp = (
+                    0.36 * collection_ts.loc[filt, (cha, "CPOOL_TO_FROOTC", 2)]
+                    + 0.14 * collection_ts.loc[filt, (cha, "CPOOL_TO_FROOTC", 3)]
+                ) + (
+                    0.36 * collection_ts.loc[filt, (cha, "FROOTC_XFER_TO_FROOTC", 2)]
+                    + 0.14 * collection_ts.loc[filt, (cha, "FROOTC_XFER_TO_FROOTC", 3)]
+                ).values
             temp = temp["hummock"] * 0.64 + temp["hollow"] * 0.36
             annual_minirhizotron.loc[y, ("g_g_d", "tree", cha)] = temp.sum() * 86400
 
@@ -327,7 +336,11 @@ def convert_sims(prefix):
             temp = temp["hummock"] * 0.64 + temp["hollow"] * 0.36
             annual_minirhizotron.loc[y, ("m_g_d", "shrub", cha)] = temp.sum() * 86400
 
-            temp = 0.25 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 11)]
+            if 'FROOTC_ALLOC' in collection_ts.columns.levels[1]:
+                temp = 0.25 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 11)]
+            else:
+                temp = 0.25 * collection_ts.loc[filt, (cha, "CPOOL_TO_FROOTC", 11)] + \
+                       0.25 * collection_ts.loc[filt, (cha, "FROOTC_XFER_TO_FROOTC", 11)]
             temp = temp["hummock"] * 0.64 + temp["hollow"] * 0.36
             annual_minirhizotron.loc[y, ("g_g_d", "shrub", cha)] = temp.sum() * 86400
 
@@ -374,10 +387,19 @@ def convert_sims(prefix):
                 temp.mean() * 86400
             )
 
-            temp2 = (
-                0.36 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 2)]
-                + 0.14 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 3)]
-            )
+            if 'FROOTC_ALLOC' in collection_ts.columns.levels[1]:
+                temp2 = (
+                    0.36 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 2)]
+                    + 0.14 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 3)]
+                )
+            else:
+                temp2 = (
+                    0.36 * collection_ts.loc[filt, (cha, "CPOOL_TO_FROOTC", 2)]
+                    + 0.14 * collection_ts.loc[filt, (cha, "CPOOL_TO_FROOTC", 3)]
+                ) + (
+                    0.36 * collection_ts.loc[filt, (cha, "FROOTC_XFER_TO_FROOTC", 2)]
+                    + 0.14 * collection_ts.loc[filt, (cha, "FROOTC_XFER_TO_FROOTC", 3)]
+                )
             temp2 = temp2["hummock"] * 0.64 + temp2["hollow"] * 0.36
             minirhizotron_cycle.loc[(start, end), ("g_g_d", "tree", cha)] = (
                 temp2.mean() # + temp.mean()
@@ -389,7 +411,11 @@ def convert_sims(prefix):
                 temp.mean() * 86400
             )
 
-            temp2 = 0.25 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 11)]
+            if 'FROOTC_ALLOC' in collection_ts.columns.levels[1]:
+                temp2 = 0.25 * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", 11)]
+            else:
+                temp2 = 0.25 * collection_ts.loc[filt, (cha, "CPOOL_TO_FROOTC", 11)] + \
+                    0.25 * collection_ts.loc[filt, (cha, "FROOTC_XFER_TO_FROOTC", 11)]
             temp2 = temp2["hummock"] * 0.64 + temp2["hollow"] * 0.36
             minirhizotron_cycle.loc[(start, end), ("g_g_d", "shrub", cha)] = (
                 temp2.mean() # + temp.mean()
@@ -432,7 +458,11 @@ def convert_sims(prefix):
             for name, frac, pft in zip(
                 ["spruce", "larch", "shrub"], [0.36, 0.14, 0.25], [2, 3, 11]
             ):
-                temp = frac * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", pft)]
+                if 'FROOTC_ALLOC' in collection_ts.columns.levels[1]:
+                    temp = frac * collection_ts.loc[filt, (cha, "FROOTC_ALLOC", pft)]
+                else:
+                    temp = frac * collection_ts.loc[filt, (cha, "CPOOL_TO_FROOTC", pft)] + \
+                        frac * collection_ts.loc[filt, (cha, "FROOTC_XFER_TO_FROOTC", pft)].values
                 temp = temp["hummock"] * 0.64 + temp["hollow"] * 0.36
                 ingrowth[name].append(temp.sum() * 86400)
         for name in ["spruce", "larch", "shrub"]:

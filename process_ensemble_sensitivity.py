@@ -24,16 +24,16 @@ workdir = os.getcwd()
 # PREFIX = "UQ_default2"
 
 # jobid = 4113489
-N = 768
+N = 400
 #N = 2000
-PREFIX = "UQ_20231113_2c"
+PREFIX = "UQ_20240316_1c"
 time.sleep(0.3*rank)
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
-BLOCK = 192
+BLOCK = 200 
 #BLOCK = 200
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")

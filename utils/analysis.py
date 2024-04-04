@@ -562,14 +562,14 @@ def read_extract_sims_ts(prefix):
 
 
 def read_sims_tair_daily():
-    prefix = "20240304_3"  # identical for any
+    prefix = "20231113"  # identical for any
     collection_ts = read_extract_sims_ts(prefix)
     temperature = (
         0.64 * collection_ts.loc[:, (slice(None), "TBOT", 0, "hummock")]
         + 0.36 * collection_ts.loc[:, (slice(None), "TBOT", 0, "hollow")].values
     )
     temperature.columns = temperature.columns.droplevel([1, 2, 3])
-    return temperature - 273.15
+    return temperature
 
 
 def read_sims_tair_annual():

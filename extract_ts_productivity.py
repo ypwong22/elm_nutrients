@@ -42,9 +42,8 @@ growing_season = False
 zwt_growing_season = True
 
 
-prefix = "20240311"
+prefix = "20231113_3"
 
-#prefix = "20240317_5"
 #prefix  = "UQ_20240315"
 extrafix = "" # "_alt_params"
 

@@ -9,8 +9,6 @@ from utils.paths import *
 path_parameter = os.path.join(os.environ["PROJDIR"], "E3SM", "inputdata", "atm", "datm7",
                               "CLM1PT_data", "SPRUCE_data")
 
-#orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno'
-#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno_npcompet'
 orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
 newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
 
@@ -25,25 +23,26 @@ hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 hr['flnr'][2] = 0.10
 hr['flnr'][3] = 0.28
 hr['flnr'][11] = 0.28
-## reduce SPRUCE's base maintenance respiration but increase Q10
-hr['leaf_long'][2] = 5 # according to Paul's assumption
-hr['br_mr_pft'][2] = 2e-06
-hr['q10_mr_pft'][2] = 2.5
-## reduce tamarack as an association
-hr['br_mr_pft'][3] = 2.2e-06
-## increase shrub's base maintenance respiration
-hr['br_mr_pft'][11] = 8e-06
 """
 
+# make mortality a PFT-specific parameter
+hr['r_mort'] = xr.DataArray(
+    [
+        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.05, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+)
+
+
 # sensitivity of fine root to leaf ratio to nutrient limitation
-# For ombrotrophic shrub, increasing mineral nutrient content means increasing
-# ease of extracting them using roots intead of mycorrhizae. Hence they reduce the 
-# belowground allocation. 
-# 2004 Dissertation: observed increasing froot_leaf when nutrient becomes more abundant
-#                    (probably also related to flooding inhibiting root growth)
+# For ombrotrophic shrub, increasing mineral nutrient content means increasing ease 
+# of extracting them using roots intead of mycorrhizae. Hence they increase the allocation
+# to roots. 
 hr['froot_leaf_slope'] = xr.DataArray(
     [
-        0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.1, 0.1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.6, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -56,7 +55,7 @@ hr['froot_leaf_slope'] = xr.DataArray(
 # the ecto-fungi at uptake.
 hr['compet_pft_sminn'] = xr.DataArray(
     [
-        0, np.nan, 0.1, 0.2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.5, 0.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -65,16 +64,18 @@ hr['compet_pft_sminn'] = xr.DataArray(
 
 hr['compet_pft_sminp'] = xr.DataArray(
     [
-        0, np.nan, 1e-8, 1e-8, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-8, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+        0, np.nan, 0.5, 0.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
     attrs={"units": "gP gC-1 s-1", "long_name": "P uptake per unit fine root biomass"},
 )
 
+# Level of competitiveness that fungi gains for the trees in their uptake
+# > 1 to be more competitive than the tree roots.
 hr['cpool_pft_sminn'] = xr.DataArray(
     [
-        0, np.nan, 0.4, 0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.7, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.5, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1., np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -83,7 +84,7 @@ hr['cpool_pft_sminn'] = xr.DataArray(
 
 hr['cpool_pft_sminp'] = xr.DataArray(
     [
-        0, np.nan, 0.4, 0.4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.7, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.5, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1., np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -115,7 +116,7 @@ hr['scale_uptake'] = xr.DataArray(
 # Michaelis-Menten parameters: set to about the average N&P concentration in my simulations
 hr['kmin_nuptake'] = xr.DataArray(
     [
-        1e20, np.nan, 0.2, 0.2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        1e20, np.nan, 1e-4, 1e-4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -123,7 +124,7 @@ hr['kmin_nuptake'] = xr.DataArray(
 )
 hr['kmin_puptake'] = xr.DataArray(
     [
-        1e20, np.nan, 2e-6, 2e-6, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2e-6, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        1e20, np.nan, 1e-9, 2e-6, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],

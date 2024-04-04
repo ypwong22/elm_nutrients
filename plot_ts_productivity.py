@@ -18,7 +18,7 @@ def fit_line(x, y):
     return xnew, ynew, res.slope, res.intercept, r2
 
 
-prefix = "20240311"
+prefix = "20231113_3"
 #prefix = "UQ_20240315"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
 
@@ -56,6 +56,7 @@ title_list += sim_var_unobs
 
 
 for varname, ov, title in zip(sim_varname, obs_varname, title_list):
+    print(varname)
     fig, ax = plt.subplots(figsize=(6, 4))
 
     if varname in ['AGNPP_tree', 'AGNPP_tree_shrub', 'AGNPP_shrub']:
@@ -78,7 +79,7 @@ for varname, ov, title in zip(sim_varname, obs_varname, title_list):
         elif "BG_to_AG_" in varname:
             pft = varname.split('_')[-1]
             sim_temp = sim_data.loc[chamber_list[co2], f'BGNPP_{pft}'] / \
-                       sim_data.loc[chamber_list[co2], f'AGNPP_{pft}']
+                       np.maximum(sim_data.loc[chamber_list[co2], f'AGNPP_{pft}'], 1e-10)
         #elif 'delta' in varname:
         #    varname2 = varname.replace('delta_', '')
         #    # subtract the chamber 7 baseline

@@ -6,15 +6,18 @@ from utils.paths import *
 path_parameter = os.path.join(os.environ["PROJDIR"], "E3SM", "inputdata", "atm", "datm7",
                               "CLM1PT_data", "SPRUCE_data")
 
-orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
 #orgfile = 'clm_params_SPRUCE_20231120_spruceroot_eca.nc'
-newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno'
 #newfile = 'clm_params_SPRUCE_20231120_spruceroot_eca.nc_rootpheno'
+#orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
+#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno'
+orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
+newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_rootpheno_npcompet'
+
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
-### edit leaf-root ratio to achieve better photosynthesis
-##hr['froot_leaf'][3] = 0.15
+# leaf-root ratio of tamarack has to be edited to achive growth
+hr['froot_leaf'][3] = 0.2
 ##hr['froot_leaf'][11] = 0.15
 
 ### reduce the root N to boreal PFT levels in Ben's paper (2019) and should reduce the MR
@@ -24,7 +27,6 @@ hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
 # The longevity of black spruce and tamarack both appear rather low
 # Ruess, R.W., Hendrick, R.L., Burton, A.J., Pregitzer, K.S., Sveinbjornssön, B., Allen, M.F. and Maurer, G.E. (2003), COUPLING FINE ROOT DYNAMICS WITH ECOSYSTEM CARBON CYCLING IN BLACK SPRUCE FORESTS OF INTERIOR ALASKA. Ecological Monographs, 73: 643-662. https://doi.org/10.1890/02-4032
-hr["froot_long"][2] = 2.5 # make spruce root live longer
 hr["froot_long"][3] = 1.5
 hr['froot_long'][11] = 1.5 # from MWM model, Siya Shao 2022 New Phytologist
 
@@ -213,7 +215,18 @@ hr["mort_tsoi"] = xr.DataArray(
 )
 
 # Need to make tamarack root more flood tolerant
-hr["mort_a"] = 0.00175
+# also make spruce root more sensitive to temperature
+hr["mort_a"] = xr.DataArray(
+    [
+        np.nan, np.nan, 0.006, 0.00175, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.00175, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={
+        "units": "",
+        "long_name": "Parameter in soil temperature control on root mortality",
+    },
+)
 
 hr["mort_psi"] = xr.DataArray(
     [
