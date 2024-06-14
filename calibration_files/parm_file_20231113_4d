@@ -1,0 +1,12 @@
+# Q10 to see if can fix NPP sensitivity
+# Range taken from 
+# Griffiths, N. A., Hanson, P. J., Ricciuto, D. M., Iversen, C. M., Jensen, A. M., Malhotra, A., et al. (2017). Temporal and Spatial Variation in Peatland Carbon Cycling and Implications for Interpreting Responses of an Ecosystem-Scale Warming Experiment. Soil Science Society of America Journal, 81(6), 1668–1688. https://doi.org/10.2136/sssaj2016.12.0422
+q10_mr_pft   2   1.2   3.8
+q10_mr_pft   3   1.2   3.8
+q10_mr_pft  11   1.2   3.8
+
+# Range with reference to 
+# Massoud, E. C., Xu, C., Fisher, R. A., Knox, R. G., Walker, A. P., Serbin, S. P., et al. (2019). Identification of key parameters controlling demographically structured vegetation dynamics in a land surface model: CLM4.5(FATES). Geoscientific Model Development, 12(9), 4133–4164. https://doi.org/10.5194/gmd-12-4133-2019
+vcmaxhd      2 120000 280000
+vcmaxhd      3 120000 280000
+vcmaxhd     11 120000 280000

@@ -9,7 +9,7 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20240316'
+prefix = '20240316_2'
 rootpheno = True
 npcompet = True
 
@@ -19,7 +19,7 @@ npcompet = True
 var_list = {}
 var_list['pft'] = ['TLAI','GPP','NPP','AGNPP','BGNPP',
                    'TOTVEGC','TOTVEGC_ABG','MR','GR','XR','LITFALL',
-                    'SMINN_TO_NPOOL', 'SMINP_TO_PPOOL', 'CPOOL', 'NPOOL', 'PPOOL']
+                    'SMINN_TO_NPOOL', 'SMINP_TO_PPOOL', 'CPOOL', 'NPOOL', 'PPOOL', 'BTRAN']
 for pool in ['LEAF', 'FROOT', 'LIVESTEM', 'DEADSTEM', 'LIVECROOT', 'DEADCROOT']:
     var_list['pft'] = var_list['pft'] + [f'{pool}C',f'{pool}C_STORAGE',f'{pool}C_XFER',
                                          f'CPOOL_TO_{pool}C', f'{pool}C_XFER_TO_{pool}C']
@@ -30,7 +30,7 @@ for pool in ['LEAF', 'FROOT']:
 if npcompet:
     var_list['pft'].extend(['FPG_PATCH', 'FPG_P_PATCH','PLANT_NDEMAND','PLANT_PDEMAND',
                             'PLANT_NABSORB','PLANT_PABSORB','PLANT_NFUNGI_PATCH',
-                            'PLANT_PFUNGI_PATCH'])
+                            'PLANT_PFUNGI_PATCH','ZWT_ROOT_PATCH'])
 if rootpheno:
     var_list['pft'] = var_list['pft'] + [
         'ONSET_FLAG', 'OFFSET_FLAG', 'DORMANT_FLAG',
@@ -42,7 +42,7 @@ if rootpheno:
 var_list['col'] = [
     'TBOT', 'TSOI_30', 'H2OSOI_30', 'HR', 'NEE', 'FPG', 'FPG_P', 
     'ZWT', 'SMINN_30', 'SOLUTIONP_30', 'ACTUAL_IMMOB', 'ACTUAL_IMMOB_P',
-    'FPI', 'FPI_P']
+    'FPI', 'FPI_P', 'RH2M']
 if not npcompet:
     var_list['col'].extend(['FPG', 'FPG_P'])
 

@@ -140,14 +140,13 @@ def daylength_simple(dayOfYear, lat):
         return 2.0 * hourAngle / 15.0
 
 
-# https://stackoverflow.com/questions/54485777/finding-twilight-times-with-skyfield
-from skyfield import api, almanac
-from datetime import datetime, timedelta
-import pytz
-from skyfield.nutationlib import iau2000b
-
-
 def daylength(year, month, day, lat, lon, elv, tzn):
+    # https://stackoverflow.com/questions/54485777/finding-twilight-times-with-skyfield
+    from skyfield import api, almanac
+    from datetime import datetime, timedelta
+    import pytz
+    from skyfield.nutationlib import iau2000b
+
     """Build a function of time that returns the daylength.
 
     The function that this returns will expect a single argument that is a
@@ -268,7 +267,14 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
         hr = xr.open_mfdataset(flist_pft, decode_times=False)
         for var in var_list_pft:
             for pft in pft_list:
-                if var == "TSOI_AVG":
+                if var == 'TOTVEGC':
+                    # need to subtract out CPOOL to be comparable to obs
+                    collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values - \
+                        hr['CPOOL'][:, pft].values
+                    collection_ts[(plot, var, pft, "hollow")] = \
+                        hr[var][:, pft + hol_add].values - \
+                        hr['CPOOL'][:, pft + hol_add].values
+                elif var == "TSOI_AVG":
                     rootfr = hr["ROOTFR"][:, :, pft].values
                     hr2 = xr.open_mfdataset(flist_col)
                     collection_ts[(plot, var, pft, "hummock")] = np.sum(
@@ -278,6 +284,7 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                         (hr2["TSOI"][:, :, 1].values - 273.15) * rootfr, axis=1
                     )
                     hr2.close()
+
                 elif var == "SWC_AVG":
                     rootfr = hr["ROOTFR"][:, :, pft].values
                     hr2 = xr.open_mfdataset(flist_col)
@@ -286,27 +293,10 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                     collection_ts[(plot, var, pft, "hollow")] = np.sum(
                         hr2["H2OSOI"][:, :, 1].values * rootfr, axis=1)
                     hr2.close()
-                elif var == "ZWT":
-                    hr2 = xr.open_mfdataset(flist_col)
-                    collection_ts[(plot, var, pft, "hummock")] = (
-                        0.3 - hr2["ZWT"][:, 0].values
-                    )
-                    collection_ts[(plot, var, pft, "hollow")] = (
-                        hr2["H2OSFC"][:, 1] / 1000.0 - hr2["ZWT"][:, 1]
-                    )
-                    hr2.close()
-                else:
-                    if var == 'TOTVEGC':
-                        # need to subtract out CPOOL to be comparable to obs
-                        collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values - \
-                            hr['CPOOL'][:, pft].values
-                        collection_ts[(plot, var, pft, "hollow")] = \
-                            hr[var][:, pft + hol_add].values - \
-                            hr['CPOOL'][:, pft + hol_add].values
-                    else:
-                        collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values
-                        collection_ts[(plot, var, pft, "hollow")] = hr[var][:, pft + hol_add].values
 
+                else:
+                    collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values
+                    collection_ts[(plot, var, pft, "hollow")] = hr[var][:, pft + hol_add].values
         hr.close()
 
         var_list_col = var_list["col"]
@@ -334,11 +324,11 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                 elif 'SOLUTIONP_' in var:
                     thisvar = 'SOLUTIONP_vr'
 
-                data = 0.
-                for i in range(maxlayer - 1):
-                    data = hr[thisvar][:, i, :] * THICKNESS[i]
+                data = np.zeros([hr[thisvar].shape[0], 2])
+                for i in range(maxlayer):
+                    data = data + hr[thisvar][:, i, :] * THICKNESS[i]
                 last_depth = min(THICKNESS[i], depth - LEVGRND_I[maxlayer])
-                data = hr[thisvar][:, maxlayer, :] * last_depth
+                data = data + hr[thisvar][:, maxlayer, :] * last_depth
                 data = data / depth
 
                 collection_ts[(plot, var, 0, "hummock")] = data.values[:, 0]
@@ -355,6 +345,16 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                 collection_ts[(plot, var, 0, "hollow")] = np.nanmax(
                     hr["SMP"][:, :, 1].values, axis=1
                 )
+
+            elif var == "ZWT":
+                hr2 = xr.open_mfdataset(flist_col)
+                collection_ts[(plot, var, 0, "hummock")] = (
+                    0.3 - hr2["ZWT"][:, 0].values
+                )
+                collection_ts[(plot, var, 0, "hollow")] = (
+                    hr2["H2OSFC"][:, 1] / 1000.0 - hr2["ZWT"][:, 1]
+                )
+                hr2.close()
 
             else:
                 collection_ts[(plot, var, 0, "hummock")] = hr[var][:, 0].values
@@ -708,34 +708,184 @@ def read_obs_tsoi_daily():
 
 
 ########################################
-# Combine Paul's and verity's observation
+# Given folder path, get the simulated values matched to the observed values
 ########################################
-def get_spruce_carbonfluxes():
-    obs_paul = pd.read_excel(os.path.join(os.environ['HOME'],
-        'Git', 'phenology_elm', "SPRUCE C Budget Summary 28Apr2022EXP.xlsx"),
-        sheet_name="DataForPythonRead", skiprows=1,  engine="openpyxl")
-    obs_paul = obs_paul.loc[obs_paul["Year"] != 2020, :]
-    obs_paul = obs_paul.set_index(['Plot', 'Year']).sort_index()
+def get_sim_carbonfluxes(year_range, runroot, growing_season, 
+                         extra_pft_vars = [], extra_col_vars = []):
+    mossfrac = pd.read_excel(
+        os.path.join(os.environ['HOME'], 'Git', 'phenology_elm', "Sphagnum_fraction.xlsx"),
+        index_col=0, skiprows=1, engine="openpyxl"
+    ).drop(["plot", "Temp", "CO2"], axis=1)
+    mossfrac[2015] = mossfrac[2016]
 
-    obs_verity = pd.read_csv(os.path.join(os.environ['HOME'],
-        'Git', 'phenology_elm', 'SalmonSPRUCE_2016to2021_AbovegroundPFT_CNPbudget_20240208.csv'))
-    # match by plot and year to temperature
-    obs_verity['Plot'] = [f'P{p:02d}' for p in obs_verity['Plot']]
-    obs_verity = obs_verity.set_index(['Plot', 'Year', 'PFT']).unstack()
-    obs_verity = obs_verity.loc[:, (slice(None), 
-                                    ['Sphagnum', 'evergreen conifer', 'deciduous conifer',  
-                                     'shrub'])]
-    obs_verity2 = obs_verity.loc[:, ['ABGbiomass_gCperm2', 'ABGnpp_gCperm2peryear']]
-                                    # 'Pretrt_ABGbiomass_gCperm2', 'Pretrt_ABGnpp_gCperm2peryear']]
+    var_list = ['Tair', 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
+                'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
+                'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
+                'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
 
-    # subtract the pre-treatment level
-    for col in obs_verity2.columns:
-        obs_verity2.loc[:, ('Delta '+col[0],col[1])] = \
-            obs_verity.loc[:, col].values - \
-            obs_verity.loc[:, ('Pretrt_'+col[0], col[1])].values
+    grid_to_plot = {"T0.00": "P06", "T2.25": "P20", "T4.50": "P13",
+        "T6.75": "P08", "T9.00": "P17", "T0.00CO2": "P19", "T2.25CO2": "P11",
+        "T4.50CO2": "P04", "T6.75CO2": "P16", "T9.00CO2": "P10", "TAMB": "P07"}
+    plot_to_grid = dict([(b,a) for a,b in grid_to_plot.items()])
 
-    obs_verity2.columns = ['_'.join(c[0].split('_')[:-1]) + ' ' + c[1] for c in obs_verity2.columns]
+    pft_stride = 17
+    plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19', 'P20']
 
-    obs_data = pd.concat([obs_paul, obs_verity2], axis = 1, join = 'outer')
-    obs_data = obs_data.reset_index()
-    return obs_data
+    collect = pd.DataFrame(np.nan,
+        index = pd.MultiIndex.from_product([['hummock', 'hollow', 'average'],
+                                            plot_list,
+                                            year_range], names = ['column', 'plot', 'year']),
+        columns = var_list + extra_pft_vars + extra_col_vars)
+
+    for plot in plot_list:
+        if not "UQ" in runroot:
+            temp = plot.replace("P", '')
+            rundir = os.path.join(runroot, f'plot{temp}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+        else:
+            temp = chamber_list_complete_dict[plot]
+            rundir = os.path.join(runroot, temp)
+
+        flist_pft = sorted(glob(rundir + "/*.h2.*.nc"))
+        flist_pft = [f for f in flist_pft if \
+                     int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
+
+        hr = xr.open_mfdataset(flist_pft)
+        flist_col = sorted(glob(rundir + "/*.h1.*.nc"))
+        flist_col = [f for f in flist_col if \
+                     int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
+
+        hr2 = xr.open_mfdataset(flist_col)
+
+        if growing_season:
+            filter = (hr['time'].to_index().month >= 5) & (hr['time'].to_index().month <= 10)
+
+        ##################################################################
+        # PFT_specific variables in VAR_LIST
+        ##################################################################
+        # hummock: 0.64, hollow: 0.36
+        # pima: 0.36, lala: 0.14
+        for var, varname in zip(['AGNPP', 'TOTVEGC_ABG'], ['AGNPP', 'AGBiomass']):
+            # temporary fix until better values become available
+            if growing_season:
+                temp = hr[var][filter, :].resample({'time': '1Y'}).mean()
+            else:
+                temp = hr[var][:-1, :].resample({'time': '1Y'}).mean()
+            if var == 'AGNPP':
+                # convert gC/m2/s to gC/m2/year; otherwise gC m-2
+                temp = temp.values * 365 * 86400
+            else:
+                temp = temp.values
+            for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+                collect.loc[(col, plot), f'{varname}_Spruce'] = temp[:, 2 + add] * 0.36
+                collect.loc[(col, plot), f'{varname}_Tamarack'] = temp[:, 3 + add] * 0.14
+                collect.loc[(col, plot), f'{varname}_Shrub'] = temp[:, 11 + add] * 0.25
+
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            for pft in ['Spruce', 'Tamarack', 'Shrub']:
+                collect.loc[(col, plot), f'AGNPPtoBiomass_{pft}'] = \
+                    collect.loc[(col, plot), f'AGNPP_{pft}'].values / \
+                    collect.loc[(col, plot), f'AGBiomass_{pft}'].values
+
+        # BGNPP_TreeShrub is purely fine root
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            # temporary fix until better values become available
+            if growing_season:
+                temp = (hr['FROOTC_ALLOC'])[filter, :].resample({'time': '1Y'}).mean()
+            else:
+                temp = (hr['FROOTC_ALLOC'])[:-1, :].resample({'time': '1Y'}).mean()
+            # convert gC/m2/s to gC/m2/year; otherwise gC m-2
+            temp = temp.values * 365 * 86400
+            collect.loc[(col, plot), 'BGNPP_TreeShrub'] = \
+                temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14 + temp[:, 11 + add] * 0.25
+
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            collect.loc[(col, plot), 'BGtoAG_TreeShrub'] = \
+                collect.loc[(col, plot), 'BGNPP_TreeShrub'].values / \
+                (collect.loc[(col, plot), 'AGNPP_Spruce'] + \
+                collect.loc[(col, plot), 'AGNPP_Tamarack'] + \
+                collect.loc[(col, plot), 'AGNPP_Shrub']).values
+
+        if growing_season:
+            temp = hr['NPP'][filter, :].resample({'time': '1Y'}).mean()
+        else:
+            temp = hr['NPP'][:-1, :].resample({'time': '1Y'}).mean()
+        # convert gC/m2/s to gC/m2/year
+        temp = temp * 365 * 86400
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            collect.loc[(col, plot), 'NPP_moss'] = temp[:, 12 + add] * \
+                mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
+
+        #if growing_season:
+        #    temp = hr['GPP'][filter, :].resample({'time': '1Y'}).mean()
+        #else:
+        #    temp = hr['GPP'][:-1, :].resample({'time': '1Y'}).mean()
+        ## convert gC/m2/s to gC/m2/year
+        #temp = temp * 365 * 86400
+        #for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+        #    collect.loc[(col, plot), 'GPP_moss'] = temp[:, 12 + add] * \
+        #        mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
+            
+
+        ##################################################################
+        # PFT variables in extra_pft_vars
+        ##################################################################
+        for var in extra_pft_vars:
+            # temporary fix until better values become available
+            if 'LEAFC_ALLOC_TO_TOTVEGC_ABG' in var:
+                if growing_season:
+                    temp = hr['LEAFC_ALLOC'][filter, :].resample({'time': '1Y'}).mean() / \
+                           hr['TOTVEGC_ABG'][filter, :].resample({'time': '1Y'}).mean() * \
+                           365 * 86400
+                else:
+                    temp = hr['LEAFC_ALLOC'][:-1, :].resample({'time': '1Y'}).mean() / \
+                           hr['TOTVEGC_ABG'][:-1, :].resample({'time': '1Y'}).mean() * \
+                           365 * 86400
+            if var == 'AGNPP':
+                # convert gC/m2/s to gC/m2/year; otherwise gC m-2
+                temp = temp.values * 365 * 86400
+            else:
+                temp = temp.values
+            for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+                collect.loc[(col, plot), f'{var}_Spruce'] = temp[:, 2 + add] * 0.36
+                collect.loc[(col, plot), f'{var}_Tamarack'] = temp[:, 3 + add] * 0.14
+                collect.loc[(col, plot), f'{var}_Shrub'] = temp[:, 11 + add] * 0.25
+
+        ##################################################################
+        # Column variables in VAR_LIST
+        ##################################################################
+        col_list = ['TBOT', 'NEE', 'HR']
+        for colvar in col_list: # 'FCH4'
+            if growing_season:
+                temp = hr2[colvar][filter, :].resample({'time': '1Y'}).mean().values
+            else:
+                temp = hr2[colvar][:-1, :].resample({'time': '1Y'}).mean().values
+            if colvar in ['NEE', 'HR']:
+                # convert gC/m2/s to gC/m2/year
+                temp = temp * 365 * 86400
+            for num, col in enumerate(['hummock', 'hollow']):
+                if colvar == 'FCH4':
+                    collect.loc[(col, plot), 'CH4'] = temp[:, num]
+                elif colvar == 'TBOT':
+                    collect.loc[(col, plot), 'Tair'] = temp[:, num] - 273.15
+                else:
+                    collect.loc[(col, plot), colvar] = temp[:, num]
+
+        ##################################################################
+        # Column variables in extra_col_vars
+        ##################################################################
+        for colvar in extra_col_vars:
+            if growing_season:
+                temp = hr2[colvar][filter, :].resample({'time': '1Y'}).mean().values
+            else:
+                temp = hr2[colvar][:-1, :].resample({'time': '1Y'}).mean().values
+            for num, col in enumerate(['hummock', 'hollow']):
+                collect.loc[(col, plot), colvar] = temp[:, num]
+
+        hr.close()
+        hr2.close()
+
+    temp = (collect.loc['hummock', :] * 0.64 + collect.loc['hollow' , :] * 0.36)
+    for ind, row in temp.iterrows():
+        collect.loc[('average', *ind), :] = row.values
+
+    return collect

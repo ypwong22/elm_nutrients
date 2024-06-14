@@ -63,6 +63,18 @@ hr['froot_leaf'][11] = 1.228784812082149847e-01
 hr['stem_leaf'][11] = 1.509871452260563018e-01
 hr['croot_stem'][11] = 1.678106396067260975e-01
 
+
+# (7) make mortality a PFT-specific parameter
+hr['r_mort'] = xr.DataArray(
+    [
+        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.12, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+)
+
+
 encoding = {}
 for data_var in hr.data_vars:
     if "_FillValue" in hr[data_var].encoding.keys():

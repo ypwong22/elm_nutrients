@@ -7,6 +7,7 @@ from utils.paths import *
 from utils.constants import chamber_list_names_complete
 import pandas as pd
 import time
+from utils.analysis import get_sim_carbonfluxes
 
 
 comm = MPI.COMM_WORLD
@@ -24,10 +25,10 @@ workdir = os.getcwd()
 # PREFIX = "UQ_default2"
 
 # jobid = 4113489
-N = 400
+N = 1000
 #N = 2000
-PREFIX = "UQ_20240316_1c"
-time.sleep(0.3*rank)
+PREFIX = "UQ_20231113_4d"
+#time.sleep(0.3*rank)
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
@@ -39,9 +40,10 @@ if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
 RUNROOT = os.path.join(os.environ["PROJDIR"], "E3SM", "output")
-VAR_LIST = ["TOTVEGC_ABG_pima", "TOTVEGC_ABG_lala", "TOTVEGC_ABG_shrub",
-            "ANPP_pima", "ANPP_lala", "ANPP_tree", "ANPP_shrub", 
-            "NPP_moss", "BGNPP", "HR", "NEE", "TOTSOMC"]
+VAR_LIST = ['Tair', 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
+            'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
+            'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
+            'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
 YEAR_LIST = range(2016, 2022)  # skip 2015 and 2021 because no observation/no model data
 
 MOSSFRAC = pd.read_excel("Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"
@@ -54,100 +56,32 @@ niter = int(N / BLOCK)
 
 # Define function to perform ensemble member post-processing
 def postproc(thisjob, collection):
+#    thisjob = 100
+#    collection = np.empty([len(VAR_LIST), 2, 4])
     ierr = 0
 
     casename = f"{PREFIX}_US-SPR_ICB20TRCNPRDCTCBC"
     baserundir = os.path.join(RUNROOT, "UQ", casename, f"g{thisjob:05g}")
-    print(thisjob)
+    # print(thisjob)
 
-    values = np.empty([len(chamber_list_names_complete), len(YEAR_LIST), len(VAR_LIST)])
-    t2m = np.empty([len(chamber_list_names_complete), len(YEAR_LIST)])
-
-    for i, folder in enumerate(chamber_list_names_complete):
-        # DEBUG
-        ##casename = f'20230526_plot{chamber_list_complete[i]:02g}_US-SPR_ICB20TRCNPRDCTCBC'
-        ##baserundir = os.path.join(RUNROOT, casename, "run")
-
-        for j, year in enumerate(YEAR_LIST):
-            fname_pft = os.path.join(
-                baserundir,
-                folder,
-                f"{casename}.elm.h2.{year}-01-01-00000.nc",
-            )
-            fname_col = os.path.join(
-                baserundir,
-                folder,
-                f"{casename}.elm.h1.{year}-01-01-00000.nc",
-            )
-
-            # note some parameter combinations can fail
-            if not (os.path.exists(fname_pft) or os.path.exists(fname_col)):
-                ierr = -1
-                return ierr
-
-            hr = Dataset(fname_pft)
-            hr2 = Dataset(fname_col)
-
-            for k, varname in enumerate(VAR_LIST):
-                if varname == "NPP_moss":
-                    var = (hr["NPP"][:, :].mean(axis=0) * MOSSFRAC.loc[folder, year] / 100)
-                    values[i, j, k] = var[12] * 0.64 + var[12 + 17] * 0.36
-                elif varname == "ANPP_tree":
-                    var = hr["AGNPP"][:, :].mean(axis=0)
-                    values[i, j, k] = (var[2] * 0.64 + var[2 + 17] * 0.36) * 0.36 + (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
-                elif varname == "ANPP_shrub":
-                    var = hr["AGNPP"][:, :].mean(axis=0)
-                    values[i, j, k] = (var[11] * 0.64 + var[11 + 17] * 0.36) * 0.25
-                elif varname == "ANPP_pima":
-                    var = hr["AGNPP"][:, :].mean(axis=0)
-                    values[i, j, k] = (var[2] * 0.64 + var[2 + 17] * 0.36) * 0.36
-                elif varname == "ANPP_lala":
-                    var = hr["AGNPP"][:, :].mean(axis=0)
-                    values[i, j, k] = (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
-                elif "TOTVEGC_ABG_" in varname:
-                    if "pima" in varname:
-                        pft = 2; frac = 0.36
-                    elif "lala" in varname:
-                        pft = 3; frac = 0.14
-                    elif "shrub" in varname:
-                        pft = 11; frac = 0.25
-                    var = hr["TOTVEGC_ABG"][:, :].mean(axis=0)
-                    values[i, j, k] = (var[pft] * 0.64 + var[pft + 17] * 0.36) * frac
-                elif varname == "BGNPP":
-                    # tree and shrub only
-                    var = hr["BGNPP"][:, :].mean(axis=0)
-                    values[i, j, k] = (
-                        (var[2] * 0.64 + var[2 + 17] * 0.36) * 0.36
-                         + (var[3] * 0.64 + var[3 + 17] * 0.36) * 0.14
-                         + (var[11] * 0.64 + var[11 + 17] * 0.36) * 0.25
-                    )
-                else:
-                    var = hr2[varname][:, :].mean(axis=0)
-                    values[i, j, k] = var[0] * 0.64 + var[1] * 0.36
-
-            var = hr2["TBOT"][:, :].mean(axis=0) - 273.15
-            t2m[i, j] = var[0] * 0.64 + var[1] * 0.36
-
-            hr.close()
-            hr2.close()
+    values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False)
+    values = values.loc['average', :]
 
     # ('amb', 'elev') x (mean, mean_std, slope, slope_std)
-    # collection = np.empty([len(VAR_LIST), 2, 4])
     # ambient -> elevated CO2
-    for i, temp in enumerate(
-        [
-            np.arange(1, len(chamber_list_names_complete), 2),
-            np.arange(2, len(chamber_list_names_complete), 2),
-        ]
-    ):
-        # Note this is the ambient or T0.00CO2 chamber
-        for k, _ in enumerate(VAR_LIST):
-            collection[k, i, 0] = np.mean(values[temp[0], :, k])
-            collection[k, i, 1] = np.std(values[temp[0], :, k])
+    chamber_list = {'amb': ['P06', 'P20', 'P13', 'P08', 'P17'], 
+                    'elev': ['P19', 'P11', 'P04', 'P16', 'P10']}
+    for i, co2 in enumerate(['amb', 'elev']):
+        temp = values.index.get_level_values(0).isin(chamber_list[co2])
+
+        # average of all the chambers
+        for k, var in enumerate(VAR_LIST):
+            collection[k, i, 0] = np.mean(values.loc[temp, var].values)
+            collection[k, i, 1] = np.std(values.loc[temp, var].values)
 
         ts = abs(t.ppf(0.05, len(temp) * len(YEAR_LIST) - 2))
-        for k, _ in enumerate(VAR_LIST):
-            res = linregress(t2m[temp, :].reshape(-1), values[temp, :, k].reshape(-1))
+        for k, var in enumerate(VAR_LIST):
+            res = linregress(values.loc[temp, 'Tair'].values, values.loc[temp, var].values)
             collection[k, i, 2] = res.slope
             collection[k, i, 3] = ts * res.stderr
 
@@ -213,5 +147,6 @@ for b in range(niter):
                 comm.send(rank, dest=0, tag=4)
                 comm.send(myjob, dest=0, tag=5)
                 comm.send(collection, dest=0, tag=6)
+        print(collection)
 
 MPI.Finalize()
