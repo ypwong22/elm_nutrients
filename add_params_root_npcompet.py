@@ -25,100 +25,213 @@ hr['flnr'][3] = 0.28
 hr['flnr'][11] = 0.28
 """
 
-# sensitivity of fine root to leaf ratio to nutrient limitation
-# For ombrotrophic shrub, increasing mineral nutrient content means increasing ease 
-# of extracting them using roots intead of mycorrhizae. Hence they increase the allocation
-# to roots. 
-hr['froot_leaf_slope'] = xr.DataArray(
+# sensitivity of fine root to leaf ratio to water table
+hr['zwt_froot_a'] = xr.DataArray(
     [
-        0, np.nan, 1.4, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.4, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.4, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "", "long_name": "Sensitivity of froot_leaf to Michaelis-Menten limitation"},
+    attrs={"units": "", "long_name": "sensitivity of froot_leaf to water table depth"},
 )
 
-# Multiplication scalars on the nutrients uptake
-# Those should be around 1, but we know larch is slightly more efficient at self-uptake than spruce.
-# Shrub is probably bad at self-uptake but ericoid mycorrhizae fungi is much better than
-# the ecto-fungi at uptake.
-hr['compet_pft_sminn'] = xr.DataArray(
+hr['froot_radius'] = xr.DataArray(
     [
-        0, np.nan, 0.5, 0.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.02, 0.02, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.01, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "gN gC-1 s-1", "long_name": "N uptake per unit fine root biomass"},
+    attrs={"units": "cm", "long_name": "fine root radius"},
 )
 
-hr['compet_pft_sminp'] = xr.DataArray(
+hr['froot_density'] = xr.DataArray(
     [
-        0, np.nan, 0.5, 0.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.03, 0.03, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.03, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "gP gC-1 s-1", "long_name": "P uptake per unit fine root biomass"},
+    attrs={"units": "gC cm-3", "long_name": "fine root density"},
 )
 
-# Level of competitiveness that fungi gains for the trees in their uptake
-# > 1 to be more competitive than the tree roots.
-hr['cpool_pft_sminn'] = xr.DataArray(
+# calibrated to replace the plant's total N content of
+# (100% * leaf + 100% * froot + r_mort*rest) in 1 year for the deciduous species
+# (20% * leaf + 20% * froot + r_mort*rest) in 1 year for Picea mariana, since the root & leaf longevity are 5 years
+# FROOTC:LEAFC = 22% for Pima, 49% for Lala, 12% for shrub
+# FROOTC:(TOTVEGC-LEAFC-FROOTC) = 77.4% for Pima, 9% for Lala, 4.3% for shrub
+# r_mort = 0.02 for Pima & Lala, 0.12 for shrub
+# vmax * frootc * 0.01 / froot_radius**2 / froot_density * (86400*365) = totvegc / CN
+# hence, 
+# vmax = np.array([0.2 / 0.22 + 0.2 + 0.02 / 0.774, 1/0.49 + 1 + 0.02 / 0.09, 1/0.12 + 1 + 0.12 / 0.043]) / 0.01 * np.array([0.02,0.02,0.01])**2 * np.array([0.03,0.03,0.03]) / 86400 / 365 / np.array([67.52, 73.80, 53.32])
+#      = np.array([6.39e-13, 1.68e-12, 2.16e-12])
+# Yet, reality still needs adjustment. ,
+
+# 20240311_3: vmax_froot_n =  2.5e-12, 2e-11, 2e-11
+# 20240311_3_1: vmax_froot_n = 3e-12, 1.5e-11, 2e-11
+hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 1., 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.5e-12, 1.5e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.5e-11, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "", "long_name": "Multiplicative factor on the CPOOL-drive mycorrhizae N uptake"},
+    attrs={"units": "gN cm-2 s-1", "long_name": "maximum N uptake rate per unit area of fine root"},
 )
 
-hr['cpool_pft_sminp'] = xr.DataArray(
+# use N:P ratio of each plant
+# The ratios printed from code are as follows
+#           1           3 C:N   67.515413567007371      C:P   946.81194843536082
+#           1           4 C:N   73.799250851819622      C:P   1004.8973966937480
+#           1          12 C:N   51.325518820304183      C:P   832.73157270429067
+# vmax = np.array([0.2 / 0.22 + 0.2 + 0.02 / 0.774, 1/0.49 + 1 + 0.02 / 0.09, 1/0.12 + 1 + 0.12 / 0.043]) / 0.01 * np.array([0.02,0.02,0.01])**2 * np.array([0.03,0.03,0.03]) / 86400 / 365 / np.array([946.81, 1004.90, 832.73])
+#      = array([4.56122134e-14, 1.23558890e-13, 1.38502456e-13])
+# Yet, reality still needs adjustment. 
+hr['vmax_froot_p'] = xr.DataArray(
     [
-        0, np.nan, 1., 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1e-13, 1e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2e-12, 8e-13, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "", "long_name": "Multiplicative factor on the CPOOL-drive mycorrhizae P uptake"},
+    attrs={"units": "gP cm-2 s-1", "long_name": "maximum P uptake rate per unit area of fine root"},
 )
 
-# Q10 equation from 
-# Ghimire et al. 2016 Representing leaf and root physiological traits in CLM 
-#                     improves global carbon and nitrogen cycling predictions
-# q10_uptake & scale_uptake from the same pape○♥r
-# tbase_uptake from Shao et al. 2023 Ericoid mycorrhizal fungi mediate the 
-#                                    response of ombrotrophic peatlands to 
-#                                    fertilization: a modeling study
-hr['q10_uptake'] = xr.DataArray(
-    [
-        1, np.nan, 2, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
-    ],
-    coords={"pft": hr["pft"]},
-    dims=["pft"],
-    attrs={"units": "", "long_name": "Q10 in root nutrients uptake Q10 function"},
-)
-hr['tbase_uptake'] = xr.DataArray(
-    [283.15], dims = ["allpft"], attrs = {"units": "K", "long_name": "Base temperature in root nutrients uptake Q10 function"})
-hr['scale_uptake'] = xr.DataArray(
-    [10], dims=["allpft"],
-    attrs={"units": "", "long_name": "Scale factor in root nutrients uptake Q10 function"},
+# It's actually meaningless to have both - NH4 is the vast majority of N, and the 
+# model subroutines do not distinguish between NH4 and NO3 in its N demand
+# literature value - 0.14, but is too high except for layer 3
+hr['km_froot_n'] = xr.DataArray(
+    [2], dims=["allpft"],
+    attrs={"units": "gN m-3", "long_name": "half saturation point for NH4 uptake rate by fine root"},
 )
 
-# Michaelis-Menten parameters: set to about the average N&P concentration in my simulations
-hr['kmin_nuptake'] = xr.DataArray(
+# literature value - 0.7, also way to high
+hr['km_froot_p'] = xr.DataArray(
+    [0.02], dims=["allpft"],
+    attrs={"units": "gP m-3", "long_name": "half saturation point for PO4 uptake rate by fine root"},
+)
+
+hr['q10_upt'] = xr.DataArray(
+    [2], dims=["allpft"],
+    attrs={"units": "", "long_name": "temperature sensitivity of nutrient uptake by fine root"},
+)
+
+hr['swc_opt'] = xr.DataArray(
+    [0.6], dims=["allpft"],
+    attrs={"units": "m3 m-3", "long_name": "optimal volumetric soil moisture content for nutrient uptake by mycorrhizal fungi"},
+)
+
+hr['alpha_fpg'] = xr.DataArray(
+    [1.5], dims=["allpft"],
+    attrs={"units": "", "long_name": "sensitivity of nutrient uptake to nutrient limitation"},
+)
+
+hr['zwt_fungi_a'] = xr.DataArray(
     [
-        1e20, np.nan, 1e-4, 1e-4, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, -30, -30, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 40, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "gN m-3", "long_name": "Half saturation point of nitrogen uptake"},
+    attrs={"units": "", "long_name": "sensitivity of fungi inhibition to water table depth"},
 )
-hr['kmin_puptake'] = xr.DataArray(
+
+hr['zwt_fungi_b'] = xr.DataArray(
     [
-        1e20, np.nan, 1e-9, 2e-6, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, -2, -2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "gP m-3", "long_name": "Half saturation point of phosphorus uptake"},
+    attrs={"units": "", "long_name": "sensitivity of fungi inhibition to water table depth"},
 )
+
+hr['zwt_fungi_c'] = xr.DataArray(
+    [0.7], dims=["allpft"],
+    attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
+)
+
+hr['zwt_fungi_d'] = xr.DataArray(
+    [1/80], dims=["allpft"],
+    attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
+)
+
+hr['zwt_fungi_e'] = xr.DataArray(
+    [1/0.016], dims=["allpft"],
+    attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
+)
+
+# Assume that colonized roots operating at "full capacity" can uptake 1.5x the 
+# plant's uptake rate, converted units, but at a carbon cost
+# vmax * frootc * (86400*365) = 2 * totvegc / CN
+# vmax = 2 * np.array([0.2 / 0.22 + 0.2 + 0.02 / 0.774, 1/0.49 + 1 + 0.02 / 0.09, 1/0.12 + 1 + 0.12 / 0.043]) / 86400 / 365 / np.array([67.52, 73.80, 53.32])
+# vmax = array([1.06600760e-09, 2.80407246e-09, 1.44204989e-08])
+# Tested distributing this vmax between organic and inorganic pools, for EcM, use 1:1, 
+#                                                                    for ErM, use 0.5:1.5
+# But still need adjustment; shrub has really high demand
+hr['vmax_fungi_din'] = xr.DataArray(
+    [
+        0, np.nan, 5e-9, 5e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "gN g-1 s-1", "long_name": "maximum inorganic N uptake rate per gram mycorrhizal root"},
+)
+# vmax * frootc * (86400*365) = 2 * totvegc / CN
+# vmax = 2 * np.array([0.2 / 0.22 + 0.2 + 0.02 / 0.774, 1/0.49 + 1 + 0.02 / 0.09, 1/0.12 + 1 + 0.12 / 0.043]) / 86400 / 365 / np.array([946.81, 1004.90, 832.73])
+# vmax = np.array([7.60203557e-11, 2.05931483e-10, 9.23349708e-10])
+# 
+# We distribute this vmax between organic and inorganic pools, for EcM, use 1:1, ErM use 0.5:1.5
+# And still need adjustment, vmax = vmax * np.array([10, 3/2, 3/4])
+hr['vmax_fungi_dip'] = xr.DataArray(
+    [
+        0, np.nan, 2.5e-10, 2.5e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-9, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "gP g-1 s-1", "long_name": "maximum inorganic P uptake rate per gram mycorrhizal root"},
+)
+
+hr['km_fungi_din'] = xr.DataArray(
+    [1e-2], dims=["allpft"],
+    attrs={"units": "gN m-3", "long_name": "half saturation point for inorganic N uptake by mycorrhizal root"},
+)
+
+hr['km_fungi_dip'] = xr.DataArray(
+    [1e-3], dims=["allpft"],
+    attrs={"units": "gP m-3", "long_name": "half saturation point for inorganic P uptake by mycorrhizal root"},
+)
+
+hr['km_nsc'] = xr.DataArray(
+    [2], dims=["allpft"],
+    attrs={"units": "", "long_name": "parameter controlling the impact of nonstructural carbohydrate saturation on nutrient uptake"},
+)
+
+# 20240311_3: vmax_fungi_son = 1.6e-9, 1.6e-9, 1.6e-8
+# 20240311_3_1: vmax_fungi_son = 1.6e-9, 1.6e-9, 1.6e-8
+hr['vmax_fungi_son'] = xr.DataArray(
+    [
+        0, np.nan, 1.6e-9, 1.6e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.6e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "gN gC-1 s-1", "long_name": "rate of mining organic N by mycorrhizal fungi"},
+)
+
+hr['vmax_fungi_sop'] = xr.DataArray(
+    [
+        0, np.nan, 3e-11, 3e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 6e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "gP gC-1 s-1", "long_name": "rate of mining organic P by mycorrhizal fungi"},
+)
+
+# Based on C:N and C:P ratio of mycorrhizal fungi
+hr['fungi_cost_n'] = xr.DataArray(
+    [25], dims=["allpft"],
+    attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
+)
+
+hr['fungi_cost_p'] = xr.DataArray(
+    [500], dims=["allpft"],
+    attrs={"units": "gP m-3", "long_name": "carbon cost of fungal P uptake"},
+)
+
 
 encoding = {}
 for data_var in hr.data_vars:

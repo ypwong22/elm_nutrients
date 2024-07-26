@@ -12,6 +12,10 @@ def fit_line(x, y):
     filt = ~np.isnan(x) & ~np.isnan(y)
     x = x[filt]
     y = y[filt]
+
+    if sum(filt) == 0:
+        return np.nan, np.nan, np.nan, np.nan, np.nan
+
     res = linregress(x, y)
     xnew = np.linspace(x.min(), x.max(), 3)
     ynew = res.slope * xnew + res.intercept
@@ -19,7 +23,7 @@ def fit_line(x, y):
     return xnew, ynew, res.slope, res.intercept, r2
 
 
-prefix = "20240311_2"
+prefix = "20231113_4"
 #prefix = "UQ_20240315"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
 

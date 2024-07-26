@@ -1,4 +1,14 @@
-""" Update some CNP ratios based on observational data"""
+""" Update some CNP ratios based on observational data
+
+[3:33 PM] Ricciuto, Daniel M.
+/ccsopen/home/zdr/models/OLMT/clm_params_SPRUCE_20231120_spruceroot.nc
+
+br_mr = 4.11e-06, 4.11e-06, 3.98884656945625e-06, 4.78407787443815e-06,
+    4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06,
+    2.5838138262092e-06, 3.09955207934309e-06, 4.11e-06, 4.11e-06, 4.11e-06,
+    4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06, 4.11e-06,
+    4.11e-06, 4.11e-06 ;
+"""
 import xarray as xr
 import numpy as np
 import os
@@ -51,15 +61,15 @@ hr['cn_s3'] = 20
 hr['cn_s4'] = 20
 
 # (6) Edits based on parameter optimization outcomes 20231113_2a and 20231113_2b
-hr['flnr'][3] = 1.541807362373865953e-01
-hr['br_mr_pft'][3] = 8.275866311697777393e-06
-hr['froot_leaf'][3] = 4.891957834556074358e-01
+#hr['flnr'][3] = 1.541807362373865953e-01
+#hr['br_mr_pft'][3] = 8.275866311697777393e-06
+#hr['froot_leaf'][3] = 4.891957834556074358e-01
 hr['stem_leaf'][3] = -3.076457295690046001e-01
 hr['croot_stem'][3] = 7.389691614435485167e-01
 
 hr['flnr'][11] = 2.083813227331323681e-01
-hr['br_mr_pft'][11] = 4.995466990066244512e-06
-hr['froot_leaf'][11] = 1.228784812082149847e-01
+#hr['br_mr_pft'][11] = 4.995466990066244512e-06
+#hr['froot_leaf'][11] = 1.228784812082149847e-01
 hr['stem_leaf'][11] = 1.509871452260563018e-01
 hr['croot_stem'][11] = 1.678106396067260975e-01
 
@@ -68,6 +78,35 @@ hr['croot_stem'][11] = 1.678106396067260975e-01
 hr['r_mort'] = xr.DataArray(
     [
         0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.12, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+)
+
+
+# (8) add new PFT-dependent inundation tolerance parameter for Ben's code
+hr['waterlevel_threshold'] = xr.DataArray(
+    [
+        -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+)
+
+hr['waterlevel_opt'] = xr.DataArray(
+    [
+        -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8, -0.8,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
+    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+)
+
+hr['waterlevel_tol'] = xr.DataArray(
+    [
+        10, 10, 2, 10, 10, 10, 10, 10, 10, 10, 10, 2, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],

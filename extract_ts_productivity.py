@@ -40,12 +40,11 @@ growing_season = False
 zwt_growing_season = True
 
 
+year_range = range(2015, 2022)
 if not "UQ" in prefix:
-    year_range = range(2015, 2021)
     runroot = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', 
                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', f'spruce_treatments{extrafix}')
 else:
-    year_range = range(2015, 2022)
     runroot = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', 'UQ',
                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', 'g01000')
 

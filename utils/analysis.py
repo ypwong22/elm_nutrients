@@ -241,7 +241,7 @@ def kge(simulations, evaluation):
 
 
 def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
-    tvec = pd.date_range("2015-01-01", "2020-12-31", freq="1D")
+    tvec = pd.date_range("2015-01-01", "2021-12-31", freq="1D")
     tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
 
     pft_list = [2, 3, 11, 12]
@@ -274,26 +274,39 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
                     collection_ts[(plot, var, pft, "hollow")] = \
                         hr[var][:, pft + hol_add].values - \
                         hr['CPOOL'][:, pft + hol_add].values
-                elif var == "TSOI_AVG":
-                    rootfr = hr["ROOTFR"][:, :, pft].values
-                    hr2 = xr.open_mfdataset(flist_col)
-                    collection_ts[(plot, var, pft, "hummock")] = np.sum(
-                        (hr2["TSOI"][:, :, 0].values - 273.15) * rootfr, axis=1
-                    )
-                    collection_ts[(plot, var, pft, "hollow")] = np.sum(
-                        (hr2["TSOI"][:, :, 1].values - 273.15) * rootfr, axis=1
-                    )
-                    hr2.close()
+                elif 'ROOTFR' in var:
+                    # root fraction weighted variable
+                    var_ = '_'.join(var.split('_')[:-1])
 
-                elif var == "SWC_AVG":
                     rootfr = hr["ROOTFR"][:, :, pft].values
-                    hr2 = xr.open_mfdataset(flist_col)
-                    collection_ts[(plot, var, pft, "hummock")] = np.sum(
-                        hr2["H2OSOI"][:, :, 0].values * rootfr, axis=1)
-                    collection_ts[(plot, var, pft, "hollow")] = np.sum(
-                        hr2["H2OSOI"][:, :, 1].values * rootfr, axis=1)
-                    hr2.close()
+                    nlev = np.max(np.where(rootfr[0, :] > 0)[0])
 
+                    if var_ in ['TSOI','H2OSOI','SMINN_vr','SOLUTIONP_vr',
+                                'LITR1N_vr','LITR2N_vr','LITR3N_vr',
+                                'LITR1P_vr','LITR2P_vr','LITR3P_vr']:
+                        # column variables
+                        hr2 = xr.open_mfdataset(flist_col)
+                        collection_ts[(plot, var, pft, "hummock")] = np.sum(
+                            hr2[var_][:,:nlev,0].values * rootfr[:,:nlev], axis=1
+                        )
+                        collection_ts[(plot, var, pft, "hollow")] = np.sum(
+                            hr2[var_][:,:nlev,1].values * rootfr[:,:nlev], axis=1
+                        )
+                        hr2.close()
+
+                        if var_ == 'TSOI':
+                            collection_ts[(plot, var, pft, "hummock")] = \
+                                collection_ts[(plot, var, pft, "hummock")] - 273.15
+                            collection_ts[(plot, var, pft, "hollow")] = \
+                                collection_ts[(plot, var, pft, "hollow")] - 273.15
+                    else:
+                        # pft-specific variables, (time, levdcmp, pft)
+                        collection_ts[(plot, var, pft, "hummock")] = np.sum(
+                            hr[var_][:, :nlev, pft].values * rootfr[:,:nlev], axis=1
+                        )
+                        collection_ts[(plot, var, pft, "hollow")] = np.sum(
+                            hr[var_][:, :nlev, pft+hol_add].values * rootfr[:,:nlev], axis=1
+                        )
                 else:
                     collection_ts[(plot, var, pft, "hummock")] = hr[var][:, pft].values
                     collection_ts[(plot, var, pft, "hollow")] = hr[var][:, pft + hol_add].values
@@ -303,6 +316,7 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
         hr = xr.open_mfdataset(flist_col, decode_times=False)
         for var in var_list_col:
             if 'TSOI_' in var or 'H2OSOI_' in var or 'SMINN_' in var or 'SOLUTIONP_' in var:
+                # layer thickness weighted variable
 
                 LEVGRND = np.array([0.007100635, 0.027925, 0.06225858, 0.1188651, 0.2121934,
                                     0.3660658, 0.6197585, 1.038027, 1.727635, 2.864607, 4.739157,
@@ -349,7 +363,7 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
             elif var == "ZWT":
                 hr2 = xr.open_mfdataset(flist_col)
                 collection_ts[(plot, var, 0, "hummock")] = (
-                    0.3 - hr2["ZWT"][:, 0].values
+                    0.15 - hr2["ZWT"][:, 0].values
                 )
                 collection_ts[(plot, var, 0, "hollow")] = (
                     hr2["H2OSFC"][:, 1] / 1000.0 - hr2["ZWT"][:, 1]
@@ -735,7 +749,8 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season,
         index = pd.MultiIndex.from_product([['hummock', 'hollow', 'average'],
                                             plot_list,
                                             year_range], names = ['column', 'plot', 'year']),
-        columns = var_list + extra_pft_vars + extra_col_vars)
+        columns = var_list + extra_col_vars + [f'{v}_Spruce' for v in extra_pft_vars] + \
+             [f'{v}_Tamarack' for v in extra_pft_vars] + [f'{v}_Shrub' for v in extra_pft_vars])
 
     for plot in plot_list:
         if not "UQ" in runroot:
