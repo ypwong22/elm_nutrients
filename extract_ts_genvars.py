@@ -9,9 +9,9 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20231113_4'
+prefix = '20240311_3_1'
 rootpheno = False
-npcompet = False
+npcompet = True
 
 #for prefix,rootpheno,npcompet in zip(['20231113', '20240311', '20240316'],
 #                                     [False, False, True],  [False, True, True]):
@@ -20,7 +20,8 @@ var_list = {}
 var_list['pft'] = ['TLAI','GPP','NPP','AGNPP','BGNPP','FROOTC_ALLOC','LEAFC_ALLOC','TOTVEGC',
                    'TOTVEGC_ABG','MR','GR','XR','LITFALL','FROOTN','FROOTP','LEAFN','LEAFP',
                    'SMINN_TO_NPOOL', 'SMINP_TO_PPOOL', 'CPOOL', 'NPOOL', 'PPOOL', 'BTRAN',
-                   'PLANT_NDEMAND','PLANT_PDEMAND', 'RETRANSN_TO_NPOOL','RETRANSP_TO_PPOOL',]
+                   'PLANT_NDEMAND','PLANT_PDEMAND', 'RETRANSN_TO_NPOOL','RETRANSP_TO_PPOOL',
+                   'XSMRPOOL']
 for pool in ['LEAF', 'FROOT', 'LIVESTEM', 'DEADSTEM', 'LIVECROOT', 'DEADCROOT']:
     var_list['pft'] = var_list['pft'] + [f'{pool}C',f'{pool}C_STORAGE',f'{pool}C_XFER',
                                          f'CPOOL_TO_{pool}C', f'CPOOL_TO_{pool}C_STORAGE',
@@ -65,7 +66,7 @@ if rootpheno:
 
 var_list['col'] = [
     'TBOT', 'TSOI_30', 'H2OSOI_30', 'HR', 'NEE', 'FPG', 'FPG_P', 'ZWT', 
-    'SMINN_30', 'SOLUTIONP_30', 'ACTUAL_IMMOB', 'ACTUAL_IMMOB_P',
+    'ACTUAL_IMMOB', 'ACTUAL_IMMOB_P', # 'SMINN_30', 'SOLUTIONP_30', 
     'FPI', 'FPI_P', 'RH2M']
 if not npcompet:
     var_list['col'].extend(['FPG', 'FPG_P'])

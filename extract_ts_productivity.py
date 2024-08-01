@@ -33,7 +33,7 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'FPI', 'FPI_P']
 
 
-prefix = "20231113_4"
+prefix = "20240311_3_2"
 #prefix  = "UQ_20240315"
 extrafix = "" # "_alt_params"
 growing_season = False
@@ -79,8 +79,8 @@ for plot in plot_list:
         flist = flist[:-1]
     hr2 = xr.open_mfdataset(flist)
 
-    if growing_season or zwt_growing_season:
-        filter = (hr['time'].to_index().month >= 5) & (hr['time'].to_index().month <= 10)
+    filter = hr['time'].to_index().month *100 + hr['time'].to_index().day
+    filter = (filter >= 515) & (filter <= 1015)
 
     if 'FPI' in var_list_extra:
         # NP limitation should always focus on growing season

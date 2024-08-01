@@ -69,7 +69,7 @@ hr['froot_density'] = xr.DataArray(
 # 20240311_3_1: vmax_froot_n = 3e-12, 1.5e-11, 2e-11
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 1.5e-12, 1.5e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.5e-11, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1e-12, 4e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2.7e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -86,7 +86,7 @@ hr['vmax_froot_n'] = xr.DataArray(
 # Yet, reality still needs adjustment. 
 hr['vmax_froot_p'] = xr.DataArray(
     [
-        0, np.nan, 1e-13, 1e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2e-12, 8e-13, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 6e-14, 3e-13, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -165,7 +165,7 @@ hr['zwt_fungi_e'] = xr.DataArray(
 # But still need adjustment; shrub has really high demand
 hr['vmax_fungi_din'] = xr.DataArray(
     [
-        0, np.nan, 5e-9, 5e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 5e-9, 5e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2.5e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -179,7 +179,7 @@ hr['vmax_fungi_din'] = xr.DataArray(
 # And still need adjustment, vmax = vmax * np.array([10, 3/2, 3/4])
 hr['vmax_fungi_dip'] = xr.DataArray(
     [
-        0, np.nan, 2.5e-10, 2.5e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1e-9, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.5e-10, 2.5e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 8e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -205,7 +205,7 @@ hr['km_nsc'] = xr.DataArray(
 # 20240311_3_1: vmax_fungi_son = 1.6e-9, 1.6e-9, 1.6e-8
 hr['vmax_fungi_son'] = xr.DataArray(
     [
-        0, np.nan, 1.6e-9, 1.6e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.6e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.6e-9, 1.6e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 4.8e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -222,8 +222,9 @@ hr['vmax_fungi_sop'] = xr.DataArray(
 )
 
 # Based on C:N and C:P ratio of mycorrhizal fungi
+# cost_n = 50, cost_p = 500; 
 hr['fungi_cost_n'] = xr.DataArray(
-    [25], dims=["allpft"],
+    [50], dims=["allpft"],
     attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
 )
 
