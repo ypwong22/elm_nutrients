@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys, os, time
 import numpy as np
 from netCDF4 import Dataset
@@ -17,34 +18,26 @@ size = comm.Get_size()
 workdir = os.getcwd()
 
 # number of simulations
-# N = 1000
-# PREFIX = "UQ_default2_optimized"
-
-# jobid = 4113483, burst
-# N = 4000
-# PREFIX = "UQ_default2"
-
-# jobid = 4113489
-N = 1000
+N = 4000
 #N = 2000
-PREFIX = "UQ_20231113_4d"
-#time.sleep(0.3*rank)
+
+PREFIX = "UQ_20240311_3"
+time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
-BLOCK = 200 
-#BLOCK = 200
+BLOCK = 200
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
-RUNROOT = os.path.join(os.environ["PROJDIR"], "E3SM", "output")
+RUNROOT = os.path.join(os.environ["E3SM_ROOT"], "output")
 VAR_LIST = ['Tair', 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
             'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
             'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
             'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
-YEAR_LIST = range(2016, 2022)  # skip 2015 and 2021 because no observation/no model data
+YEAR_LIST = range(2015, 2022)  # skip 2015 and 2021 because no observation/no model data
 
 MOSSFRAC = pd.read_excel("Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"
                          ).drop(["plot", "Temp", "CO2"], axis=1)
@@ -53,18 +46,19 @@ MOSSFRAC[2015] = MOSSFRAC[2016]
 
 niter = int(N / BLOCK)
 
-
-# Define function to perform ensemble member post-processing
+# Function to perform post-processing for one ensemble member
 def postproc(thisjob, collection):
-#    thisjob = 100
-#    collection = np.empty([len(VAR_LIST), 2, 4])
+    # Debug
+    # thisjob = 3852
+    # collection = np.empty([len(VAR_LIST), 2, 4])
     ierr = 0
 
     casename = f"{PREFIX}_US-SPR_ICB20TRCNPRDCTCBC"
     baserundir = os.path.join(RUNROOT, "UQ", casename, f"g{thisjob:05g}")
+    # print(baserundir)    
     # print(thisjob)
 
-    values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False)
+    values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])
     values = values.loc['average', :]
 
     # ('amb', 'elev') x (mean, mean_std, slope, slope_std)
@@ -85,13 +79,19 @@ def postproc(thisjob, collection):
             collection[k, i, 2] = res.slope
             collection[k, i, 3] = ts * res.stderr
 
+    # Debug
+    #return collection
     return ierr
+
+# Debug
+#collection = postproc(None, None)
 
 
 for b in range(niter):
-    print("rank = ", rank, "b = ", b)
+    print("rank = ", rank, "b = ", b, flush = True)
 
     if rank == 0:
+        # process a whole block
         start = b * BLOCK
         collection_all = np.full([BLOCK, len(VAR_LIST), 2, 4], np.nan)
 
@@ -134,6 +134,7 @@ for b in range(niter):
 
     # --------------------- Slave process (get data and calculate) --------------
     else:
+        # process individual members inside the block
         collection = np.full([len(VAR_LIST), 2, 4], np.nan)
 
         status = 0
@@ -147,6 +148,6 @@ for b in range(niter):
                 comm.send(rank, dest=0, tag=4)
                 comm.send(myjob, dest=0, tag=5)
                 comm.send(collection, dest=0, tag=6)
-        print(collection)
+        print(collection[:, 1, 2])
 
 MPI.Finalize()

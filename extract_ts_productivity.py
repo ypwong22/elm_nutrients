@@ -23,7 +23,6 @@ grid_to_plot = {
 plot_to_grid = dict([(b,a) for a,b in grid_to_plot.items()])
 
 
-#pft_stride = 32
 pft_stride = 17
 plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19', 'P20']
 
@@ -33,8 +32,8 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'FPI', 'FPI_P']
 
 
-prefix = "20240311_3_2"
-#prefix  = "UQ_20240315"
+#prefix = "20240311_3_2"
+prefix  = "UQ_20240311_3"
 extrafix = "" # "_alt_params"
 growing_season = False
 zwt_growing_season = True
@@ -42,11 +41,11 @@ zwt_growing_season = True
 
 year_range = range(2015, 2022)
 if not "UQ" in prefix:
-    runroot = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', 
+    runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 
                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', f'spruce_treatments{extrafix}')
 else:
-    runroot = os.path.join(os.environ['PROJDIR'], 'E3SM', 'output', 'UQ',
-                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', 'g01000')
+    runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 'UQ',
+                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', 'g03852')
 
 collect_part1 = get_sim_carbonfluxes(year_range, runroot, growing_season, 
                                      extra_pft_vars = ['LEAFC_ALLOC_TO_TOTVEGC_ABG'])

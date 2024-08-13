@@ -23,8 +23,8 @@ def fit_line(x, y):
     return xnew, ynew, res.slope, res.intercept, r2
 
 
-prefix = "20240311_3_2"
-#prefix = "UQ_20240315"
+#prefix = "20240311_3_2"
+prefix = "UQ_20240311_3"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
 
 # T: 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
@@ -37,7 +37,7 @@ chamber_list = {
 sim_data = pd.read_csv(os.path.join(outdir, 'extract_ts_productivity.csv'), 
                        index_col=[0, 1, 2])
 sim_data = sim_data.loc['average', :]
-sim_data = sim_data.loc[sim_data.index.get_level_values(0) != 2020, :]
+# sim_data = sim_data.loc[sim_data.index.get_level_values(0) != 2020, :]
 sim_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
                'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
@@ -111,6 +111,8 @@ for varname, ov, title, unit in zip(sim_varname, obs_varname, title_list, units_
             color=clist[count], transform=ax.transAxes)
         count = count + 1
 
+        dummy()
+
         if varname in sim_var_unobs:
             continue
 
@@ -127,6 +129,7 @@ for varname, ov, title, unit in zip(sim_varname, obs_varname, title_list, units_
             "y$_{OBS\_"+ CO2 + "}$=" + f"{slope:.2f}x+{intercept:.2f}  " + "R$^2$=" + f"{r2:.3f}",
             color=clist[count], transform=ax.transAxes)
         count = count + 1
+        
 
     ax.axhline(0.0, ls=":", color="k", lw=0.5)
 

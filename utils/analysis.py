@@ -6,6 +6,7 @@ from glob import glob
 import xarray as xr
 from .constants import *
 from .paths import *
+import warnings
 
 
 def get_treatment_string(chamber):
@@ -726,6 +727,8 @@ def read_obs_tsoi_daily():
 ########################################
 def get_sim_carbonfluxes(year_range, runroot, growing_season, 
                          extra_pft_vars = [], extra_col_vars = []):
+    warnings.filterwarnings("ignore")
+
     mossfrac = pd.read_excel(
         os.path.join(os.environ['HOME'], 'Git', 'phenology_elm', "Sphagnum_fraction.xlsx"),
         index_col=0, skiprows=1, engine="openpyxl"
@@ -759,6 +762,8 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season,
         else:
             temp = chamber_list_complete_dict[plot]
             rundir = os.path.join(runroot, temp)
+
+            print(rundir)
 
         flist_pft = sorted(glob(rundir + "/*.h2.*.nc"))
         flist_pft = [f for f in flist_pft if \
@@ -902,5 +907,7 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season,
     temp = (collect.loc['hummock', :] * 0.64 + collect.loc['hollow' , :] * 0.36)
     for ind, row in temp.iterrows():
         collect.loc[('average', *ind), :] = row.values
+
+    warnings.filterwarnings("default")
 
     return collect
