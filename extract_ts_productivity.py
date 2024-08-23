@@ -33,7 +33,7 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
 
 
 #prefix = "20240311_3_2"
-prefix  = "UQ_20240311_3"
+prefix  = "UQ_20240311_4" # UQ_20240311_3 = g03505, UQ_20240311_4 = g01540
 extrafix = "" # "_alt_params"
 growing_season = False
 zwt_growing_season = True
@@ -45,7 +45,7 @@ if not "UQ" in prefix:
                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', f'spruce_treatments{extrafix}')
 else:
     runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 'UQ',
-                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', 'g03852')
+                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', 'g01438')
 
 collect_part1 = get_sim_carbonfluxes(year_range, runroot, growing_season, 
                                      extra_pft_vars = ['LEAFC_ALLOC_TO_TOTVEGC_ABG'])

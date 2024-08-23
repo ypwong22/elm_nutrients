@@ -6,7 +6,7 @@ import numpy as np
 import os
 from utils.paths import *
 
-path_parameter = os.path.join(os.environ["PROJDIR"], "E3SM", "inputdata", "atm", "datm7",
+path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm7",
                               "CLM1PT_data", "SPRUCE_data")
 
 orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
@@ -69,7 +69,7 @@ hr['froot_density'] = xr.DataArray(
 # 20240311_3_1: vmax_froot_n = 3e-12, 1.5e-11, 2e-11
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 1e-12, 4e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2.7e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 8.51290725970651e-13, 3.36064694163732e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.90148095083628e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -97,7 +97,7 @@ hr['vmax_froot_p'] = xr.DataArray(
 # model subroutines do not distinguish between NH4 and NO3 in its N demand
 # literature value - 0.14, but is too high except for layer 3
 hr['km_froot_n'] = xr.DataArray(
-    [2], dims=["allpft"],
+    [3], dims=["allpft"],
     attrs={"units": "gN m-3", "long_name": "half saturation point for NH4 uptake rate by fine root"},
 )
 
@@ -165,7 +165,7 @@ hr['zwt_fungi_e'] = xr.DataArray(
 # But still need adjustment; shrub has really high demand
 hr['vmax_fungi_din'] = xr.DataArray(
     [
-        0, np.nan, 5e-9, 5e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2.5e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 4.3631019527772e-09, 2.25632830124756e-09, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.23944522817284e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -205,7 +205,7 @@ hr['km_nsc'] = xr.DataArray(
 # 20240311_3_1: vmax_fungi_son = 1.6e-9, 1.6e-9, 1.6e-8
 hr['vmax_fungi_son'] = xr.DataArray(
     [
-        0, np.nan, 1.6e-9, 1.6e-9, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 4.8e-8, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.24207579152288e-09, 1.52754034409134e-09, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.55208421915683e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -224,7 +224,7 @@ hr['vmax_fungi_sop'] = xr.DataArray(
 # Based on C:N and C:P ratio of mycorrhizal fungi
 # cost_n = 50, cost_p = 500; 
 hr['fungi_cost_n'] = xr.DataArray(
-    [50], dims=["allpft"],
+    [19], dims=["allpft"],
     attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
 )
 

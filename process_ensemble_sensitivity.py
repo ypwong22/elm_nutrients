@@ -21,7 +21,7 @@ workdir = os.getcwd()
 N = 4000
 #N = 2000
 
-PREFIX = "UQ_20240311_3"
+PREFIX = "UQ_20240311_4"
 time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
@@ -148,6 +148,6 @@ for b in range(niter):
                 comm.send(rank, dest=0, tag=4)
                 comm.send(myjob, dest=0, tag=5)
                 comm.send(collection, dest=0, tag=6)
-        print(collection[:, 1, 2])
+        #print(collection[:, 1, 2])
 
 MPI.Finalize()

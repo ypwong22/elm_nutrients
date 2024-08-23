@@ -24,7 +24,7 @@ def fit_line(x, y):
 
 
 #prefix = "20240311_3_2"
-prefix = "UQ_20240311_3"
+prefix = "UQ_20240311_4"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
 
 # T: 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
@@ -110,8 +110,6 @@ for varname, ov, title, unit in zip(sim_varname, obs_varname, title_list, units_
             + f"{slope:.2f}x+{intercept:.2f}  "+ "R$^2$="+ f"{r2:.3f}", 
             color=clist[count], transform=ax.transAxes)
         count = count + 1
-
-        dummy()
 
         if varname in sim_var_unobs:
             continue
