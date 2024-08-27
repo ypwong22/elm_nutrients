@@ -179,7 +179,7 @@ hr['vmax_fungi_din'] = xr.DataArray(
 # And still need adjustment, vmax = vmax * np.array([10, 3/2, 3/4])
 hr['vmax_fungi_dip'] = xr.DataArray(
     [
-        0, np.nan, 2.5e-10, 2.5e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 8e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.81e-10, 1.5e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 7e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -214,7 +214,7 @@ hr['vmax_fungi_son'] = xr.DataArray(
 
 hr['vmax_fungi_sop'] = xr.DataArray(
     [
-        0, np.nan, 3e-11, 3e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 6e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 3e-11, 3e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],

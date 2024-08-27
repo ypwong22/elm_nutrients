@@ -32,8 +32,8 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'FPI', 'FPI_P']
 
 
-#prefix = "20240311_3_2"
-prefix  = "UQ_20240311_4" # UQ_20240311_3 = g03505, UQ_20240311_4 = g01540
+prefix = "20231113"
+#prefix  = "UQ_20240311_4" # UQ_20240311_3 = g03505, UQ_20240311_4 = g01540
 extrafix = "" # "_alt_params"
 growing_season = False
 zwt_growing_season = True
