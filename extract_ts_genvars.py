@@ -9,9 +9,9 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20240311_3_1'
+prefix = '20231113_4'
 rootpheno = False
-npcompet = True
+npcompet = False
 
 #for prefix,rootpheno,npcompet in zip(['20231113', '20240311', '20240316'],
 #                                     [False, False, True],  [False, True, True]):
@@ -21,7 +21,7 @@ var_list['pft'] = ['TLAI','GPP','NPP','AGNPP','BGNPP','FROOTC_ALLOC','LEAFC_ALLO
                    'TOTVEGC_ABG','MR','GR','XR','LITFALL','FROOTN','FROOTP','LEAFN','LEAFP',
                    'SMINN_TO_NPOOL', 'SMINP_TO_PPOOL', 'CPOOL', 'NPOOL', 'PPOOL', 'BTRAN',
                    'PLANT_NDEMAND','PLANT_PDEMAND', 'RETRANSN_TO_NPOOL','RETRANSP_TO_PPOOL',
-                   'XSMRPOOL']
+                   'XSMRPOOL','AVAILC']
 for pool in ['LEAF', 'FROOT', 'LIVESTEM', 'DEADSTEM', 'LIVECROOT', 'DEADCROOT']:
     var_list['pft'] = var_list['pft'] + [f'{pool}C',f'{pool}C_STORAGE',f'{pool}C_XFER',
                                          f'CPOOL_TO_{pool}C', f'CPOOL_TO_{pool}C_STORAGE',
@@ -100,7 +100,7 @@ def extract_sims_rootfr_weighted(prefix, var_list={"pft": [], "col": []}):
     )
 
     for plot in chamber_list_complete:
-        path_data = os.path.join(os.environ["PROJDIR"], "E3SM",
+        path_data = os.path.join(os.environ["E3SM_ROOT"],
             "output", f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC",
             "spruce_treatments", f'plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
 

@@ -242,7 +242,7 @@ def kge(simulations, evaluation):
 
 
 def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
-    tvec = pd.date_range("2015-01-01", "2021-12-31", freq="1D")
+    tvec = pd.date_range("2015-01-01", "2023-12-31", freq="1D")
     tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
 
     pft_list = [2, 3, 11, 12]
@@ -254,7 +254,7 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
     )
 
     for plot in chamber_list_complete:
-        path_data = os.path.join(os.environ["PROJDIR"], "E3SM",
+        path_data = os.path.join(os.environ["E3SM_ROOT"],
             "output", f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC",
             "spruce_treatments", f'plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
 

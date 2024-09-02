@@ -69,7 +69,7 @@ hr['froot_density'] = xr.DataArray(
 # 20240311_3_1: vmax_froot_n = 3e-12, 1.5e-11, 2e-11
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 8.51290725970651e-13, 3.36064694163732e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.90148095083628e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1e-12, 6e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 2e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -86,7 +86,7 @@ hr['vmax_froot_n'] = xr.DataArray(
 # Yet, reality still needs adjustment. 
 hr['vmax_froot_p'] = xr.DataArray(
     [
-        0, np.nan, 6e-14, 3e-13, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 6e-14, 1e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -97,13 +97,14 @@ hr['vmax_froot_p'] = xr.DataArray(
 # model subroutines do not distinguish between NH4 and NO3 in its N demand
 # literature value - 0.14, but is too high except for layer 3
 hr['km_froot_n'] = xr.DataArray(
-    [3], dims=["allpft"],
+    [1e-3], dims=["allpft"],
     attrs={"units": "gN m-3", "long_name": "half saturation point for NH4 uptake rate by fine root"},
 )
 
 # literature value - 0.7, also way to high
+# Set to extremely low values to create stability
 hr['km_froot_p'] = xr.DataArray(
-    [0.02], dims=["allpft"],
+    [1e-6], dims=["allpft"],
     attrs={"units": "gP m-3", "long_name": "half saturation point for PO4 uptake rate by fine root"},
 )
 
@@ -124,7 +125,7 @@ hr['alpha_fpg'] = xr.DataArray(
 
 hr['zwt_fungi_a'] = xr.DataArray(
     [
-        0, np.nan, -30, -30, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 40, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, -85, -85, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 120, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -133,7 +134,7 @@ hr['zwt_fungi_a'] = xr.DataArray(
 
 hr['zwt_fungi_b'] = xr.DataArray(
     [
-        0, np.nan, -2, -2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, -3.5, -3.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -146,12 +147,12 @@ hr['zwt_fungi_c'] = xr.DataArray(
 )
 
 hr['zwt_fungi_d'] = xr.DataArray(
-    [1/80], dims=["allpft"],
+    [1/60], dims=["allpft"],
     attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
 )
 
 hr['zwt_fungi_e'] = xr.DataArray(
-    [1/0.016], dims=["allpft"],
+    [1/0.012], dims=["allpft"],
     attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
 )
 
@@ -165,7 +166,7 @@ hr['zwt_fungi_e'] = xr.DataArray(
 # But still need adjustment; shrub has really high demand
 hr['vmax_fungi_din'] = xr.DataArray(
     [
-        0, np.nan, 4.3631019527772e-09, 2.25632830124756e-09, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.23944522817284e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 5e-09, 1e-08, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.23944522817284e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -179,7 +180,7 @@ hr['vmax_fungi_din'] = xr.DataArray(
 # And still need adjustment, vmax = vmax * np.array([10, 3/2, 3/4])
 hr['vmax_fungi_dip'] = xr.DataArray(
     [
-        0, np.nan, 1.81e-10, 1.5e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 7e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 3e-10, 3e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 7e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -214,22 +215,23 @@ hr['vmax_fungi_son'] = xr.DataArray(
 
 hr['vmax_fungi_sop'] = xr.DataArray(
     [
-        0, np.nan, 3e-11, 3e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 3e-11, 5e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 3e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
     attrs={"units": "gP gC-1 s-1", "long_name": "rate of mining organic P by mycorrhizal fungi"},
 )
 
-# Based on C:N and C:P ratio of mycorrhizal fungi
-# cost_n = 50, cost_p = 500; 
+## Based on C:N and C:P ratio of mycorrhizal fungi
+## cost_n = 50, cost_p = 500; 
+# Set those to zero for stability, for initial run (non-sensitivity)
 hr['fungi_cost_n'] = xr.DataArray(
-    [19], dims=["allpft"],
+    [0], dims=["allpft"],
     attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
 )
 
 hr['fungi_cost_p'] = xr.DataArray(
-    [500], dims=["allpft"],
+    [0], dims=["allpft"],
     attrs={"units": "gP m-3", "long_name": "carbon cost of fungal P uptake"},
 )
 

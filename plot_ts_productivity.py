@@ -23,7 +23,7 @@ def fit_line(x, y):
     return xnew, ynew, res.slope, res.intercept, r2
 
 
-prefix = "20231113"
+prefix = "20240311"
 #prefix = "UQ_20240311_4"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
 
@@ -51,8 +51,11 @@ sim_var_unobs = ["SMINN_30", "SOLUTIONP_30",
                  "FPI","FPI_P", "TOTSOMC",
                  "LEAFC_ALLOC_TO_TOTVEGC_ABG_Spruce",
                  "LEAFC_ALLOC_TO_TOTVEGC_ABG_Tamarack",
-                 "LEAFC_ALLOC_TO_TOTVEGC_ABG_Shrub"]
-units_list_unobs = ['gN m-3', 'gP m-3', '','','','','','','','','','gC m-2',"yr-1","yr-1","yr-1"]
+                 "LEAFC_ALLOC_TO_TOTVEGC_ABG_Shrub",
+                 'SOMN_TO_SMINN_Spruce', 'SOMN_TO_SMINN_Tamarack', 'SOMN_TO_SMINN_Shrub',
+                 'SOMP_TO_SMINP_Spruce', 'SOMP_TO_SMINP_Tamarack', 'SOMP_TO_SMINP_Shrub']
+units_list_unobs = ['gN m-3', 'gP m-3', '','','','','','','','','gC m-2',"yr-1","yr-1","yr-1",
+                    "","","","","",""]
 sim_varname += sim_var_unobs
 units_list = units_list + units_list_unobs
 

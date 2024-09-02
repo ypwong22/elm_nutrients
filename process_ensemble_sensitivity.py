@@ -21,7 +21,7 @@ workdir = os.getcwd()
 N = 4000
 #N = 2000
 
-PREFIX = "UQ_20240311_4"
+PREFIX = "UQ_20240311_1"
 time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
@@ -55,7 +55,7 @@ def postproc(thisjob, collection):
 
     casename = f"{PREFIX}_US-SPR_ICB20TRCNPRDCTCBC"
     baserundir = os.path.join(RUNROOT, "UQ", casename, f"g{thisjob:05g}")
-    # print(baserundir)    
+    print(baserundir)    
     # print(thisjob)
 
     values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])

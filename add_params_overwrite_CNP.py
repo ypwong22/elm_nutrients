@@ -14,7 +14,7 @@ import numpy as np
 import os
 from utils.paths import *
 
-path_parameter = os.path.join(os.environ["PROJDIR"], "E3SM", "inputdata", "atm", "datm7",
+path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm7",
                               "CLM1PT_data", "SPRUCE_data")
 
 orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc'
@@ -92,7 +92,7 @@ hr['waterlevel_threshold'] = xr.DataArray(
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+    attrs={"units": "yr-1", "long_name": "flooding factor threshold"},
 )
 
 hr['waterlevel_opt'] = xr.DataArray(
@@ -101,16 +101,16 @@ hr['waterlevel_opt'] = xr.DataArray(
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+    attrs={"units": "yr-1", "long_name": "flooding factor optimal water table depth"},
 )
 
 hr['waterlevel_tol'] = xr.DataArray(
     [
-        10, 10, 2, 10, 10, 10, 10, 10, 10, 10, 10, 2, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
-    attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
+    attrs={"units": "yr-1", "long_name": "flooding factor curvature"},
 )
 
 

@@ -29,10 +29,13 @@ plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19
 var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'FPG_Spruce', 'FPG_Tamarack', 'FPG_Shrub',
                   'FPG_P_Spruce', 'FPG_P_Tamarack', 'FPG_P_Shrub', 
-                  'FPI', 'FPI_P']
+                  'FPI', 'FPI_P', 'SOMN_TO_SMINN_Spruce', 
+                  'SOMN_TO_SMINN_Tamarack', 'SOMN_TO_SMINN_Shrub',
+                  'SOMP_TO_SMINP_Spruce', 'SOMP_TO_SMINP_Tamarack',
+                  'SOMP_TO_SMINP_Shrub']
 
 
-prefix = "20231113"
+prefix = "20240311"
 #prefix  = "UQ_20240311_4" # UQ_20240311_3 = g03505, UQ_20240311_4 = g01540
 extrafix = "" # "_alt_params"
 growing_season = False
@@ -67,15 +70,19 @@ for plot in plot_list:
         rundir = os.path.join(runroot, temp)
 
     flist = sorted(glob(rundir + "/*.h2.*.nc"))
-    if "UQ" in prefix:
-        flist = flist[:-1]
+    flist = [f for f in flist if \
+             int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
+    # if "UQ" in prefix:
+    #     flist = flist[:-1]
     # if len(flist) == 0:
     #    continue
     hr = xr.open_mfdataset(flist)
 
     flist = sorted(glob(rundir + "/*.h1.*.nc"))
-    if "UQ" in prefix:
-        flist = flist[:-1]
+    flist = [f for f in flist if \
+             int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
+    #if "UQ" in prefix:
+    #    flist = flist[:-1]
     hr2 = xr.open_mfdataset(flist)
 
     filter = hr['time'].to_index().month *100 + hr['time'].to_index().day
@@ -84,11 +91,16 @@ for plot in plot_list:
     if 'FPI' in var_list_extra:
         # NP limitation should always focus on growing season
         if 'FPG_PATCH' in hr.variables:
-            temp = hr['FPG_PATCH'][filter, :].resample({'time': '1Y'}).mean()
+            # the FPG_PATCH variable can have benign extremely high values
+            # because the current step's demand is too small compared to
+            # available fie root uptake
+            pot_smin_demand = hr['PLANT_NDEMAND_POT'][filter, :].resample({'time': '1Y'}).mean()
+            smin_demand = hr['PLANT_NDEMAND'][filter, :].resample({'time': '1Y'}).mean()
+            # som = hr['FUNGI_SOM_TO_NPOOL'][filter, :].resample({'time': '1Y'}).mean()
             for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-                collect_part2.loc[(col, plot), 'FPG_Spruce'] = temp[:, 2 + add]
-                collect_part2.loc[(col, plot), 'FPG_Tamarack'] = temp[:, 3 + add]
-                collect_part2.loc[(col, plot), 'FPG_Shrub'] = temp[:, 11 + add]
+                collect_part2.loc[(col, plot), 'FPG_Spruce'] = (pot_smin_demand / smin_demand)[:, 2 + add]
+                collect_part2.loc[(col, plot), 'FPG_Tamarack'] = (pot_smin_demand / smin_demand)[:, 3 + add]
+                collect_part2.loc[(col, plot), 'FPG_Shrub'] = (pot_smin_demand / smin_demand)[:, 11 + add]
         else:
             temp = hr2['FPG'][filter, :].resample({'time': '1Y'}).mean()
             for num, col in enumerate(['hummock', 'hollow']):
@@ -96,18 +108,37 @@ for plot in plot_list:
                 collect_part2.loc[(col, plot), 'FPG_Tamarack'] = temp[:, num]
                 collect_part2.loc[(col, plot), 'FPG_Shrub'] = temp[:, num]
 
-        if 'FPG_PATCH' in hr.variables:
-            temp = hr['FPG_P_PATCH'][filter, :].resample({'time': '1Y'}).mean()
+        if 'FPG_P_PATCH' in hr.variables:
+            pot_smin_demand = hr['PLANT_PDEMAND_POT'][filter, :].resample({'time': '1Y'}).mean()
+            smin_demand = hr['PLANT_PDEMAND'][filter, :].resample({'time': '1Y'}).mean()
+            som = hr['FUNGI_SOM_TO_PPOOL'][filter, :].resample({'time': '1Y'}).mean()
             for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-                collect_part2.loc[(col, plot), 'FPG_P_Spruce'] = temp[:, 2 + add]
-                collect_part2.loc[(col, plot), 'FPG_P_Tamarack'] = temp[:, 3 + add]
-                collect_part2.loc[(col, plot), 'FPG_P_Shrub'] = temp[:, 11 + add]
+                collect_part2.loc[(col, plot), 'FPG_P_Spruce'] = (pot_smin_demand / smin_demand)[:, 2 + add]
+                collect_part2.loc[(col, plot), 'FPG_P_Tamarack'] = (pot_smin_demand / smin_demand)[:, 3 + add]
+                collect_part2.loc[(col, plot), 'FPG_P_Shrub'] = (pot_smin_demand / smin_demand)[:, 11 + add]
         else:
             temp = hr2['FPG_P'][filter, :].resample({'time': '1Y'}).mean()
             for num, col in enumerate(['hummock', 'hollow']):
                 collect_part2.loc[(col, plot), 'FPG_P_Spruce'] = temp[:, num]
                 collect_part2.loc[(col, plot), 'FPG_P_Tamarack'] = temp[:, num]
                 collect_part2.loc[(col, plot), 'FPG_P_Shrub'] = temp[:, num]
+    
+    if 'FPG_PATCH' in hr.variables:
+        # calculate the ratio of organic nutrient uptake to inorganic nutrient uptake
+        smin_demand = hr['PLANT_NDEMAND'][filter, :].resample({'time': '1Y'}).mean()
+        som = hr['FUNGI_SOM_TO_NPOOL'][filter, :].resample({'time': '1Y'}).mean()
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            collect_part2.loc[(col, plot), 'SOMN_TO_SMINN_Spruce'] = (som / smin_demand)[:, 2 + add]
+            collect_part2.loc[(col, plot), 'SOMN_TO_SMINN_Tamarack'] = (som / smin_demand)[:, 3 + add]
+            collect_part2.loc[(col, plot), 'SOMN_TO_SMINN_Shrub'] = (som / smin_demand)[:, 11 + add]
+
+    if 'FPG_P_PATCH' in hr.variables:
+        smin_demand = hr['PLANT_PDEMAND'][filter, :].resample({'time': '1Y'}).mean()
+        som = hr['FUNGI_SOM_TO_PPOOL'][filter, :].resample({'time': '1Y'}).mean()
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            collect_part2.loc[(col, plot), 'SOMP_TO_SMINP_Spruce'] = (som / smin_demand)[:, 2 + add]
+            collect_part2.loc[(col, plot), 'SOMP_TO_SMINP_Tamarack'] = (som / smin_demand)[:, 3 + add]
+            collect_part2.loc[(col, plot), 'SOMP_TO_SMINP_Shrub'] = (som / smin_demand)[:, 11 + add]
 
     if 'FPI' in var_list_extra:
         col_list = ['TOTSOMC', 'FPI', 'FPI_P']
