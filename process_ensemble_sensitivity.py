@@ -55,7 +55,7 @@ def postproc(thisjob, collection):
 
     casename = f"{PREFIX}_US-SPR_ICB20TRCNPRDCTCBC"
     baserundir = os.path.join(RUNROOT, "UQ", casename, f"g{thisjob:05g}")
-    print(baserundir)    
+    # print(baserundir)    
     # print(thisjob)
 
     values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])
