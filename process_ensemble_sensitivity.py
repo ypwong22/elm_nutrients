@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import sys, os, time
 import numpy as np
-from netCDF4 import Dataset
 from scipy.stats import linregress, t
 from mpi4py import MPI
 from utils.paths import *
@@ -21,7 +20,7 @@ workdir = os.getcwd()
 N = 4000
 #N = 2000
 
-PREFIX = "UQ_20240312_1"
+PREFIX = "UQ_20240311_1"
 time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
@@ -58,7 +57,12 @@ def postproc(thisjob, collection):
     # print(baserundir)    
     # print(thisjob)
 
-    values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])
+    try:
+        values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])
+    except:
+        ierr = 1
+        return ierr
+
     values = values.loc['average', :]
 
     # ('amb', 'elev') x (mean, mean_std, slope, slope_std)
@@ -144,6 +148,7 @@ for b in range(niter):
             start = comm.recv(source=0, tag=3)
 
             if status == 0:
+                collection[:, :, :] = np.nan
                 ierr = postproc(start + myjob, collection)
                 comm.send(rank, dest=0, tag=4)
                 comm.send(myjob, dest=0, tag=5)

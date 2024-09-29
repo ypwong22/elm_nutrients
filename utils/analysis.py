@@ -241,10 +241,7 @@ def kge(simulations, evaluation):
     return np.vstack((kge_, r, alpha, beta))
 
 
-def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
-    tvec = pd.date_range("2015-01-01", "2023-12-31", freq="1D")
-    tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
-
+def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}, ensemble_id = None):
     pft_list = [2, 3, 11, 12]
     hol_add = 17
 
@@ -254,15 +251,25 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}):
     )
 
     for plot in chamber_list_complete:
-        path_data = os.path.join(os.environ["E3SM_ROOT"],
-            "output", f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC",
-            "spruce_treatments", f'plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
-
-        print(f'Plot {plot}', path_data)
+        if ensemble_id is None:
+            tvec = pd.date_range("2015-01-01", "2023-12-31", freq="1D")
+            tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
+            path_data = os.path.join(os.environ["E3SM_ROOT"],
+                "output", f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC",
+                "spruce_treatments", f'plot{plot:02d}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+        else:
+            tvec = pd.date_range("2015-01-01", "2021-12-31", freq="1D")
+            tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
+            path_data = os.path.join(os.environ["E3SM_ROOT"], "output", "UQ", 
+                                     f"{prefix}_US-SPR_ICB20TRCNPRDCTCBC", f"g{ensemble_id:05g}",
+                                     chamber_list_complete_dict[f'P{plot:02d}'])
 
         flist_pft = sorted(glob(os.path.join(path_data, "*.h2.*.nc")))[:-1]
         flist_col = sorted(glob(os.path.join(path_data, "*.h1.*.nc")))[:-1]
         flist_const = sorted(glob(os.path.join(path_data, "*.h0.*.nc")))[:-1]
+
+        print(f'Plot {plot}', f"g{ensemble_id:05g}", chamber_list_complete_dict[f'P{plot:02d}'], 
+              len(flist_pft), len(flist_col), len(flist_const))
 
         var_list_pft = var_list["pft"]
         hr = xr.open_mfdataset(flist_pft, decode_times=False)

@@ -1,5 +1,7 @@
 """
 Parameters for the updated nutrients competition routine
+
+Note: it seems parameter difference at the level of 1e-27 can still cause results to diverge. For exact replication, please copy the parameter file directly from UQ folder. 
 """
 import xarray as xr
 import numpy as np
@@ -65,9 +67,9 @@ hr['froot_density'] = xr.DataArray(
 #      = np.array([6.39e-13, 1.68e-12, 2.16e-12])
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 4e-12, 5e-11, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        2.10646662329962e-11, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.1155167694702e-12, 8.09107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 4.84082627658822e-11, 0, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -84,9 +86,9 @@ hr['vmax_froot_n'] = xr.DataArray(
 # Yet, reality still needs adjustment. 
 hr['vmax_froot_p'] = xr.DataArray(
     [
-        0, np.nan, 6e-14, 1e-12, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        5.67000058897852e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.91299374647962e-13, 9.20270690350306e-14, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 3.87929749348862e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -97,14 +99,14 @@ hr['vmax_froot_p'] = xr.DataArray(
 # model subroutines do not distinguish between NH4 and NO3 in its N demand
 # literature value - 0.14, but is too high except for layer 3
 hr['km_froot_n'] = xr.DataArray(
-    [6], dims=["allpft"],
+    [4], dims=["allpft"],
     attrs={"units": "gN m-3", "long_name": "half saturation point for NH4 uptake rate by fine root"},
 )
 
 # literature value - 0.7, also way to high
 # Set to extremely low values to create stability
 hr['km_froot_p'] = xr.DataArray(
-    [0.00167879564163614], dims=["allpft"],
+    [0.00495538937141517], dims=["allpft"],
     attrs={"units": "gP m-3", "long_name": "half saturation point for PO4 uptake rate by fine root"},
 )
 
@@ -165,9 +167,9 @@ hr['zwt_fungi_e'] = xr.DataArray(
 # We distribute this vmax between organic and inorganic pools; Use small values for inorganic uptake
 hr['vmax_fungi_din'] = xr.DataArray(
     [
-        0, np.nan, 1e-09, 2e-09, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        1.8549421805839e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.5977396756146e-09, 3.48329403706601e-08, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 7.72894097101296e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -178,9 +180,9 @@ hr['vmax_fungi_din'] = xr.DataArray(
 # vmax = np.array([7.60203557e-11, 2.05931483e-10, 9.23349708e-10])
 hr['vmax_fungi_dip'] = xr.DataArray(
     [
-        0, np.nan, 6e-11, 1.5e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
-        1.02753676551213e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.2229349597555e-09, 1.95666458920476e-09, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 3.1368607446859e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -206,9 +208,9 @@ hr['km_nsc'] = xr.DataArray(
 # 20240311_3_1: vmax_fungi_son = 1.6e-9, 1.6e-9, 1.6e-8
 hr['vmax_fungi_son'] = xr.DataArray(
     [
-        0, np.nan, 2e-09, 6e-09, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        1.26148210527256e-07, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.10226015059032e-08, 3.64768497635707e-07, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 5.82585064028967e-07, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -217,9 +219,9 @@ hr['vmax_fungi_son'] = xr.DataArray(
 
 hr['vmax_fungi_sop'] = xr.DataArray(
     [
-        0, np.nan, 1.2e-10, 2e-10, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
-        2.47014691397667e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.02007484344376e-11, 9.07918248129927e-10, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 1.72650425480598e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -230,12 +232,12 @@ hr['vmax_fungi_sop'] = xr.DataArray(
 ## cost_n = 50, cost_p = 500; 
 # Set those to zero for stability, for initial run (non-sensitivity)
 hr['fungi_cost_n'] = xr.DataArray(
-    [16], dims=["allpft"],
+    [85], dims=["allpft"],
     attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
 )
 
 hr['fungi_cost_p'] = xr.DataArray(
-    [150], dims=["allpft"],
+    [242], dims=["allpft"],
     attrs={"units": "gP m-3", "long_name": "carbon cost of fungal P uptake"},
 )
 

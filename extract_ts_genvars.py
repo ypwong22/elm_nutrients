@@ -9,9 +9,9 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20240312'
+prefix = '20231113'
 rootpheno = False
-npcompet = True
+npcompet = False
 
 #for prefix,rootpheno,npcompet in zip(['20231113', '20240311', '20240316'],
 #                                     [False, False, True],  [False, True, True]):
