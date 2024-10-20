@@ -35,8 +35,10 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'SOMP_TO_SMINP_Shrub']
 
 
-prefix = "20240311"
-#prefix  = "UQ_20240311_4" # UQ_20240311_3 = g03505, UQ_20240311_4 = g01540
+prefix = "20240318"
+ensemble_id = None
+#prefix  = "UQ_20231113"
+#ensemble_id = 'g00682'
 extrafix = "" # "_alt_params"
 growing_season = False
 zwt_growing_season = True
@@ -48,7 +50,7 @@ if not "UQ" in prefix:
                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', f'spruce_treatments{extrafix}')
 else:
     runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 'UQ',
-                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', 'g01438')
+                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', ensemble_id)
 
 collect_part1 = get_sim_carbonfluxes(year_range, runroot, growing_season, 
                                      extra_pft_vars = ['LEAFC_ALLOC_TO_TOTVEGC_ABG'])
@@ -59,7 +61,6 @@ collect_part2 = pd.DataFrame(
                                         plot_list,
                                         year_range], names = ['column', 'plot', 'year']),
     columns = var_list_extra)
-
 
 for plot in plot_list:
     if not "UQ" in prefix:

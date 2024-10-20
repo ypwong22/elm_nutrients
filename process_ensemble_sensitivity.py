@@ -17,17 +17,19 @@ size = comm.Get_size()
 workdir = os.getcwd()
 
 # number of simulations
-N = 4000
+#N = 4000
 #N = 2000
+N = 3125
 
-PREFIX = "UQ_20240311_1"
+PREFIX = "UQ_20240312_test20241017"
 time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
-BLOCK = 200
+#BLOCK = 200
+BLOCK = 125
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
@@ -45,6 +47,7 @@ MOSSFRAC[2015] = MOSSFRAC[2016]
 
 niter = int(N / BLOCK)
 
+
 # Function to perform post-processing for one ensemble member
 def postproc(thisjob, collection):
     # Debug
@@ -60,6 +63,7 @@ def postproc(thisjob, collection):
     try:
         values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])
     except:
+        print(f'unsuccessful reading of {baserundir}')
         ierr = 1
         return ierr
 

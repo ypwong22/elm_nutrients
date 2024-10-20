@@ -1,0 +1,5 @@
+# Based on the outcome of 20240312
+# vary vmax_fungi_n of shrub by -37% to +63%
+# vary vmax_froot_n of shrub by 0 to 100%
+vmax_froot_n 11 7.34082627658822e-12 1.468165255317644e-11
+vmax_fungi_son 11 1.32585064028967e-06 2.976136543672162e-06

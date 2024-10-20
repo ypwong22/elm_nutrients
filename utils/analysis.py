@@ -7,6 +7,8 @@ import xarray as xr
 from .constants import *
 from .paths import *
 import warnings
+from typing import Union, List
+from scipy.stats import linregress, t
 
 
 def get_treatment_string(chamber):
@@ -268,9 +270,13 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}, ensemble_
         flist_col = sorted(glob(os.path.join(path_data, "*.h1.*.nc")))[:-1]
         flist_const = sorted(glob(os.path.join(path_data, "*.h0.*.nc")))[:-1]
 
-        print(f'Plot {plot}', f"g{ensemble_id:05g}", chamber_list_complete_dict[f'P{plot:02d}'], 
-              len(flist_pft), len(flist_col), len(flist_const))
-
+        if ensemble_id is None:
+            print(f'Plot {plot}', chamber_list_complete_dict[f'P{plot:02d}'], 
+                  len(flist_pft), len(flist_col), len(flist_const))
+        else:
+            print(f'Plot {plot}', f"g{ensemble_id:05g}", chamber_list_complete_dict[f'P{plot:02d}'], 
+                  len(flist_pft), len(flist_col), len(flist_const))
+ 
         var_list_pft = var_list["pft"]
         hr = xr.open_mfdataset(flist_pft, decode_times=False)
         for var in var_list_pft:
@@ -290,6 +296,7 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}, ensemble_
                     nlev = np.max(np.where(rootfr[0, :] > 0)[0])
 
                     if var_ in ['TSOI','H2OSOI','SMINN_vr','SOLUTIONP_vr',
+                                'SMIN_NH4_vr', 'SMIN_NO3_vr', 
                                 'LITR1N_vr','LITR2N_vr','LITR3N_vr',
                                 'LITR1P_vr','LITR2P_vr','LITR3P_vr']:
                         # column variables
@@ -343,6 +350,10 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}, ensemble_
                     thisvar = 'H2OSOI'
                 elif 'SMINN_' in var:
                     thisvar = 'SMINN_vr'
+                elif 'SMIN_NH4_' in var:
+                    thisvar = 'SMIN_NH4_vr'
+                elif 'SMIN_NO3_' in var:
+                    thisvar = 'SMIN_NO3_vr'
                 elif 'SOLUTIONP_' in var:
                     thisvar = 'SOLUTIONP_vr'
 
@@ -918,3 +929,207 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season,
     warnings.filterwarnings("default")
 
     return collect
+
+
+
+def vert_interp(
+    target_nodes: Union[List[float], np.ndarray],
+    input_nodes: Union[List[float], np.ndarray],
+    input_data: np.ndarray,
+    target_single_level: bool = False,
+    target_interfaces: Union[List[float], np.ndarray, None] = None,
+    input_interfaces: Union[List[float], np.ndarray, None] = None,
+) -> np.ndarray:
+    """
+    Linearly interpolate soil moisture/soil temperature from input_nodes to target_nodes. 
+    If the target depths are single-level, returns weighted average based on the distance 
+        between the input nodes and target node. 
+    If the target depths are defined by bounds (target_interfaces != None), returns weighted
+        average based on the overlapping lengths between the target_interfaces and 
+        input_interface. 
+
+    Parameters:
+    -----------
+    target_nodes : Union[List[float], np.ndarray]
+        List or numpy array of target node depths in meters.
+    
+    input_nodes : Union[List[float], np.ndarray]
+        List or numpy array of input node depths in meters.
+
+    input_data : np.ndarray
+        2D numpy array of input data with shape (time, len(input_nodes)).
+
+    target_single_level : bool
+        Indicates whether the target nodes are single level. If true, target_interface and input_interfaces are un-used. 
+
+    Returns:
+    --------
+    np.ndarray
+        Processed data as a 2D numpy array with shape (time, len(target_nodes)).
+    """
+    # unifying data types
+    target_nodes = np.array(target_nodes)
+    input_nodes = np.array(input_nodes)
+
+    # sanity checks
+    if not input_data.shape[1] == len(input_nodes):
+        raise Exception('Mismatch between specified inputs depths and available data')
+    if not target_single_level:
+        if (target_interfaces is None or input_interfaces is None):
+            raise Exception('Must specify depth bounds if target is not single level')
+        if not ((len(target_interfaces) - len(target_nodes)) == 1):
+            raise Exception('Number of soil layers mismatched between target interface and node depths')
+        if not ((len(input_interfaces) - len(input_nodes)) == 1):
+            raise Exception('Number of soil layers mismatched between input interface and node depths')
+        # unifying data types
+        target_interfaces = np.array(target_interfaces)
+        input_interfaces = np.array(input_interfaces)
+
+    # actual calculations
+    output_data = np.full([input_data.shape[0], len(target_nodes)], np.nan)
+    if target_single_level:
+        for i, d in enumerate(target_nodes):
+            if d < input_nodes[0]:
+                output_data[:, i] = input_data[:, 0]
+            elif d > input_nodes[-1]:
+                output_data[:, i] = input_data[:, -1]
+            else:
+                d_matched = np.where(np.isclose(input_nodes, d))[0]
+                if len(d_matched) > 1:
+                    raise Exception('Input nodes have duplicate values')
+                elif len(d_matched) == 1:
+                    # just apply the nearest node
+                    output_data[:, i] = input_data[:, d_matched[0]]
+                else:
+                    # interpolate between two nearby nodes
+                    d_up = np.where(input_nodes < d)[0][-1]
+                    d_down = np.where(input_nodes > d)[0][0]
+                    f1 = (input_nodes[d_down] - d) / (input_nodes[d_down] - input_nodes[d_up]) 
+                    f2 = (d - input_nodes[d_up]) / (input_nodes[d_down] - input_nodes[d_up])
+                    output_data[:, i] = input_data[:, d_up] * f1 + input_data[:, d_down] * f2
+    else:
+        for i, d1 in enumerate(target_interfaces[:-1]):
+            d2 = target_interfaces[i+1]
+            if d2 <= input_interfaces[1]:
+                output_data[:, i] = input_data[:, 0]
+            elif d1 >= input_interfaces[-2]:
+                output_data[:, i] = input_data[:, -1]
+            else:
+                output_data[:, i] = 0.
+                sum_weight = 0.
+                for j, dd1 in enumerate(input_interfaces[:-1]):
+                    dd2 = input_interfaces[j+1]
+                    if (dd2 <= d1) or (dd1 >= d2):
+                        continue
+                    else:
+                        if (dd1 >= d1):
+                            if (dd2 <= d2):
+                                sum_weight += (dd2 - dd1)
+                                output_data[:, i] += input_data[:, j] * (dd2 - dd1)
+                            else:
+                                sum_weight += (d2 - dd1)
+                                output_data[:, i] += input_data[:, j] * (d2 - dd1)
+                        else:
+                            if (dd2 <= d2):
+                                sum_weight += (dd2 - d1)
+                                output_data[:, i] += input_data[:, j] * (dd2 - d1)
+                            else:
+                                sum_weight = 1.
+                                output_data[:, i] = input_data[:, j]
+                                break
+                output_data[:, i] /= sum_weight
+                # print(i, d1, d2, sum_weight)
+
+    return output_data
+
+
+def uq_get_obs(VAR_LIST):
+    """ Get the observational slope & value at ambient chamber """
+    plot_list = [f'P{p:02g}' for p in chamber_list_complete]
+
+    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
+                                        'extract_obs_productivity.csv'), index_col = [0, 1])
+    t2m_obs = obs_data.loc[:, 'Tair']
+    # re-order
+    obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
+                   'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
+                   'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
+                   'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
+    obs_data = obs_data.loc[:, obs_varname]
+
+
+    collection = pd.DataFrame(np.nan,
+                              index = pd.MultiIndex.from_product([VAR_LIST, ['amb', 'elev']]),
+                              columns = ['mean', 'mean_std', 'slope', 'slope_std'])
+    collection.index.names = ['Variable', 'CO2']
+
+    for varname in VAR_LIST:
+        for co2 in ['amb','elev']:
+            if co2 == 'amb':
+                filt = obs_data.index.get_level_values(0).isin([plot_list[0]] + plot_list[1::2])
+            else:
+                filt = obs_data.index.get_level_values(0).isin(plot_list[2::2])
+
+            if varname != 'TOTSOMC':
+                obs_temp = obs_data.loc[filt, varname]
+                obs_T    = t2m_obs.loc[filt]
+
+                filt2 = ~np.isnan(obs_T) & ~np.isnan(obs_temp)
+                obs_temp = obs_temp.values[filt2]
+                obs_T = obs_T.values[filt2]
+
+                res = linregress(obs_T, obs_temp)
+
+                ts = abs(t.ppf(0.05, len(obs_T) - 2))
+
+                collection.loc[(varname, co2), 'slope'] = res.slope
+                collection.loc[(varname, co2), 'slope_std'] = ts * res.stderr
+
+                # use the average of all the chambers to be compatible with simulated results
+                # obs_temp = obs_data.loc[obs_data.index.get_level_values(0) == plot_list[0], varname] # T0
+                collection.loc[(varname, co2), 'mean'] = obs_temp.mean()
+                collection.loc[(varname, co2), 'mean_std'] = obs_temp.std()
+            else:
+                collection.loc[(varname, co2), 'mean'] = 200000
+                collection.loc[(varname, co2), 'mean_std'] = 500000
+
+    return collection
+
+
+def uq_get_sim(prefix, VAR_LIST):
+    plot_list = [f'P{p:02g}' for p in chamber_list_complete]
+
+    sim_data = pd.read_csv(
+        os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', "extract", prefix, 
+                     'extract_ts_productivity.csv'), index_col = [0,1,2], header = 0
+    )
+    sim_tair = sim_data.loc['average', 'Tair']
+    sim_data = sim_data.loc['average', VAR_LIST]
+    sim_data['HR'] = - sim_data['HR']
+    sim_data['NEE'] = - sim_data['NEE']
+
+    collection = pd.DataFrame(np.nan,
+                              index = pd.MultiIndex.from_product([VAR_LIST, ['amb', 'elev']]),
+                              columns = ['mean', 'mean_std', 'slope', 'slope_std'])
+    collection.index.names = ['Variable', 'CO2']
+
+    for varname in VAR_LIST:
+        for co2 in ['amb','elev']:
+            if co2 == 'amb':
+                filt = sim_data.index.get_level_values(0).isin([plot_list[0]] + plot_list[1::2])
+            else:
+                filt = sim_data.index.get_level_values(0).isin(plot_list[2::2])
+
+            sim_temp = sim_data.loc[filt, varname]
+
+            res = linregress(sim_tair.loc[filt], sim_temp)
+
+            ts = abs(t.ppf(0.05, len(sim_tair.loc[filt]) - 2))
+
+            collection.loc[(varname, co2), 'slope'] = res.slope
+            collection.loc[(varname, co2), 'slope_std'] = ts * res.stderr
+
+            collection.loc[(varname, co2), 'mean'] = sim_temp.mean()
+            collection.loc[(varname, co2), 'mean_std'] = sim_temp.mean()
+
+    return collection

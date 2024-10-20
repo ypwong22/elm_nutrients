@@ -1,0 +1,4 @@
+# vary km_froot_n by +0% to +100%
+vmax_fungi_son 11 1.82585064028967e-06 5.82585064028967e-06
+km_froot_n 0 4 10
+fungi_cost_n 0 85 200

@@ -18,7 +18,7 @@ size = comm.Get_size()
 
 workdir = os.getcwd()
 
-PREFIX = 'UQ_20240311_1'
+PREFIX = 'UQ_20240312_test20241012'
 if PREFIX == 'UQ_20240311_1':
     # Down-select the runs because it is impossible to finish processing
     # all 4000 runs in reasonable amount of time
@@ -55,6 +55,13 @@ elif PREFIX == 'UQ_20240311_2':
                        3381,984,2033,3494,1018,291,1833,3427,1975,86,2396,3348,411,2851,
                        525,329,1262,1853,2679,1979,1255,2363,3364,3318,3496,491,292,1208,
                        2750,1003,1166,8]
+
+elif PREFIX == 'UQ_20240312_test20241012':
+    subset_ensemble = np.arange(1, 101)
+
+elif PREFIX == 'UQ_20240312_test20241013':
+    subset_ensemble = np.array([381, 589, 990, 257, 566, 21, 909, 901, 721, 849, 436, 318, 34, 
+                                811, 507, 355, 608, 307, 132, 552])
 
 N = len(subset_ensemble)
 

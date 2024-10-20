@@ -135,8 +135,8 @@ def barplot_data(prefix_list, xlabel_list, prefix_out):
 
 
 if __name__ == '__main__':
-    barplot_data(["20231113_4", "20240311_2", "20240316_2"], 
-                 ["Default", "+ Roots uptake", "+ Roots uptake\n+ phenology"],
-                 "20240401")
+    barplot_data(["20231113", "UQ_20231113", "20240313", "20240314", "20240315"], 
+                 ["Default", "Default-opt", "v1", "v2", "v3"],
+                 "20241014")
     #barplot_data(["20231113_4", "20240316_1"], 
     #             ["Default Model", "New Model"], "20240429")
