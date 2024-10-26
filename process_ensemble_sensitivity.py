@@ -19,9 +19,10 @@ workdir = os.getcwd()
 # number of simulations
 #N = 4000
 #N = 2000
-N = 3125
+#N = 3125
+N = 128
 
-PREFIX = "UQ_20240312_test20241017"
+PREFIX = "UQ_20240312_test20241025"
 time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
@@ -29,7 +30,8 @@ if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
 #BLOCK = 200
-BLOCK = 125
+#BLOCK = 125
+BLOCK = 16
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 

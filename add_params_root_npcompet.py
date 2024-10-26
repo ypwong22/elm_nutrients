@@ -69,8 +69,8 @@ hr['froot_density'] = xr.DataArray(
 #      = np.array([6.39e-13, 1.68e-12, 2.16e-12])
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 6.6155167694702e-12, 5.39107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 1.38785467901505e-11, 0, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 6.6155167694702e-12, 4.39107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 2.38785467901505e-11, 0, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -205,7 +205,7 @@ hr['km_nsc'] = xr.DataArray(
 hr['vmax_fungi_son'] = xr.DataArray(
     [
         0, np.nan, 4.50226015059032e-09, 7.04768497635707e-09, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, 4.47476004390863e-05, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 4.47476004390863e-06, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -216,7 +216,7 @@ hr['vmax_fungi_son'] = xr.DataArray(
 hr['vmax_fungi_sop'] = xr.DataArray(
     [
         0, np.nan, 1.52007484344376e-11, 1.37918248129927e-10, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, 2.12650425480598e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 1.12650425480598e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},

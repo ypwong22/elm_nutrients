@@ -1103,6 +1103,7 @@ def uq_get_sim(prefix, VAR_LIST):
         os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', "extract", prefix, 
                      'extract_ts_productivity.csv'), index_col = [0,1,2], header = 0
     )
+
     sim_tair = sim_data.loc['average', 'Tair']
     sim_data = sim_data.loc['average', VAR_LIST]
     sim_data['HR'] = - sim_data['HR']
