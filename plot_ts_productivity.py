@@ -1,4 +1,3 @@
-
 """ Sensitivity of annual mean quantities to temperature, scatter plots """
 import matplotlib.pyplot as plt
 import os
@@ -23,7 +22,7 @@ def fit_line(x, y):
     return xnew, ynew, res.slope, res.intercept, r2
 
 
-prefix = "20240322"
+prefix = "20240406"
 #prefix = "UQ_20231113"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
 
@@ -41,10 +40,10 @@ sim_data = sim_data.loc['average', :]
 sim_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
                'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-               'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
+               'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR'] # , 'NEE'
 units_list = ['gC m-2', 'gC m-2', 'gC m-2', 'yr-1', 'yr-1', 'yr-1',
               'gC m-2 yr-1', 'gC m-2 yr-1', 'gC m-2 yr-1', 'gC m-2 yr-1',
-              'gC m-2 yr-1', '', 'gC m-2 yr-1', 'gC m-2 yr-1']
+              'gC m-2 yr-1', '', 'gC m-2 yr-1', 'gC m-2 yr-1', 'gC m-2 yr-1']
 sim_var_unobs = ["SMINN_30", "SOLUTIONP_30",
                  "FPG_Spruce", "FPG_Tamarack", "FPG_Shrub", "FPG_P_Spruce", "FPG_P_Tamarack",
                  "FPG_P_Shrub", # 'BG_to_AG_pima', 'BG_to_AG_lala', 'BG_to_AG_shrub',
@@ -65,14 +64,14 @@ obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'out
 obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
                'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-               'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
+               'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
 obs_varname += sim_var_unobs
 title_list = ["Spruce Biomass", "Tamarack Biomass", "Shrub Biomass",
               "Spruce Aboveground NPP:Biomass", "Tamarack Aboveground NPP:Biomass", 
               "Shrub Aboveground NPP:Biomass", 
               "Spruce Aboveground NPP", "Tamarack Aboveground NPP", "Shrub Aboveground NPP", 
               'Sphagnum NPP','Trees+Shrub Fine Root NPP', 'Trees+Shrub Root:Aboveground',
-              'HR', 'NEE']
+              'NPP', 'HR'] # , 'NEE'
 title_list += sim_var_unobs
 
 

@@ -9,13 +9,14 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20240322'
+prefix = '20240321'
 ensemble_id = None
 #prefix  = "UQ_20240312_test20241017"
 #ensemble_id = 2852
 #ensemble_id = 682
 rootpheno = False
 npcompet = True
+
 
 #for prefix,rootpheno,npcompet in zip(['20231113', '20240311', '20240316'],
 #                                     [False, False, True],  [False, True, True]):
@@ -40,6 +41,12 @@ var_list['pft'].extend([
     'TSOI_ROOTFR', 'H2OSOI_ROOTFR','SMINN_vr_ROOTFR','SOLUTIONP_vr_ROOTFR',
     'SMIN_NH4_vr_ROOTFR', 'SMIN_NO3_vr_ROOTFR'
 ])
+# root fraction weighted organic nutrient availability - must be PFT level
+var_list['pft'].extend([
+    'LITR1C_vr_ROOTFR', 'LITR2C_vr_ROOTFR', 'LITR3C_vr_ROOTFR',
+    'LITR1N_vr_ROOTFR', 'LITR2N_vr_ROOTFR', 'LITR3N_vr_ROOTFR',
+    'LITR1P_vr_ROOTFR', 'LITR2P_vr_ROOTFR', 'LITR3P_vr_ROOTFR'
+])
 if npcompet:
     # nutrient limitation quantities
     var_list['pft'].extend(['FPG_PATCH', 'FPG_P_PATCH',
@@ -55,11 +62,6 @@ if npcompet:
             'FFR_TSOI_PATCH_ROOTFR', 'FFR_SWC_PATCH_ROOTFR', 'FFN_NSC_PATCH', 
             'FFN_N_PATCH_ROOTFR', 'FFN_P_PATCH_ROOTFR', 'FFR_FPG_PATCH',
             'FFR_FPG_P_PATCH'])
-    # root fraction weighted organic nutrient availability - must be PFT level
-    var_list['pft'].extend([
-        'LITR1N_vr_ROOTFR', 'LITR2N_vr_ROOTFR', 'LITR3N_vr_ROOTFR',
-        'LITR1P_vr_ROOTFR', 'LITR2P_vr_ROOTFR', 'LITR3P_vr_ROOTFR'
-    ])
 
 if rootpheno:
     var_list['pft'] = var_list['pft'] + [
@@ -71,8 +73,8 @@ if rootpheno:
 
 var_list['col'] = [
     'TBOT', 'TSOI_30', 'H2OSOI_30', 'HR', 'NEE', 'FPG', 'FPG_P', 'ZWT', 
-    'ACTUAL_IMMOB', 'ACTUAL_IMMOB_P', # 'SMINN_30', 'SOLUTIONP_30', 
-    'FPI', 'FPI_P', 'RH2M']
+    'ACTUAL_IMMOB', 'ACTUAL_IMMOB_P', 'SMINN_30', 'SOLUTIONP_30', 
+    'FPI', 'FPI_P', 'RH2M', 'H2OSFC']
 if not npcompet:
     var_list['col'].extend(['FPG', 'FPG_P'])
 var_list['const'] = []

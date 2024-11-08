@@ -18,18 +18,29 @@ path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm
                               "CLM1PT_data", "SPRUCE_data")
 
 orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc'
-newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
+newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP' # _orig
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
 # (1) based on the observations, the ratios mustn't exceed 1 and is on avg. ~0.5
 # 2004 Dissertation says Tamarak root:leaf ratio > Spruce root:leaf ratio
 #     values taken from Fig. 6.4 for the second  growing season
-#     also see abstract, tamarak allocates more to the root
+#     also see abstract, tamarak allocates more to the root#
 # Islam, MD. A. (2004). Ecophysiological adaptations of black spruce (Picea mariana) and tamarack (Larix laricina) seedlings to flooding and nutrition stress. University of Alberta, Edmonton, Alberta, Canada.
-hr['froot_leaf'][2] = 0.3 # 0.28 - 0.5
-hr['froot_leaf'][3] = 0.38 # 0.38 - 0.5
-hr['froot_leaf'][11] = 0.3 # try to start low to match observation
+# Pima: 0.28-0.5, Lala: 0.38-0.5
+#hr['froot_leaf'][2] = 0.3
+#hr['froot_leaf'][3] = 0.38
+#hr['froot_leaf'][11] = 0.3 # try to start low to match observation
+#
+#
+# Use Soren's numbers because 0.3 caused LAI to be too high
+# Herbert et al. (2010). Does trait plasticity of three boreal nutrient-conserving species relate to their competitive ability?
+# 2-year old seedling of Pima: 0.63
+# the root:leaf ratios are found to be insensitive to light or nutrient treatment
+hr['froot_leaf'][2] = 0.63
+hr['froot_leaf'][3] = 0.516
+hr['froot_leaf'][11] = 0.55
+
 # "Observations" at SPRUCE assume Picea mariana needles live 5 years long
 # Salmon, V. G., Brice, D. J., Bridgham, S., Childs, J., Graham, J., Griffiths, N. A., et al. (2021). Nitrogen and phosphorus cycling in an ombrotrophic peatland: a benchmark for assessing change. Plant and Soil, 466(1–2), 649–674. https://doi.org/10.1007/s11104-021-05065-x
 hr['leaf_long'][2] = 5
@@ -83,7 +94,6 @@ hr['r_mort'] = xr.DataArray(
     dims=["pft"],
     attrs={"units": "yr-1", "long_name": "Whole-plant mortality"},
 )
-
 
 # (8) add new PFT-dependent inundation tolerance parameter for Ben's code
 hr['waterlevel_threshold'] = xr.DataArray(

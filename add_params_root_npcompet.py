@@ -69,8 +69,8 @@ hr['froot_density'] = xr.DataArray(
 #      = np.array([6.39e-13, 1.68e-12, 2.16e-12])
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 6.6155167694702e-12, 4.39107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 2.38785467901505e-11, 0, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 2.8155167694702e-12, 1.59107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 2.09107323423353e-11, 0, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -88,8 +88,8 @@ hr['vmax_froot_n'] = xr.DataArray(
 # Yet, reality still needs adjustment. 
 hr['vmax_froot_p'] = xr.DataArray(
     [
-        0, np.nan, 2.31299374647962e-13, 9.00270690350306e-13, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 1.37929749348862e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.31299374647962e-13, 3.00270690350306e-13, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 1.30270690350306e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -108,7 +108,7 @@ hr['km_froot_n'] = xr.DataArray(
 # literature value - 0.7, also way to high
 # Set to extremely low values to create stability
 hr['km_froot_p'] = xr.DataArray(
-    [0.00495538937141517], dims=["allpft"],
+    [0.007], dims=["allpft"],
     attrs={"units": "gP m-3", "long_name": "half saturation point for PO4 uptake rate by fine root"},
 )
 
@@ -129,7 +129,7 @@ hr['alpha_fpg'] = xr.DataArray(
 
 hr['zwt_fungi_a'] = xr.DataArray(
     [
-        0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.6, 0.6, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.85, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -138,7 +138,7 @@ hr['zwt_fungi_a'] = xr.DataArray(
 
 hr['zwt_fungi_b'] = xr.DataArray(
     [
-        0, np.nan, 0.04, 0.04, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -0.04, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0., 0., np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -0.04, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -154,30 +154,28 @@ hr['zwt_fungi_c'] = xr.DataArray(
     attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
 )
 
-# Assume that colonized roots operating at "full capacity" can uptake 1.5x the 
-# plant's uptake rate, converted units, but at a carbon cost
-# vmax * frootc * (86400*365) = 2 * totvegc / CN
-# vmax = 2 * np.array([0.2 / 0.22 + 0.2 + 0.02 / 0.774, 1/0.49 + 1 + 0.02 / 0.09, 1/0.12 + 1 + 0.12 / 0.043]) / 86400 / 365 / np.array([67.52, 73.80, 53.32])
-#      = np.array([1.06600760e-09, 2.80407246e-09, 1.44204989e-08])
-# 
-# We distribute this vmax between organic and inorganic pools; Use small values for inorganic uptake
+# calculate from the baseline of vmax_froot_n
+# r = np.array([0.02, 0.02, 0.01])
+# rho = 0.03
+# vmax_froot_n * 0.01 / r**2 / rho
+# = array([5.51293064e-09, 2.82589436e-08, 1.46261823e-07])
 hr['vmax_fungi_din'] = xr.DataArray(
     [
-        0, np.nan, 1.5977396756146e-09, 3.48329403706601e-08, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 7.72894097101296e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 2.01293064e-08, 1.52589436e-08, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 1.46261823e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
     attrs={"units": "gN g-1 s-1", "long_name": "maximum inorganic N uptake rate per gram mycorrhizal root"},
 )
-# vmax * frootc * (86400*365) = 2 * totvegc / CN
-# vmax = 2 * np.array([0.2 / 0.22 + 0.2 + 0.02 / 0.774, 1/0.49 + 1 + 0.02 / 0.09, 1/0.12 + 1 + 0.12 / 0.043]) / 86400 / 365 / np.array([946.81, 1004.90, 832.73])
-# vmax = np.array([7.60203557e-11, 2.05931483e-10, 9.23349708e-10])
+# calculate from the baseline of vmax_froot_p
+# vmax_froot_n * 0.01 / r**2 / rho
+# = array([5.51293064e-09, 2.82589436e-08, 1.46261823e-07])
 hr['vmax_fungi_dip'] = xr.DataArray(
     [
-        0, np.nan, 1.222934959755e-10, 2.75666458920476e-10, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 2.5368607446859e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 2.09416146e-10, 4.50225575e-10, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 4.45976583e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -192,7 +190,7 @@ hr['vmax_fungi_dip'] = xr.DataArray(
 
 #hr['km_fungi_dip'] = xr.DataArray(
 #    [1e-3], dims=["allpft"],
-#    attrs={"units": "gP m-3", "long_name": "half saturation point for inorganic P uptake by mycorrhizal root"},
+# pl   attrs={"units": "gP m-3", "long_name": "half saturation point for inorganic P uptake by mycorrhizal root"},
 #)
 
 hr['km_nsc'] = xr.DataArray(
@@ -200,12 +198,11 @@ hr['km_nsc'] = xr.DataArray(
     attrs={"units": "", "long_name": "parameter controlling the impact of nonstructural carbohydrate saturation on nutrient uptake"},
 )
 
-# 20240311_3: vmax_fungi_son = 1.6e-9, 1.6e-9, 1.6e-8
-# 20240311_3_1: vmax_fungi_son = 1.6e-9, 1.6e-9, 1.6e-8
+# baseline value should be identical to organic uptake
 hr['vmax_fungi_son'] = xr.DataArray(
     [
-        0, np.nan, 4.50226015059032e-09, 7.04768497635707e-09, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, 4.47476004390863e-06, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 3.11293064e-09, 3.02089436e-08, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 1.06261823e-07, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -215,8 +212,8 @@ hr['vmax_fungi_son'] = xr.DataArray(
 
 hr['vmax_fungi_sop'] = xr.DataArray(
     [
-        0, np.nan, 1.52007484344376e-11, 1.37918248129927e-10, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, 1.12650425480598e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 8.59416146e-11, 1.70225575e-10, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 2.35976583e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -224,9 +221,8 @@ hr['vmax_fungi_sop'] = xr.DataArray(
     attrs={"units": "gP gC-1 s-1", "long_name": "rate of mining organic P by mycorrhizal fungi"},
 )
 
-## Based on C:N and C:P ratio of mycorrhizal fungi
-## cost_n = 50, cost_p = 500; 
-# Set those to zero for stability, for initial run (non-sensitivity)
+# The effect of the cost variables seem to be mainly on reducing the hollow biomass (TLAI),
+# limited effect on hummock
 hr['fungi_cost_n'] = xr.DataArray(
     [20], dims=["allpft"],
     attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
@@ -236,7 +232,6 @@ hr['fungi_cost_p'] = xr.DataArray(
     [200], dims=["allpft"],
     attrs={"units": "gP m-3", "long_name": "carbon cost of fungal P uptake"},
 )
-
 
 encoding = {}
 for data_var in hr.data_vars:

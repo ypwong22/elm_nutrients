@@ -20,9 +20,9 @@ workdir = os.getcwd()
 #N = 4000
 #N = 2000
 #N = 3125
-N = 128
+N = 495
 
-PREFIX = "UQ_20240312_test20241025"
+PREFIX = "UQ_20240407_OAT"
 time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
@@ -31,7 +31,8 @@ if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
 # this avoids having difficulty in dumping file
 #BLOCK = 200
 #BLOCK = 125
-BLOCK = 16
+BLOCK = 99
+#BLOCK = 16
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
@@ -39,7 +40,7 @@ RUNROOT = os.path.join(os.environ["E3SM_ROOT"], "output")
 VAR_LIST = ['Tair', 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
             'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
             'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-            'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
+            'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
 YEAR_LIST = range(2015, 2022)  # skip 2015 and 2021 because no observation/no model data
 
 MOSSFRAC = pd.read_excel("Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"

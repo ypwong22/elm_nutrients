@@ -274,7 +274,8 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}, ensemble_
             print(f'Plot {plot}', chamber_list_complete_dict[f'P{plot:02d}'], 
                   len(flist_pft), len(flist_col), len(flist_const))
         else:
-            print(f'Plot {plot}', f"g{ensemble_id:05g}", chamber_list_complete_dict[f'P{plot:02d}'], 
+            print(f'Plot {plot}', f"g{ensemble_id:05g}", 
+                  chamber_list_complete_dict[f'P{plot:02d}'], 
                   len(flist_pft), len(flist_col), len(flist_const))
  
         var_list_pft = var_list["pft"]
@@ -294,9 +295,11 @@ def extract_sims(prefix, var_list={"pft": [], "col": [], "const": []}, ensemble_
 
                     rootfr = hr["ROOTFR"][:, :, pft].values
                     nlev = np.max(np.where(rootfr[0, :] > 0)[0])
+                    nlev = nlev + 1 # the indexation needs to be 1+ the last index
 
                     if var_ in ['TSOI','H2OSOI','SMINN_vr','SOLUTIONP_vr',
                                 'SMIN_NH4_vr', 'SMIN_NO3_vr', 
+                                'LITR1C_vr','LITR2C_vr','LITR3C_vr',
                                 'LITR1N_vr','LITR2N_vr','LITR3N_vr',
                                 'LITR1P_vr','LITR2P_vr','LITR3P_vr']:
                         # column variables
@@ -743,8 +746,8 @@ def read_obs_tsoi_daily():
 ########################################
 # Given folder path, get the simulated values matched to the observed values
 ########################################
-def get_sim_carbonfluxes(year_range, runroot, growing_season, 
-                         extra_pft_vars = [], extra_col_vars = []):
+def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [], 
+                         extra_col_vars = []):
     warnings.filterwarnings("ignore")
 
     mossfrac = pd.read_excel(
@@ -756,7 +759,7 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season,
     var_list = ['Tair', 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
                 'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                 'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-                'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
+                'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
 
     grid_to_plot = {"T0.00": "P06", "T2.25": "P20", "T4.50": "P13",
         "T6.75": "P08", "T9.00": "P17", "T0.00CO2": "P19", "T2.25CO2": "P11",
@@ -862,7 +865,6 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season,
         #for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
         #    collect.loc[(col, plot), 'GPP_moss'] = temp[:, 12 + add] * \
         #        mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
-            
 
         ##################################################################
         # PFT variables in extra_pft_vars
@@ -891,13 +893,19 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season,
         ##################################################################
         # Column variables in VAR_LIST
         ##################################################################
-        col_list = ['TBOT', 'NEE', 'HR']
+        col_list = ['NPP','TBOT', 'NEE', 'HR']
         for colvar in col_list: # 'FCH4'
             if growing_season:
-                temp = hr2[colvar][filter, :].resample({'time': '1Y'}).mean().values
+                if colvar == 'NPP':
+                    temp = (hr2['AGNPP'] + hr2['BGNPP'].values)[filter, :].resample({'time': '1Y'}).mean().values
+                else:
+                    temp = hr2[colvar][filter, :].resample({'time': '1Y'}).mean().values
             else:
-                temp = hr2[colvar][:-1, :].resample({'time': '1Y'}).mean().values
-            if colvar in ['NEE', 'HR']:
+                if colvar == 'NPP':
+                    temp = (hr2['AGNPP'] + hr2['BGNPP'].values)[:-1, :].resample({'time': '1Y'}).mean().values
+                else:
+                    temp = hr2[colvar][:-1, :].resample({'time': '1Y'}).mean().values
+            if colvar in ['NPP','NEE', 'HR']:
                 # convert gC/m2/s to gC/m2/year
                 temp = temp * 365 * 86400
             for num, col in enumerate(['hummock', 'hollow']):
@@ -1054,7 +1062,7 @@ def uq_get_obs(VAR_LIST):
     obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
                    'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                    'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-                   'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE']
+                   'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
     obs_data = obs_data.loc[:, obs_varname]
 
 
