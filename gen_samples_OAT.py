@@ -36,7 +36,7 @@ f.write(f'zwt_froot_a 11 0 2\n')
 ########################################################################
 for parname in ['km_froot_n', 'km_froot_p', 'alpha_fpg', 'km_nsc', 'fungi_cost_n', 'fungi_cost_p',
                 'q10_upt', 'swc_opt']:
-    f.write(parname + ' ' + str(pft) + ' ' + str(float(hr[parname]*0.5)) + ' ' \
+    f.write(parname + ' 0 ' + str(float(hr[parname]*0.5)) + ' ' \
             + str(float(hr[parname]*1.5)) + '\n')
 
 f.close()
