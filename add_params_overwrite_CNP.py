@@ -38,8 +38,8 @@ hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 # 2-year old seedling of Pima: 0.63
 # the root:leaf ratios are found to be insensitive to light or nutrient treatment
 hr['froot_leaf'][2] = 0.63
-hr['froot_leaf'][3] = 0.516
-hr['froot_leaf'][11] = 0.55
+#hr['froot_leaf'][3] = 0.516 # the original 0.99 works better for tamarack NPP
+#hr['froot_leaf'][11] = 0.55
 
 # "Observations" at SPRUCE assume Picea mariana needles live 5 years long
 # Salmon, V. G., Brice, D. J., Bridgham, S., Childs, J., Graham, J., Griffiths, N. A., et al. (2021). Nitrogen and phosphorus cycling in an ombrotrophic peatland: a benchmark for assessing change. Plant and Soil, 466(1–2), 649–674. https://doi.org/10.1007/s11104-021-05065-x

@@ -25,7 +25,6 @@ plot_to_grid = dict([(b,a) for a,b in grid_to_plot.items()])
 
 pft_stride = 17
 plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19', 'P20']
-
 var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'FPG_Spruce', 'FPG_Tamarack', 'FPG_Shrub',
                   'FPG_P_Spruce', 'FPG_P_Tamarack', 'FPG_P_Shrub', 
@@ -35,7 +34,8 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'SOMP_TO_SMINP_Shrub']
 
 
-prefix = "20240406"
+prefix = "20240323"
+#prefix = 'y9s_20241018'
 ensemble_id = None
 #prefix  = "UQ_20231113"
 #ensemble_id = 'g00682'
@@ -51,6 +51,8 @@ if not "UQ" in prefix:
 else:
     runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 'UQ',
                            f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', ensemble_id)
+if 'y9s' in prefix:
+    runroot = os.path.join(os.environ['E3SM_ROOT'], 'y9s_runs')
 
 collect_part1 = get_sim_carbonfluxes(year_range, runroot, growing_season, 
                                      extra_pft_vars = ['LEAFC_ALLOC_TO_TOTVEGC_ABG'])

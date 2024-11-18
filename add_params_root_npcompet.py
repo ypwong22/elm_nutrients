@@ -30,6 +30,7 @@ hr['flnr'][11] = 0.28
 """
 
 # sensitivity of fine root to leaf ratio to water table
+# shrub = 1.4
 hr['zwt_froot_a'] = xr.DataArray(
     [
         0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1.4, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
@@ -70,7 +71,7 @@ hr['froot_density'] = xr.DataArray(
 hr['vmax_froot_n'] = xr.DataArray(
     [
         0, np.nan, 2.8155167694702e-12, 1.59107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 2.09107323423353e-11, 0, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 9.09107323423353e-12, 0, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -89,7 +90,7 @@ hr['vmax_froot_n'] = xr.DataArray(
 hr['vmax_froot_p'] = xr.DataArray(
     [
         0, np.nan, 1.31299374647962e-13, 3.00270690350306e-13, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 1.30270690350306e-12, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 4.30270690350306e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -162,7 +163,7 @@ hr['zwt_fungi_c'] = xr.DataArray(
 hr['vmax_fungi_din'] = xr.DataArray(
     [
         0, np.nan, 2.01293064e-08, 1.52589436e-08, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 1.46261823e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 1.46261823e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -201,7 +202,7 @@ hr['km_nsc'] = xr.DataArray(
 # baseline value should be identical to organic uptake
 hr['vmax_fungi_son'] = xr.DataArray(
     [
-        0, np.nan, 3.11293064e-09, 3.02089436e-08, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 5.11293064e-09, 3.02089436e-08, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, 1.06261823e-07, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
@@ -212,8 +213,8 @@ hr['vmax_fungi_son'] = xr.DataArray(
 
 hr['vmax_fungi_sop'] = xr.DataArray(
     [
-        0, np.nan, 8.59416146e-11, 1.70225575e-10, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, 2.35976583e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 4.59416146e-11, 1.70225575e-10, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 1.05976583e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},

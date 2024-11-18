@@ -17,21 +17,21 @@ size = comm.Get_size()
 workdir = os.getcwd()
 
 # number of simulations
-#N = 4000
+N = 4000
 #N = 2000
 #N = 3125
-N = 495
+#N = 495
 
-PREFIX = "UQ_20240407_OAT"
+PREFIX = "UQ_20231113"
 time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
-#BLOCK = 200
+BLOCK = 200
 #BLOCK = 125
-BLOCK = 99
+#BLOCK = 99
 #BLOCK = 16
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
@@ -74,7 +74,7 @@ def postproc(thisjob, collection):
 
     # ('amb', 'elev') x (mean, mean_std, slope, slope_std)
     # ambient -> elevated CO2
-    chamber_list = {'amb': ['P06', 'P20', 'P13', 'P08', 'P17'], 
+    chamber_list = {'amb': ['P07', 'P06', 'P20', 'P13', 'P08', 'P17'], 
                     'elev': ['P19', 'P11', 'P04', 'P16', 'P10']}
     for i, co2 in enumerate(['amb', 'elev']):
         temp = values.index.get_level_values(0).isin(chamber_list[co2])

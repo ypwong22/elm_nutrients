@@ -780,11 +780,13 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
         if not "UQ" in runroot:
             temp = plot.replace("P", '')
             rundir = os.path.join(runroot, f'plot{temp}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+            if not os.path.exists(rundir):
+                # try using descriptive label
+                rundir = glob(os.path.join(runroot, 
+                    f'*{chamber_list_complete_dict[plot]}_US-SPR_ICB20TRCNPRDCTCBC', 'run'))[0]
         else:
             temp = chamber_list_complete_dict[plot]
             rundir = os.path.join(runroot, temp)
-
-            print(rundir)
 
         flist_pft = sorted(glob(rundir + "/*.h2.*.nc"))
         flist_pft = [f for f in flist_pft if \
@@ -805,21 +807,28 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
         ##################################################################
         # hummock: 0.64, hollow: 0.36
         # pima: 0.36, lala: 0.14
-        for var, varname in zip(['AGNPP', 'TOTVEGC_ABG'], ['AGNPP', 'AGBiomass']):
+        # temporary fix until better values become available
+        if growing_season:
+            temp = hr['AGNPP'][filter, :].resample({'time': '1Y'}).mean() * 365 * 86400
+        else:
+            temp = hr['AGNPP'][:-1, :].resample({'time': '1Y'}).mean() * 365 * 86400
+        # convert gC/m2/s to gC/m2/year; otherwise gC m-2
+        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+            collect.loc[(col, plot), f'AGNPP_Spruce'] = temp[:, 2 + add] * 0.36
+            collect.loc[(col, plot), f'AGNPP_Tamarack'] = temp[:, 3 + add] * 0.14
+            collect.loc[(col, plot), f'AGNPP_Shrub'] = temp[:, 11 + add] * 0.25
+
+        if not 'y9s' in runroot:
             # temporary fix until better values become available
             if growing_season:
-                temp = hr[var][filter, :].resample({'time': '1Y'}).mean()
+                temp = hr['TOTVEGC_ABG'][filter, :].resample({'time': '1Y'}).mean()
             else:
-                temp = hr[var][:-1, :].resample({'time': '1Y'}).mean()
-            if var == 'AGNPP':
-                # convert gC/m2/s to gC/m2/year; otherwise gC m-2
-                temp = temp.values * 365 * 86400
-            else:
-                temp = temp.values
+                temp = hr['TOTVEGC_ABG'][:-1, :].resample({'time': '1Y'}).mean()
+            temp = temp.values
             for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-                collect.loc[(col, plot), f'{varname}_Spruce'] = temp[:, 2 + add] * 0.36
-                collect.loc[(col, plot), f'{varname}_Tamarack'] = temp[:, 3 + add] * 0.14
-                collect.loc[(col, plot), f'{varname}_Shrub'] = temp[:, 11 + add] * 0.25
+                collect.loc[(col, plot), f'AGBiomass_Spruce'] = temp[:, 2 + add] * 0.36
+                collect.loc[(col, plot), f'AGBiomass_Tamarack'] = temp[:, 3 + add] * 0.14
+                collect.loc[(col, plot), f'AGBiomass_Shrub'] = temp[:, 11 + add] * 0.25
 
         for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
             for pft in ['Spruce', 'Tamarack', 'Shrub']:
@@ -871,7 +880,7 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
         ##################################################################
         for var in extra_pft_vars:
             # temporary fix until better values become available
-            if 'LEAFC_ALLOC_TO_TOTVEGC_ABG' in var:
+            if 'LEAFC_ALLOC_TO_TOTVEGC_ABG' in var and not 'y9s' in runroot:
                 if growing_season:
                     temp = hr['LEAFC_ALLOC'][filter, :].resample({'time': '1Y'}).mean() / \
                            hr['TOTVEGC_ABG'][filter, :].resample({'time': '1Y'}).mean() * \
@@ -897,12 +906,12 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
         for colvar in col_list: # 'FCH4'
             if growing_season:
                 if colvar == 'NPP':
-                    temp = (hr2['AGNPP'] + hr2['BGNPP'].values)[filter, :].resample({'time': '1Y'}).mean().values
+                    temp = (hr2['AGNPP'] + hr2['FROOTC_ALLOC'].values)[filter, :].resample({'time': '1Y'}).mean().values
                 else:
                     temp = hr2[colvar][filter, :].resample({'time': '1Y'}).mean().values
             else:
                 if colvar == 'NPP':
-                    temp = (hr2['AGNPP'] + hr2['BGNPP'].values)[:-1, :].resample({'time': '1Y'}).mean().values
+                    temp = (hr2['AGNPP'] + hr2['FROOTC_ALLOC'].values)[:-1, :].resample({'time': '1Y'}).mean().values
                 else:
                     temp = hr2[colvar][:-1, :].resample({'time': '1Y'}).mean().values
             if colvar in ['NPP','NEE', 'HR']:
@@ -937,7 +946,6 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
     warnings.filterwarnings("default")
 
     return collect
-
 
 
 def vert_interp(
