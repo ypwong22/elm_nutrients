@@ -1,0 +1,27 @@
+km_froot_n 0 4 10
+km_froot_p 0 0.004 0.01
+km_nsc 0 2 4
+
+vmax_froot_n 2 2e-13 3e-11
+vmax_froot_n 3 1.6e-12 1.6e-10
+vmax_froot_n 11 9e-12 9e-10
+
+vmax_froot_p 2 1.3e-14 1.3e-12
+vmax_froot_p 3 3e-14 3e-12
+vmax_froot_p 11 4.3e-14 4.3e-12
+
+vmax_fungi_din 2 6e-9 2e-7
+vmax_fungi_din 3 5e-9 1.5e-7
+vmax_fungi_din 11 1.46e-9 1.46e-7
+
+vmax_fungi_dip 2 6e-11 2e-9
+vmax_fungi_dip 3 4e-11 4e-9
+vmax_fungi_dip 11 4e-11 4e-9
+
+vmax_fungi_son 2 6e-10 6e-8
+vmax_fungi_son 3 3e-9 3e-7
+vmax_fungi_son 11 1e-8 1e-6
+
+vmax_fungi_sop 2 2e-11 2e-9
+vmax_fungi_sop 3 2e-11 2e-9
+vmax_fungi_sop 11 1e-10 1e-8

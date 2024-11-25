@@ -5,7 +5,7 @@ import os
 import xarray as xr
 import numpy as np
 
-prefix = '20240407'
+prefix = '20240101'
 basic_file = os.path.join(
     os.environ['E3SM_ROOT'], 'output', f'{prefix}_US-SPR_ICB1850CNRDCTCBC_ad_spinup', 'run', 
     'clm_params.nc'

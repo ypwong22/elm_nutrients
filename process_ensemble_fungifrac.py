@@ -18,7 +18,7 @@ size = comm.Get_size()
 
 workdir = os.getcwd()
 
-PREFIX = 'UQ_20240312_test20241012'
+PREFIX = 'UQ_20240323'
 if PREFIX == 'UQ_20240311_1':
     # Down-select the runs because it is impossible to finish processing
     # all 4000 runs in reasonable amount of time

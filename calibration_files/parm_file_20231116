@@ -4,28 +4,34 @@
 # Ricciuto et al. 2017 DOI: 10.1002/2017MS000962
 
 mbbopt       2   4.5     13.5
-vcmaxha      2   36000   108000
-vcmaxhd      2   198000  202000
+#vcmaxha      2   36000   108000
+vcmaxhd      2   191000  210000
 flnr         2   0.05    0.30
 slatop       2   0.00255 0.00475
 br_mr_pft    2   1e-6    5e-6
 q10_mr_pft   2   1.2     3.8
-froot_leaf   2   0.2     0.6
+froot_leaf   2   0.3     1.3
+stem_leaf    2   -0.5    -0.1
 
 mbbopt       3   4.5     13.5
-vcmaxha      3   36000   108000
-vcmaxhd      3   198000  202000
+#vcmaxha      3   36000   108000
+vcmaxhd      3   191000  210000
 flnr         3   0.05    0.30
 slatop       3   0.00854 0.01302
 br_mr_pft    3   1e-6    5e-6
 q10_mr_pft   3   1.2     3.8
-froot_leaf   3   0.2     0.6
+froot_leaf   3   0.3     1.3
+stem_leaf    3   -0.5    -0.1
 
 mbbopt      11   4.5     13.5
-vcmaxha     11   36000   108000
-vcmaxhd     11   198000  202000
+#vcmaxha     11   36000   108000
+vcmaxhd     11   191000  210000
 flnr        11   0.05    0.30
 slatop      11   0.00833 0.0154
 br_mr_pft   11   1e-6    5e-6
 q10_mr_pft  11   1.2     3.8
-froot_leaf  11   0.2     0.6
+froot_leaf  11   0.3     1.3
+
+decomp_depth_efolding 0 0.3 1.0
+q10_hr   0      1.4    2.5
+mino2lim 0      0.0001  0.05

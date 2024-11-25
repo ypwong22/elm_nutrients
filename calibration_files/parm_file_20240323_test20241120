@@ -1,0 +1,24 @@
+# Test varying the most sensitive parameters
+zwt_fungi_a 2 0.3 0.8
+zwt_fungi_a 3 0.3 0.8
+zwt_fungi_a 11 0.4 1.
+#zwt_fungi_b 2 0. 0.1
+#zwt_fungi_b 3 -0.1 0.
+zwt_fungi_b 11 -0.04 0.
+
+vmax_fungi_son 2 5e-10 5e-8
+vmax_fungi_sop 3 1.7e-11 1.7e-9
+
+fungi_cost_n 0 5 30
+km_nsc 0 1.5 4
+
+vmax_fungi_sop 2 5e-12 5e-10
+vmax_fungi_din 2 1e-8 3e-8
+
+alpha_fpg 0 1.25 1.75
+
+# add some extras
+vmax_froot_n 2 3e-13 3e-11
+vmax_froot_n 11 9e-13 9e-11
+#vmax_fungi_din 2 2e-9 2e-7
+#vmax_fungi_din 3 1.5e-9 1.5e-7
