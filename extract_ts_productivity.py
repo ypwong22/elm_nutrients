@@ -34,7 +34,7 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'SOMP_TO_SMINP_Shrub']
 
 
-prefix = "20240323"
+prefix = "20240327"
 #prefix = 'y9s_20241018'
 ensemble_id = None
 #prefix  = "UQ_20231113"

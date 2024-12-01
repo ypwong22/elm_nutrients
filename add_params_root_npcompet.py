@@ -70,8 +70,8 @@ hr['froot_density'] = xr.DataArray(
 #      = np.array([6.39e-13, 1.68e-12, 2.16e-12])
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 2.67156581164975e-12, 1.59107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 3.3272971781062e-11, 0, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 2.2155167694702e-12, 2.39107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 1.58785467901505e-11, 0, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -89,8 +89,8 @@ hr['vmax_froot_n'] = xr.DataArray(
 # Yet, reality still needs adjustment. 
 hr['vmax_froot_p'] = xr.DataArray(
     [
-        0, np.nan, 1.31299374647962e-13, 3.00270690350306e-13, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 4.30270690350306e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.31299374647962e-13, 9.00270690350306e-13, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 9.07929749348862e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -109,7 +109,7 @@ hr['km_froot_n'] = xr.DataArray(
 # literature value - 0.7, also way to high
 # Set to extremely low values to create stability
 hr['km_froot_p'] = xr.DataArray(
-    [0.007], dims=["allpft"],
+    [0.00495538937141517], dims=["allpft"],
     attrs={"units": "gP m-3", "long_name": "half saturation point for PO4 uptake rate by fine root"},
 )
 
@@ -124,13 +124,13 @@ hr['swc_opt'] = xr.DataArray(
 )
 
 hr['alpha_fpg'] = xr.DataArray(
-    [1.27640042520593], dims=["allpft"],
+    [1.5], dims=["allpft"],
     attrs={"units": "", "long_name": "sensitivity of nutrient uptake to nutrient limitation"},
 )
 
 hr['zwt_fungi_a'] = xr.DataArray(
     [
-        0, np.nan, 0.6, 0.761301396174382, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.414544508974449, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.7, 0.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -139,7 +139,7 @@ hr['zwt_fungi_a'] = xr.DataArray(
 
 hr['zwt_fungi_b'] = xr.DataArray(
     [
-        0, np.nan, 0.0428244228680147, -0.000196048335144486, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -0.04, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -0.04, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -162,8 +162,8 @@ hr['zwt_fungi_c'] = xr.DataArray(
 # = array([5.51293064e-09, 2.82589436e-08, 1.46261823e-07])
 hr['vmax_fungi_din'] = xr.DataArray(
     [
-        0, np.nan, 1.24861758874148e-07, 9.0657031272106e-08, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 1.46261823e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 4.5977396756146e-09, 3.48329403706601e-08, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 3.32894097101296e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -175,8 +175,8 @@ hr['vmax_fungi_din'] = xr.DataArray(
 # = array([5.51293064e-09, 2.82589436e-08, 1.46261823e-07])
 hr['vmax_fungi_dip'] = xr.DataArray(
     [
-        0, np.nan, 2.09416146e-10, 4.50225575e-10, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 4.45976583e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 1.222934959755e-10, 2.75666458920476e-10, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 8.0368607446859e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -202,8 +202,8 @@ hr['km_nsc'] = xr.DataArray(
 # baseline value should be identical to organic uptake
 hr['vmax_fungi_son'] = xr.DataArray(
     [
-        0, np.nan, 6.15004240634888e-09, 3.02089436e-08, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, 1.06261823e-07, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 2.55004240634888e-09, 1.02089436e-08, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 3.57476004390863e-08, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -213,8 +213,8 @@ hr['vmax_fungi_son'] = xr.DataArray(
 
 hr['vmax_fungi_sop'] = xr.DataArray(
     [
-        0, np.nan, 2.76601186605562e-10, 2.28481641086137e-10, np.nan, np.nan, np.nan, np.nan,
-        np.nan, np.nan, np.nan, 1.05976583e-09, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 1.52007484344376e-11, 1.07918248129927e-10, np.nan, np.nan, np.nan, np.nan,
+        np.nan, np.nan, np.nan, 1.12650425480598e-10, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -225,7 +225,7 @@ hr['vmax_fungi_sop'] = xr.DataArray(
 # The effect of the cost variables seem to be mainly on reducing the hollow biomass (TLAI),
 # limited effect on hummock
 hr['fungi_cost_n'] = xr.DataArray(
-    [24], dims=["allpft"],
+    [20], dims=["allpft"],
     attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
 )
 

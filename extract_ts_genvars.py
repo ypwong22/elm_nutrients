@@ -9,7 +9,7 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20240323'
+prefix = '20240327'
 ensemble_id = None
 #prefix  = "UQ_20240312_test20241017"
 #ensemble_id = 2852
