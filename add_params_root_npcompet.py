@@ -42,7 +42,9 @@ hr['zwt_froot_a'] = xr.DataArray(
 
 hr['froot_radius'] = xr.DataArray(
     [
-        0, np.nan, 0.02, 0.02, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.01, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.012, 0.018, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.0045,
+        0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -51,7 +53,7 @@ hr['froot_radius'] = xr.DataArray(
 
 hr['froot_density'] = xr.DataArray(
     [
-        0, np.nan, 0.03, 0.03, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.03, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 0.16, 0.15, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.09, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
     dims=["pft"],
@@ -70,8 +72,8 @@ hr['froot_density'] = xr.DataArray(
 #      = np.array([6.39e-13, 1.68e-12, 2.16e-12])
 hr['vmax_froot_n'] = xr.DataArray(
     [
-        0, np.nan, 2.2155167694702e-12, 2.39107323423353e-11, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 1.58785467901505e-11, 0, np.nan, np.nan, np.nan, np.nan, 
+        0, np.nan, 4.25379220e-12, 9.68384660e-11, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 9.64621718e-12, 0, np.nan, np.nan, np.nan, np.nan, 
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -89,8 +91,8 @@ hr['vmax_froot_n'] = xr.DataArray(
 # Yet, reality still needs adjustment. 
 hr['vmax_froot_p'] = xr.DataArray(
     [
-        0, np.nan, 2.31299374647962e-13, 9.00270690350306e-13, np.nan, np.nan, np.nan, np.nan, 
-        np.nan, np.nan, np.nan, 9.07929749348862e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
+        0, np.nan, 4.44094799e-13, 3.64609630e-12, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 5.51567323e-13, 0, np.nan, np.nan, np.nan, np.nan, np.nan,
         np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
     coords={"pft": hr["pft"]},
@@ -102,14 +104,25 @@ hr['vmax_froot_p'] = xr.DataArray(
 # model subroutines do not distinguish between NH4 and NO3 in its N demand
 # literature value - 0.14, but is too high except for layer 3
 hr['km_froot_n'] = xr.DataArray(
-    [7], dims=["allpft"],
+    [
+        0, np.nan, 7, 7, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 7, 0, np.nan, 
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
     attrs={"units": "gN m-3", "long_name": "half saturation point for NH4 uptake rate by fine root"},
 )
 
 # literature value - 0.7, also way to high
 # Set to extremely low values to create stability
 hr['km_froot_p'] = xr.DataArray(
-    [0.00495538937141517], dims=["allpft"],
+    [
+        0, np.nan, 0.00495538937141517, 0.00495538937141517, np.nan, np.nan, np.nan, np.nan, 
+        np.nan, np.nan, np.nan, 0.00495538937141517, 0, np.nan, 
+        np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+    ],
+    coords={"pft": hr["pft"]},
+    dims=["pft"],
     attrs={"units": "gP m-3", "long_name": "half saturation point for PO4 uptake rate by fine root"},
 )
 
@@ -128,7 +141,7 @@ hr['alpha_fpg'] = xr.DataArray(
     attrs={"units": "", "long_name": "sensitivity of nutrient uptake to nutrient limitation"},
 )
 
-hr['zwt_fungi_a'] = xr.DataArray(
+hr['inh_fungi_a'] = xr.DataArray(
     [
         0, np.nan, 0.7, 0.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
@@ -137,7 +150,7 @@ hr['zwt_fungi_a'] = xr.DataArray(
     attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
 )
 
-hr['zwt_fungi_b'] = xr.DataArray(
+hr['inh_fungi_b'] = xr.DataArray(
     [
         0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, -0.04, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],
@@ -146,7 +159,7 @@ hr['zwt_fungi_b'] = xr.DataArray(
     attrs={"units": "", "long_name": "sensitivity of fungi inhibition to nutrients"},
 )
 
-hr['zwt_fungi_c'] = xr.DataArray(
+hr['inh_fungi_c'] = xr.DataArray(
     [
         0, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
     ],

@@ -9,7 +9,7 @@ import pandas as pd
 import time
 from utils.analysis import get_sim_carbonfluxes
 
-
+# delete when debug
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
@@ -20,10 +20,10 @@ workdir = os.getcwd()
 N = 4000
 #N = 2000
 #N = 3125
-#N = 495
+#N = 1850
 
-PREFIX = "UQ_20240325"
-time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
+PREFIX = "UQ_20240101_R1"
+#time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
     os.mkdir(os.path.join(path_out, 'extract', PREFIX))
 
@@ -32,7 +32,7 @@ if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
 BLOCK = 200
 #BLOCK = 125
 #BLOCK = 99
-#BLOCK = 16
+#BLOCK = 50
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
@@ -53,9 +53,10 @@ niter = int(N / BLOCK)
 
 # Function to perform post-processing for one ensemble member
 def postproc(thisjob, collection):
-    # Debug
-    # thisjob = 3852
-    # collection = np.empty([len(VAR_LIST), 2, 4])
+    ## Debug
+    ##thisjob = 3852
+    ##collection = np.empty([len(VAR_LIST), 2, 4])
+
     ierr = 0
 
     casename = f"{PREFIX}_US-SPR_ICB20TRCNPRDCTCBC"
@@ -64,7 +65,7 @@ def postproc(thisjob, collection):
     # print(thisjob)
 
     try:
-        values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])
+         values = get_sim_carbonfluxes(YEAR_LIST, baserundir, False, extra_col_vars=['TOTSOMC'])
     except:
         print(f'unsuccessful reading of {baserundir}')
         ierr = 1
