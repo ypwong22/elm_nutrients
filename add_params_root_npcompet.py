@@ -11,10 +11,10 @@ from utils.paths import *
 path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm7",
                               "CLM1PT_data", "SPRUCE_data")
 
-orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
-newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
-#orgfile = 'clm_params_SPRUCE_UQ_20231113_g00682.nc'
-#newfile = 'clm_params_SPRUCE_UQ_20231113_g00682.nc_npcompet'
+#orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
+#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
+orgfile = 'clm_params_SPRUCE_UQ_20231116_g03568.nc'
+newfile = 'clm_params_SPRUCE_UQ_20231116_g03568.nc_npcompet'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
