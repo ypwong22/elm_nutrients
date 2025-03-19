@@ -1104,7 +1104,9 @@ def uq_get_obs(VAR_LIST):
                 # use the average of all the chambers to be compatible with simulated results
                 # obs_temp = obs_data.loc[obs_data.index.get_level_values(0) == plot_list[0], varname] # T0
                 collection.loc[(varname, co2), 'mean'] = obs_temp.mean()
-                collection.loc[(varname, co2), 'mean_std'] = obs_temp.std()
+                # ---- use random variable theory to estimate this uncertainty
+                # print(len(obs_temp)) = 25 to 30, because aggregated over chambers
+                collection.loc[(varname, co2), 'mean_std'] = obs_temp.std() / len(obs_temp)
             else:
                 collection.loc[(varname, co2), 'mean'] = 200000
                 collection.loc[(varname, co2), 'mean_std'] = 500000
@@ -1148,5 +1150,41 @@ def uq_get_sim(prefix, VAR_LIST):
 
             collection.loc[(varname, co2), 'mean'] = sim_temp.mean()
             collection.loc[(varname, co2), 'mean_std'] = sim_temp.mean()
+
+    return collection
+
+
+def get_obs_agnpp():
+    """ Get the observational chamber-wise slope & value """
+    plot_list = [f'P{p:02g}' for p in chamber_list_complete]
+
+    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
+                                        'extract_obs_productivity.csv'), index_col = [0, 1])
+    t2m_obs = obs_data.loc[:, 'Tair']
+    obs_varname = ['AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss']
+    obs_data = obs_data.loc[:, obs_varname]
+
+    collection = pd.DataFrame(np.nan, index = plot_list, 
+                    columns = pd.MultiIndex.from_product([obs_varname, ['mean','mean_std','slope','slope_std']]))
+
+    for varname in obs_varname:
+        for plot in plot_list:
+            filt = obs_data.index.get_level_values(0) == plot
+
+            obs_temp = obs_data.loc[filt, varname]
+            obs_T    = t2m_obs.loc[filt]
+
+            filt2 = ~np.isnan(obs_T) & ~np.isnan(obs_temp)
+            obs_temp = obs_temp.values[filt2]
+            obs_T = obs_T.values[filt2]
+
+            if len(obs_temp) >= 5:
+                res = linregress(obs_T, obs_temp)
+                ts = abs(t.ppf(0.05, len(obs_T) - 2))
+
+                collection.loc[plot, (varname, 'slope')] = res.slope
+                collection.loc[plot, (varname, 'slope_std')] = res.stderr * ts
+                collection.loc[plot, (varname, 'mean')] = obs_temp.mean()
+                collection.loc[plot, (varname, 'mean_std')] = obs_temp.std() / len(obs_temp)
 
     return collection

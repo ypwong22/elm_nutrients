@@ -1,4 +1,5 @@
 # Use netCDF4 because xarray is too slow
+# Save the whole matrix instead of just mean and slope
 from netCDF4 import Dataset
 from mpi4py import MPI
 import itertools as it
@@ -47,7 +48,7 @@ var_list_pft = ['FPG_PATCH', 'FPG_P_PATCH', 'PLANT_NDEMAND_POT',
                 'SMINN_TO_NPOOL','SMINP_TO_PPOOL',
                 'FUNGI_SOM_TO_NPOOL','FUNGI_SOM_TO_PPOOL', 'CPOOL_TO_FUNGI']
 chambers_ordered = {
-    'amb': [6, 20, 13, 8, 17], 
+    'amb': [7, 6, 20, 13, 8, 17], 
     'elev': [19, 11, 4, 16, 10]
 }
 
@@ -90,6 +91,7 @@ def postproc(ind):
     temp = temp.loc[filt, :].mean().unstack().unstack( \
         ).loc[chambers_ordered['amb'] + chambers_ordered['elev'], :]
 
+    # (chamber) x (mean average)
     nu_uptake_fraction = pd.DataFrame(np.nan,
         index = chambers_ordered['amb'] + chambers_ordered['elev'],
         columns = pd.MultiIndex.from_product([['N','P'],
@@ -107,46 +109,12 @@ def postproc(ind):
             retemp = np.vstack([froot_min, fungi_min, fungi_som]).T * 86400
             nu_uptake_fraction.loc[:, (nu,name)] = retemp
 
-    # ('amb', 'elev') x (mean, mean_std, slope, slope_std)
-    # ambient -> elevated CO2
-    nu_uptake_fraction_summary = pd.DataFrame(np.nan,
-        index = ['mean', 'slope'],
-        columns = pd.MultiIndex.from_product([['amb', 'elev'], ['N','P'],
-                                              ['Spruce','Tamarack','Shrub'],
-                                              ['min froot','min fungi','org fungi']]))
-    for i, co2 in enumerate(['amb', 'elev']):
-        temp = nu_uptake_fraction.loc[chambers_ordered[co2], :]
-
-        # average of all the chambers
-        for col in nu_uptake_fraction.columns:
-            nu_uptake_fraction_summary.loc['mean', (co2, *col)] = np.mean(temp[col].values)
-            res = linregress(np.arange(len(chambers_ordered[co2])), temp[col].values)
-            nu_uptake_fraction_summary.loc['slope', (co2, *col)] = res.slope
-
-    collection = nu_uptake_fraction_summary.values
+    collection = nu_uptake_fraction.values
     return collection
 
-# Debug
-#collection = postproc(1)
+## Debug
+##collection = postproc(1)
 
-"""
-rank = 0
-b = 49 
-collection = np.full([BLOCK, 2, 36], np.nan)
-for ind in range(BLOCK):
-    print(f'Start index to ensemble = {ind + b*BLOCK}, block = {b}, rank = {rank}')
-    sys.stdout.flush()
-    result = postproc(ind + b*BLOCK)
-    if not result is None:
-        collection[ind, :, :] = result
-    else:
-        ierr = ind
-collection.dump(
-    os.path.join(
-        path_out, 'extract', PREFIX, f'ensemble_fungifrac_part{b:03g}.bin'
-    )
-)
-"""
 
 if rank == 0:
     n_done = 0
@@ -190,7 +158,7 @@ else:
         ierr = -1
 
         if status == 0:
-            collection = np.full([BLOCK, 2, 36], np.nan)
+            collection = np.full([BLOCK, 11, 18], np.nan)
             for ind in range(BLOCK):
                 print(f'Start ensemble = {ind + b*BLOCK + 1}, block = {b}, rank = {rank}')
                 sys.stdout.flush()
@@ -202,7 +170,7 @@ else:
 
             collection.dump(
                 os.path.join(
-                    path_out, 'extract', PREFIX, f'ensemble_fungifrac_part{b:03g}.bin'
+                    path_out, 'extract', PREFIX, f'ensemble_fungifrac_raw_part{b:03g}.bin'
                 )
             )
             comm.send(rank, dest=0, tag=3)

@@ -1,6 +1,6 @@
 #!/bin/csh
 #SBATCH --time=24:00:00
-#SBATCH -J ens_UQ_20240311_US-SPR_ICB20TRCNPRDCTCBC
+#SBATCH -J fungifrac
 #SBATCH --nodes=1
 #SBATCH -A CLI185
 #SBATCH -p batch_ccsi
@@ -10,4 +10,4 @@
 
 # From load-balancing perspective, 128 cores seems inefficient. Fewer cores are better
 cd ${HOME}/Git/phenology_elm
-srun -n 3 ${HOME}/.conda/envs/olmt/bin/python -u process_ensemble_fungifrac.py # u flag to print un-buffered output
+srun -n 3 ${HOME}/.conda/envs/olmt/bin/python -u process_ensemble_fungifrac_raw.py # u flag to print un-buffered output

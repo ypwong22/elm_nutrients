@@ -9,10 +9,14 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-prefix = '20240101'
-ensemble_id = None
-#prefix  = "UQ_20240327"
-#ensemble_id = 2527
+#prefix = '20240101'
+#ensemble_id = None
+#prefix = "UQ_20240102"
+#ensemble_id = 3681
+prefix  = "UQ_20240101"
+ensemble_id = 3001
+#prefix  = "UQ_20231116"
+#ensemble_id = 3568
 rootpheno = False
 npcompet = True
 
