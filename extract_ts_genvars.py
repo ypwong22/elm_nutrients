@@ -9,16 +9,18 @@ from utils.constants import *
 from utils.analysis import *
 from utils.paths import *
 
-#prefix = '20240101'
-#ensemble_id = None
+prefix = '20231118'
+ensemble_id = None
 #prefix = "UQ_20240102"
 #ensemble_id = 3681
-prefix  = "UQ_20240101"
-ensemble_id = 3001
+#prefix  = "UQ_20240101"
+#ensemble_id = 3001
 #prefix  = "UQ_20231116"
-#ensemble_id = 3568
+#ensemble_id = 570
+#prefix  = "UQ_20240104"
+#ensemble_id = 570
 rootpheno = False
-npcompet = True
+npcompet = False
 
 
 #for prefix,rootpheno,npcompet in zip(['20231113', '20240311', '20240316'],

@@ -22,7 +22,7 @@ N = 4000
 #N = 3125
 #N = 1850
 
-PREFIX = 'UQ_20240111'
+PREFIX = 'UQ_20240112'
 #PREFIX = "UQ_20240106_OAT"
 #time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
 if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):

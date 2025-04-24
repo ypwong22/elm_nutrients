@@ -13,8 +13,10 @@ path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm
 
 #orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
 #newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
-orgfile = 'clm_params_SPRUCE_UQ_20231116_g03568.nc'
-newfile = 'clm_params_SPRUCE_UQ_20231116_g03568.nc_npcompet'
+#orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_slatop'
+#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet_slatop'
+orgfile = 'clm_params_SPRUCE_UQ_20231119_g01038.nc'
+newfile = 'clm_params_SPRUCE_UQ_20231119_g01038.nc_npcompet'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 

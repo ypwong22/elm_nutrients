@@ -5,10 +5,10 @@ import os
 import xarray as xr
 import numpy as np
 
-prefix = '20240101'
+prefix = '20240106'
 basic_file = os.path.join(
-    os.environ['E3SM_ROOT'], 'output', f'{prefix}_US-SPR_ICB1850CNRDCTCBC_ad_spinup', 'run', 
-    'clm_params.nc'
+    os.environ['E3SM_ROOT'], 'inputdata', 'atm', 'datm7', 'CLM1PT_data', 'SPRUCE_data',
+    'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet_slatop'
 )
 hr = xr.open_dataset(basic_file)
 

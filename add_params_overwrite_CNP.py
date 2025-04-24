@@ -18,7 +18,8 @@ path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm
                               "CLM1PT_data", "SPRUCE_data")
 
 orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc'
-newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP' # _orig
+#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
+newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_slatop'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
@@ -122,6 +123,13 @@ hr['waterlevel_tol'] = xr.DataArray(
     dims=["pft"],
     attrs={"units": "yr-1", "long_name": "flooding factor curvature"},
 )
+
+# (9) modify the SLA TOP to be consistent with Griffiths et al. 2017 DOI: 10.2136/sssaj2016.12.0422
+#     reported range
+if newfile == 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_slatop':
+    hr['slatop'][2] =  0.00376542
+    hr['slatop'][3] = 0.0107668
+    hr['slatop'][11] = 0.0107668
 
 encoding = {}
 for data_var in hr.data_vars:

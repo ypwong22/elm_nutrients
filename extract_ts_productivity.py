@@ -34,11 +34,11 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'SOMP_TO_SMINP_Shrub']
 
 
-prefix = "20231116"
+#prefix = "20231116"
 #prefix = 'y9s_20241018'
-ensemble_id = None
-#prefix = "UQ_20231116"
-#ensemble_id = "g03568"
+#ensemble_id = None
+prefix = "UQ_20231117"
+ensemble_id = "g00397"
 #prefix  = "UQ_20240102"
 #ensemble_id = 'g03681'
 extrafix = "" # "_alt_params"
