@@ -35,12 +35,14 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
 
 
 #prefix = "20231116"
-#prefix = 'y9s_20241018'
+##prefix = 'y9s_20241018'
 #ensemble_id = None
-prefix = "UQ_20231117"
-ensemble_id = "g00397"
-#prefix  = "UQ_20240102"
-#ensemble_id = 'g03681'
+#prefix = "UQ_20231118"
+#ensemble_id = "g01181"
+prefix  = "UQ_20240107"
+ensemble_id = 'g02786'
+#prefix  = "UQ_20240112"
+#ensemble_id = 'g00867'
 extrafix = "" # "_alt_params"
 growing_season = False
 zwt_growing_season = True

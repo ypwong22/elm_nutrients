@@ -1111,6 +1111,34 @@ def uq_get_obs(VAR_LIST):
                 collection.loc[(varname, co2), 'mean'] = 200000
                 collection.loc[(varname, co2), 'mean_std'] = 500000
 
+
+    # replace the growth uncertainty with the +/- SD in Paul's excel spreadsheet
+    collection.loc['AGNPP_Spruce', 'mean_std'] = 32/73 * collection.loc['AGNPP_Spruce', 
+                                                                        'mean'].values
+    collection.loc['AGNPP_Tamarack', 'mean_std'] = 32/73 * collection.loc['AGNPP_Tamarack', 
+                                                                          'mean'].values
+    collection.loc['AGNPP_Shrub', 'mean_std'] = 34/104 * collection.loc['AGNPP_Shrub', 
+                                                                        'mean'].values
+    collection.loc['NPP_moss', 'mean_std'] = 67/208 * collection.loc['NPP_moss', 
+                                                                     'mean'].values
+    collection.loc['BGNPP_TreeShrub', 'mean_std'] = 4.8/3.4 * collection.loc['BGNPP_TreeShrub', 'mean'].values
+    collection.loc['HR', 'mean_std'] = -53/283 * collection.loc['HR', 'mean'].values
+
+    #obs_data2.loc[:, 'NPP'] = \
+    #    (obs_data2.loc[:, 'AGNPP_Spruce'] + obs_data2.loc[:, 'AGNPP_Tamarack'] + \
+    #    obs_data2.loc[:, 'AGNPP_Shrub'] + obs_data2.loc[:, 'BGNPP_TreeShrub'] + \
+    #    obs_data2.loc[:, 'NPP_moss']).values
+    collection.loc['NPP', 'mean_std'] = np.sqrt( \
+        collection.loc['AGNPP_Spruce', 'mean_std']**2 + \
+        collection.loc['AGNPP_Tamarack', 'mean_std']**2 + \
+        collection.loc['AGNPP_Shrub', 'mean_std']**2 + \
+        collection.loc['BGNPP_TreeShrub', 'mean_std']**2 + \
+        collection.loc['NPP_moss', 'mean_std']**2
+    ).values
+
+    ### replace the ingrowth core uncertainty with that estimated from the 2014 data
+    ##collection.loc['BGNPP_TreeShrub', 'mean_std'] = 61.72
+
     return collection
 
 
