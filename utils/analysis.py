@@ -1060,7 +1060,7 @@ def vert_interp(
 
 
 def uq_get_obs(VAR_LIST):
-    """ Get the observational slope & value at ambient chamber """
+    """ Get the observational slope & intercept at ambient chamber """
     plot_list = [f'P{p:02g}' for p in chamber_list_complete]
 
     obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
@@ -1068,11 +1068,9 @@ def uq_get_obs(VAR_LIST):
     t2m_obs = obs_data.loc[:, 'Tair']
     # re-order
     obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
-                   'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                    'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-                   'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
+                   'BGNPP_TreeShrub', 'NPP', 'HR']
     obs_data = obs_data.loc[:, obs_varname]
-
 
     collection = pd.DataFrame(np.nan,
                               index = pd.MultiIndex.from_product([VAR_LIST, ['amb', 'elev']]),
@@ -1113,12 +1111,12 @@ def uq_get_obs(VAR_LIST):
 
 
     # replace the growth uncertainty with the +/- SD in Paul's excel spreadsheet
-    collection.loc['AGNPP_Spruce', 'mean_std'] = 32/73 * collection.loc['AGNPP_Spruce', 
-                                                                        'mean'].values
-    collection.loc['AGNPP_Tamarack', 'mean_std'] = 32/73 * collection.loc['AGNPP_Tamarack', 
-                                                                          'mean'].values
-    collection.loc['AGNPP_Shrub', 'mean_std'] = 34/104 * collection.loc['AGNPP_Shrub', 
-                                                                        'mean'].values
+    collection.loc['AGNPP_Spruce', 'mean_std'] = 16.47 # 32/73 * collection.loc['AGNPP_Spruce', 
+                                                       #                'mean'].values
+    collection.loc['AGNPP_Tamarack', 'mean_std'] = 8.05 #32/73 * collection.loc['AGNPP_Tamarack', 
+                                                   #                       'mean'].values
+    collection.loc['AGNPP_Shrub', 'mean_std'] = 44.58 #34/104 * collection.loc['AGNPP_Shrub', 
+                                                #                        'mean'].values
     collection.loc['NPP_moss', 'mean_std'] = 67/208 * collection.loc['NPP_moss', 
                                                                      'mean'].values
     collection.loc['BGNPP_TreeShrub', 'mean_std'] = 4.8/3.4 * collection.loc['BGNPP_TreeShrub', 'mean'].values
