@@ -9,6 +9,7 @@ from .paths import *
 import warnings
 from typing import Union, List
 from scipy.stats import linregress, t
+from datetime import datetime
 
 
 def get_treatment_string(chamber):
@@ -1060,7 +1061,7 @@ def vert_interp(
 
 
 def uq_get_obs(VAR_LIST):
-    """ Get the observational slope & intercept at ambient chamber """
+    """ Get the observational slope & value at ambient chamber """
     plot_list = [f'P{p:02g}' for p in chamber_list_complete]
 
     obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
@@ -1068,9 +1069,11 @@ def uq_get_obs(VAR_LIST):
     t2m_obs = obs_data.loc[:, 'Tair']
     # re-order
     obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
+                   'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                    'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-                   'BGNPP_TreeShrub', 'NPP', 'HR']
+                   'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
     obs_data = obs_data.loc[:, obs_varname]
+
 
     collection = pd.DataFrame(np.nan,
                               index = pd.MultiIndex.from_product([VAR_LIST, ['amb', 'elev']]),
@@ -1109,14 +1112,14 @@ def uq_get_obs(VAR_LIST):
                 collection.loc[(varname, co2), 'mean'] = 200000
                 collection.loc[(varname, co2), 'mean_std'] = 500000
 
-
     # replace the growth uncertainty with the +/- SD in Paul's excel spreadsheet
-    collection.loc['AGNPP_Spruce', 'mean_std'] = 16.47 # 32/73 * collection.loc['AGNPP_Spruce', 
-                                                       #                'mean'].values
-    collection.loc['AGNPP_Tamarack', 'mean_std'] = 8.05 #32/73 * collection.loc['AGNPP_Tamarack', 
-                                                   #                       'mean'].values
-    collection.loc['AGNPP_Shrub', 'mean_std'] = 44.58 #34/104 * collection.loc['AGNPP_Shrub', 
-                                                #                        'mean'].values
+    # (assume proportional % uncertainty)
+    collection.loc['AGNPP_Spruce', 'mean_std'] = 53.5/90.5 * collection.loc['AGNPP_Spruce', 
+                                                                            'mean'].values
+    collection.loc['AGNPP_Tamarack', 'mean_std'] = 32/73 * collection.loc['AGNPP_Tamarack', 
+                                                                          'mean'].values
+    collection.loc['AGNPP_Shrub', 'mean_std'] = 35/92.1 * collection.loc['AGNPP_Shrub', 
+                                                                          'mean'].values
     collection.loc['NPP_moss', 'mean_std'] = 67/208 * collection.loc['NPP_moss', 
                                                                      'mean'].values
     collection.loc['BGNPP_TreeShrub', 'mean_std'] = 4.8/3.4 * collection.loc['BGNPP_TreeShrub', 'mean'].values
@@ -1137,6 +1140,12 @@ def uq_get_obs(VAR_LIST):
     ### replace the ingrowth core uncertainty with that estimated from the 2014 data
     ##collection.loc['BGNPP_TreeShrub', 'mean_std'] = 61.72
 
+    # multiply the numbers by -1 to be consistent with model definition
+    collection.loc['HR', 'mean'] = -collection.loc['HR', 'mean'].values
+    collection.loc['HR', 'slope'] = -collection.loc['HR', 'slope'].values
+    collection.loc['NEE', 'mean'] = -collection.loc['NEE', 'mean'].values
+    collection.loc['NEE', 'slope'] = -collection.loc['NEE', 'slope'].values
+
     return collection
 
 
@@ -1150,8 +1159,8 @@ def uq_get_sim(prefix, VAR_LIST):
 
     sim_tair = sim_data.loc['average', 'Tair']
     sim_data = sim_data.loc['average', VAR_LIST]
-    sim_data['HR'] = - sim_data['HR']
-    sim_data['NEE'] = - sim_data['NEE']
+    ##sim_data['HR'] = - sim_data['HR'] # I adjusted Paul's value to be consistent with model instead
+    ##sim_data['NEE'] = - sim_data['NEE']
 
     collection = pd.DataFrame(np.nan,
                               index = pd.MultiIndex.from_product([VAR_LIST, ['amb', 'elev']]),
@@ -1213,4 +1222,42 @@ def get_obs_agnpp():
                 collection.loc[plot, (varname, 'mean')] = obs_temp.mean()
                 collection.loc[plot, (varname, 'mean_std')] = obs_temp.std() / len(obs_temp)
 
+    # replace the growth uncertainty with the +/- SD in Paul's excel spreadsheet
+    # (assume proportional % uncertainty)
+    collection.loc[:, ('AGNPP_Spruce', 'mean_std')] = 53.5/90.5 * \
+        collection.loc[:, ('AGNPP_Spruce', 'mean')].values
+    collection.loc[:, ('AGNPP_Tamarack', 'mean_std')] = 32/73 * \
+        collection.loc[:, ('AGNPP_Tamarack', 'mean')].values
+    collection.loc[:, ('AGNPP_Shrub', 'mean_std')] = 35/92.1 * \
+        collection.loc[:, ('AGNPP_Shrub', 'mean')].values
+    collection.loc[:, ('NPP_moss', 'mean_std')] = 67/208 * \
+        collection.loc[:, ('NPP_moss', 'mean')].values
+
     return collection
+
+
+def get_dissolved_nutrients(DEPTH):
+    # Observed dissolved N & P at multiple depths
+    data = pd.read_csv(
+        os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'input',
+                    'SPRUCE_plot_porewater_chemistry_release_20240617.csv'),
+        na_values=[-9999, -8888]
+    )
+    data['DATE'] = data['DATE'].apply(lambda x: datetime.strptime(str(x), '%Y%m%d'))
+    data = data.loc[(pd.DatetimeIndex(data['DATE']).year >= 2015) &
+                    (~data['PLOT'].isin([2,5,9,14,15,21])),
+                    ['PLOT', 'DEPTH', 'DATE', 'NH4', 'NO3', 'SRP', 'TN', 'TP']]
+    data['PLOT'] = [f'{x:02d}' for x in data['PLOT']]
+    data['dT'] = [chamber_levels_complete[x][0] for x in data['PLOT']]
+    data['CO2'] = [chamber_levels_complete[x][1] for x in data['PLOT']]
+
+    data['NH4+NO3'] = data['NH4'] + data['NO3']
+
+    data = data.loc[np.isclose(data['DEPTH'], DEPTH), :]
+    data = data.sort_values(by = 'DATE')
+
+    if DEPTH == 0.3:
+        # apparently there is some outlier
+        data.loc[data['PLOT'].isin(['10', '19']) & (data['NH4'] > 1.5)] = np.nan
+    
+    return data

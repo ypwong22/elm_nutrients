@@ -11,14 +11,14 @@ from utils.paths import *
 
 #prefix = '20231116'
 #ensemble_id = None
-#prefix  = "UQ_20231118"
-#ensemble_id = 1181 # 3067
-prefix  = "UQ_20240107"
-ensemble_id = 2786 # 1185
+prefix  = "UQ_20231118"
+ensemble_id = 3067 # 1181
+#prefix  = "UQ_20240107"
+#ensemble_id = 1485 # 1185
 #prefix  = "UQ_20240112"
-#ensemble_id = 867
+#ensemble_id = 1944 # 867
 rootpheno = False
-npcompet = True # False
+npcompet = False
 
 
 #for prefix,rootpheno,npcompet in zip(['20231113', '20240311', '20240316'],
@@ -75,7 +75,7 @@ if rootpheno:
         'LFR_FROOT_TD', 'LFR_FROOT_WD']
 
 var_list['col'] = [
-    'TBOT', 'TSOI_30', 'H2OSOI_30', 'HR', 'NEE', 'FPG', 'FPG_P', 'ZWT', 
+    'TBOT', 'TSOI_30', 'H2OSOI_30', 'GPP', 'AR', 'MR', 'HR', 'NEE', 'FPG', 'FPG_P', 'ZWT', 
     'ACTUAL_IMMOB', 'ACTUAL_IMMOB_P', 'SMINN_30', 'SOLUTIONP_30', 
     'FPI', 'FPI_P', 'RH2M', 'H2OSFC']
 if not npcompet:

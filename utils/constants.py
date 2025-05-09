@@ -46,6 +46,7 @@ chamber_list_names_complete = [
     "T9.00CO2",
 ]
 chamber_list_complete_dict = dict({f"P{a:02d}": b for  a,b in zip(chamber_list_complete, chamber_list_names_complete)})
+chamber_list_complete_dict_rev = dict({b:str(a) for  a,b in zip(chamber_list_complete, chamber_list_names_complete)})
 
 
 sim_tvec = pd.date_range("2015-01-01", "2020-12-31", freq="1D")

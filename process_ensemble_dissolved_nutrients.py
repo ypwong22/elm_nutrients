@@ -11,6 +11,7 @@ from glob import glob
 from utils.constants import *
 from utils.paths import *
 import sys
+from utils.analysis import vert_interp, get_dissolved_nutrients
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -21,20 +22,18 @@ workdir = os.getcwd()
 # Down-select the runs because it is impossible to finish processing
 # all 4000 runs in reasonable amount of time
 PREFIX = 'UQ_20240107'
-if PREFIX == 'UQ_20240101':
-    subset_ensemble = [2656,147,3470,124,3454,1223,2977,1787,204,3259,877,1322,
-                       649,1846,3001,2390,226,3545,3767,3380]
-elif PREFIX == 'UQ_20240102':
-    subset_ensemble = [3941,3377,1899,1876,744,3690,2348,3681,1810,3641,776,1257,1089,1921,
-                       1929,1933,3263,1967,1693,3305]
+if PREFIX == 'UQ_20231118':
+    subset_ensemble =  [1903,823,2598,2028,3796,3165,2526,2691,3453,1534,3108,2472,231,1196,
+                        907,3620,1181,262,2848,3613,3067,2562,1125,1757,1679,1682,2154,98,
+                        1103,3003,694,3661,652,709,3711,255,1660,3767,3564,1130]
 elif PREFIX == 'UQ_20240107':
-    subset_ensemble = [276,2578,3203,2263,2366,1002,174,2583,605,1458,3420,873,1485,2786,
-                       140,1931,2030,1741,1535,3384,103,2541,2702,936,1881,1876,722,715,
-                       64,653,1081,3119,1847,249,35,2316,49,1917,61,2100]
-elif PREFIX == 'UQ_20240107':
-    subset_ensemble = [1870,1944,1002,1330,1071,448,654,3833,161,2601,2585,867,2764,1079,
-                       3629,1372,2364,3116,2675,1838,2421,1172,3609,3204,55,2204,1221,
-                       34,1480,2540,3558,1542,3726,2234,2422,2971,2165,840,3490,2495]
+    subset_ensemble = [249,2702,61,936,174,1535,1485,1002,3119,1741,2263,1081,1590,103,
+                       1918,2786,2541,1532,559,1685,902,1026,1392,1881,1377,316,722,1069,
+                       1957,131,1198,1027,616,2120,1963,3384,3510,1847,653,3203]
+elif PREFIX == 'UQ_20240112':
+    subset_ensemble = [1944,2204,1429,2540,2764,867,654,1870,1079,1362,2922,1330,448,2364,
+                       2601,2165,2421,3609,3554,34,1172,1480,161,1980,2259,840,3116,1071,
+                       3744,1372,2495,2096,3204,55,3726,3297,2971,1838,1002,3650]
 N = len(subset_ensemble)
 
 # Assume folder already exists
@@ -49,29 +48,33 @@ if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 niter = int(N / BLOCK)
 
-var_list_pft = ['FPG_PATCH', 'FPG_P_PATCH', 'PLANT_NDEMAND_POT',
-                'PLANT_PDEMAND_POT', 'FROOT_NDEMAND_POT','FROOT_PDEMAND_POT',
-                'FUNGI_NDEMAND_POT','FUNGI_PDEMAND_POT',
-                'SMINN_TO_NPOOL','SMINP_TO_PPOOL',
-                'FUNGI_SOM_TO_NPOOL','FUNGI_SOM_TO_PPOOL', 'CPOOL_TO_FUNGI']
 chambers_ordered = {
     'amb': [6, 20, 13, 8, 17], 
     'elev': [19, 11, 4, 16, 10]
 }
 
+# Read the observed nutrient level because I need to get the dates
+DEPTH = 0.3
+obs_data = get_dissolved_nutrients(DEPTH)
+
 # Function to perform post-processing for one ensemble member
 def postproc(ind):
-    pft_list = np.array([2, 3, 11])
-    hol_add = 17
     tvec = pd.date_range("2015-01-01", "2021-12-31", freq="1D")
     tvec = tvec[(tvec.month != 2) | (tvec.day != 29)]
     rid = subset_ensemble[ind]
 
+    LEVGRND = np.array([0.007100635, 0.027925, 0.06225858, 0.1188651, 0.2121934,
+                        0.3660658, 0.6197585, 1.038027, 1.727635, 2.864607, 4.739157,
+                        7.829766, 12.92532, 21.32647, 35.17762])
+
+    var_list = ['SMINN_vr','SMIN_NH4_vr','SMIN_NO3_vr','SOLUTIONP_vr']
+    obs_list = ['NH4','NO3','SRP']
+
+
     temp = pd.DataFrame(
         np.nan, index = tvec,
-        columns = pd.MultiIndex.from_product([
-            chamber_list_complete, var_list_pft, pft_list
-        ], names = ['plot','variable','pft'])
+        columns = pd.MultiIndex.from_product([chamber_list_complete, var_list],
+                                             names = ['plot','variable'])
     )
 
     for plot in chamber_list_complete:
@@ -80,58 +83,63 @@ def postproc(ind):
                                     chamber_list_complete_dict[f'P{plot:02d}'])
         for year in range(2015, 2022):
             # print(plot, year)
-            filename = os.path.join(path_data, f'{PREFIX}_US-SPR_ICB20TRCNPRDCTCBC.elm.h2.' + 
+            filename = os.path.join(path_data, f'{PREFIX}_US-SPR_ICB20TRCNPRDCTCBC.elm.h1.' + 
                                     f'{year}-01-01-00000.nc')
             if not os.path.exists(filename):
                 return None
             nc = Dataset(filename)
-            for var in var_list_pft:
-                # DEBUG: print(plot, year, var)
-                # average hummock & hollow
-                temp.loc[temp.index.year == year, (plot, var)] = \
-                    nc[var][:, pft_list].data * 0.64 + nc[var][:, pft_list+hol_add].data * 0.36
+            for var in var_list:
+
+                target_nodes = [DEPTH]
+                input_nodes = LEVGRND
+                target_single_level = True
+
+                # hollow only
+                col = 1
+                input_data = nc[var][:,:,col] / nc['H2OSOI'][:,:,col]
+                result = vert_interp(target_nodes, input_nodes, input_data, 
+                                     target_single_level)
+                temp.loc[temp.index.year == year, (plot, var)] = result[:, 0]
             nc.close()
 
-    # average hummock and hollow, resample to growing season's all-year average
-    # unit: g m-2 day-1
-    filt = (tvec.month >= 5) & (tvec.month <= 10)
-    temp = temp.loc[filt, :].mean().unstack().unstack( \
-        ).loc[chambers_ordered['amb'] + chambers_ordered['elev'], :]
+    # For this simulation, subset to the observed dates, calculate temporal trend and average values
+    collect_mean = pd.DataFrame(np.nan,
+                                index = chambers_ordered['amb'] + chambers_ordered['elev'],
+                                columns = ['NH4','NO3','SRP'])
+    collect_trend = pd.DataFrame(np.nan,
+                                 index = chambers_ordered['amb'] + chambers_ordered['elev'],
+                                 columns = ['NH4','NO3','SRP'])
+    collect_trend_p = collect_trend.copy()
 
-    nu_uptake_fraction = pd.DataFrame(np.nan,
-        index = chambers_ordered['amb'] + chambers_ordered['elev'],
-        columns = pd.MultiIndex.from_product([['N','P'],
-                                              ['Spruce','Tamarack','Shrub'], 
-                                              ['min froot','min fungi','org fungi']]))
-    for nu in ['N','P']:
-        for i, (pft, name) in enumerate(zip([2,3,11],['Spruce','Tamarack','Shrub'])):
-            froot_min = temp.loc[:, (pft, f'SMIN{nu}_TO_{nu}POOL')].values / \
-                temp.loc[:, (pft, f'PLANT_{nu}DEMAND_POT')].values * \
-                temp.loc[:, (pft, f'FROOT_{nu}DEMAND_POT')].values
-            fungi_min = temp.loc[:, (pft, f'SMIN{nu}_TO_{nu}POOL')].values / \
-                temp.loc[:, (pft, f'PLANT_{nu}DEMAND_POT')].values * \
-                temp.loc[:, (pft, f'FUNGI_{nu}DEMAND_POT')].values
-            fungi_som = temp.loc[:, (pft, f'FUNGI_SOM_TO_{nu}POOL')].values
-            retemp = np.vstack([froot_min, fungi_min, fungi_som]).T * 86400
-            nu_uptake_fraction.loc[:, (nu,name)] = retemp
+    for sim_name, obs_name in zip(var_list, obs_list):
 
-    # ('amb', 'elev') x (mean, mean_std, slope, slope_std)
-    # ambient -> elevated CO2
-    nu_uptake_fraction_summary = pd.DataFrame(np.nan,
-        index = ['mean', 'slope'],
-        columns = pd.MultiIndex.from_product([['amb', 'elev'], ['N','P'],
-                                              ['Spruce','Tamarack','Shrub'],
-                                              ['min froot','min fungi','org fungi']]))
-    for i, co2 in enumerate(['amb', 'elev']):
-        temp = nu_uptake_fraction.loc[chambers_ordered[co2], :]
+        # get the days since begin from observed data
+        obs_data_var = obs_data[['PLOT', 'DATE', obs_name]
+                                ].set_index(['DATE', 'PLOT']).iloc[:,0].dropna().unstack()
+        day_since_begin = (obs_data_var.index - obs_data_var.index[0]).days
 
-        # average of all the chambers
-        for col in nu_uptake_fraction.columns:
-            nu_uptake_fraction_summary.loc['mean', (co2, *col)] = np.mean(temp[col].values)
-            res = linregress(np.arange(len(chambers_ordered[co2])), temp[col].values)
-            nu_uptake_fraction_summary.loc['slope', (co2, *col)] = res.slope
+        for col in chambers_ordered['amb'] + chambers_ordered['elev']:
 
-    collection = nu_uptake_fraction_summary.values
+            filt = ~np.isnan(obs_data_var[f'{col:02d}'].values)
+
+            # simulated data on the same dates as observed
+            sims_data_matched = pd.DataFrame(np.nan, index = obs_data_var.index, 
+                                             columns = obs_data_var.columns)
+            for plot in chambers_ordered['amb'] + chambers_ordered['elev']:
+                sims_data_matched.loc[:, plot] = temp.loc[obs_data_var.index, (plot,sim_name)]
+
+            for col in chambers_ordered['amb'] + chambers_ordered['elev']:
+                filt = ~np.isnan(obs_data_var[f'{col:02d}'].values)
+
+                collect_mean.loc[col,obs_name] = np.mean(sims_data_matched[col].values[filt])
+
+                res = linregress(day_since_begin[filt], sims_data_matched[col].values[filt])
+                collect_trend.loc[col, obs_name] = res.slope
+                collect_trend_p.loc[col, obs_name] = res.pvalue
+
+    collection = np.stack([collect_mean.values, collect_trend.values, 
+                                 collect_trend_p.values], axis=2)
+
     return collection
 
 # Debug
@@ -139,21 +147,22 @@ def postproc(ind):
 
 """
 rank = 0
-b = 49 
-collection = np.full([BLOCK, 2, 36], np.nan)
+b = 2
+collection = np.full([BLOCK, len(chambers_ordered['amb']+chambers_ordered['elev']) , 3, 3], np.nan)
 for ind in range(BLOCK):
     print(f'Start index to ensemble = {ind + b*BLOCK}, block = {b}, rank = {rank}')
     sys.stdout.flush()
     result = postproc(ind + b*BLOCK)
     if not result is None:
-        collection[ind, :, :] = result
+        collection[ind, :, :, :] = result
     else:
         ierr = ind
 collection.dump(
     os.path.join(
-        path_out, 'extract', PREFIX, f'ensemble_fungifrac_part{b:03g}.bin'
+        path_out, 'extract', PREFIX, f'ensemble_dissolved_nutrients_part{b:03g}.bin'
     )
 )
+
 """
 
 if rank == 0:
@@ -198,19 +207,20 @@ else:
         ierr = -1
 
         if status == 0:
-            collection = np.full([BLOCK, 2, 36], np.nan)
+            collection = np.full([BLOCK, len(chambers_ordered['amb']+chambers_ordered['elev']),
+                                  3, 3], np.nan)
             for ind in range(BLOCK):
                 print(f'Start ensemble = {ind + b*BLOCK + 1}, block = {b}, rank = {rank}')
                 sys.stdout.flush()
                 result = postproc(ind + b*BLOCK)
                 if not result is None:
-                    collection[ind, :, :] = result
+                    collection[ind, :, :, :] = result
                 else:
                     ierr = ind
 
             collection.dump(
                 os.path.join(
-                    path_out, 'extract', PREFIX, f'ensemble_fungifrac_part{b:03g}.bin'
+                    path_out, 'extract', PREFIX, f'ensemble_dissolved_nutrients_part{b:03g}.bin'
                 )
             )
             comm.send(rank, dest=0, tag=3)

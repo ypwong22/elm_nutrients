@@ -22,8 +22,7 @@ def fit_line(x, y):
     return xnew, ynew, res.slope, res.intercept, r2
 
 
-prefix = "UQ_20231117"
-#prefix = "UQ_20231113"
+prefix = "UQ_20240112"
 outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
 
 # T: 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
