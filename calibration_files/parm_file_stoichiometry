@@ -1,0 +1,40 @@
+# Analyze model sensitivity to plant tissue & 
+# peat C:N and C:P ratios
+
+# Leaf range: post-treatment obs +/- 2*std
+# Froot range: pre-treatment obs range
+
+leafcn      2   34.46   109.26
+leafcp      2   199.96  663.56
+livewdcn    2   61.29   149.93
+livewdcp    2   72.43   1165.87
+deadwdcn    2   400     1500
+deadwdcp    2   1000    5000
+frootcn     2   29      50
+frootcp     2   500     1500
+
+leafcn      3   13.71   80.49
+leafcp      3   40.27   528.59
+livewdcn    3   43.61   117.93
+livewdcp    3   140.235 1349.1
+deadwdcn    3   400     1500
+deadwdcp    3   1000    5000
+frootcn     3   20      55
+frootcp     3   500     1500
+
+leafcn     11   19.17   68.77
+leafcp     11   237.06  866.90
+livewdcn   11   46.62   128.74
+livewdcp   11   198.96  1357.24
+deadwdcn   11   400     1500
+deadwdcp   11   1000    5000
+frootcn    11   45      65
+frootcp    11   500     1500
+
+leafcn     12   29.00   64.68
+leafcp     12   131.34  873.22
+frootcn    12   29      64.68
+frootcp    12   131.34  873.22
+
+np_s1_new   0   25      55
+np_s2_new   0   25      55
