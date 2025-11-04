@@ -1,11 +1,11 @@
 import xarray as xr
 import os
 
-inputfile = os.path.join(os.environ['PROJDIR'], 'E3SM', 'inputdata', 'lnd', 'clm2', 'paramdata',
+inputfile = os.path.join(os.environ['E3SM_ROOT'], 'inputdata', 'lnd', 'clm2', 'paramdata',
                          'clm_params.eca.c190307.nc')
 h_in = xr.open_dataset(inputfile)
 
-hr = xr.open_dataset(os.path.join(os.environ['PROJDIR'], 'E3SM', 'inputdata',
+hr = xr.open_dataset(os.path.join(os.environ['E3SM_ROOT'], 'inputdata',
                                   'atm', 'datm7', 'CLM1PT_data', 'SPRUCE_data',
                                   'clm_params_SPRUCE_20231120_spruceroot.nc'
                                   ), decode_times = False) # 'clm_params.nc_yang_dmr_02242021'
@@ -51,7 +51,7 @@ for data_var in hr.data_vars:
     else:
         encoding[data_var] = {'_FillValue': None}
 
-outputfile = os.path.join(os.environ['PROJDIR'], 'E3SM', 'inputdata',
+outputfile = os.path.join(os.environ['E3SM_ROOT'], 'inputdata',
                           'atm', 'datm7', 'CLM1PT_data', 'SPRUCE_data',
                           'clm_params_SPRUCE_20231120_spruceroot_eca.nc') 
                           # 'clm_params.nc_eca_yang_dmr_02242021')
