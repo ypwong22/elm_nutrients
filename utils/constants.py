@@ -48,6 +48,10 @@ chamber_list_names_complete = [
 chamber_list_complete_dict = dict({f"P{a:02d}": b for  a,b in zip(chamber_list_complete, chamber_list_names_complete)})
 chamber_list_complete_dict_rev = dict({b:str(a) for  a,b in zip(chamber_list_complete, chamber_list_names_complete)})
 
+chambers_ordered = {
+    'amb': ['P07', 'P06', 'P20', 'P13', 'P08', 'P17'],
+    'elev': ['P19', 'P11', 'P04', 'P16', 'P10']
+}
 
 sim_tvec = pd.date_range("2015-01-01", "2020-12-31", freq="1D")
 sim_tvec = sim_tvec[(sim_tvec.month != 2) | (sim_tvec.day != 29)]

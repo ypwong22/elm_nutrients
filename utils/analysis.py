@@ -41,7 +41,7 @@ def get_treatment_string(chamber):
 def get_mossfrac(year, treatment):
     mossfrac = pd.read_excel(
         os.path.join(
-            os.environ["HOME"], "Git", "phenology_elm", "Sphagnum_fraction.xlsx"
+            os.environ["HOME"], "Git", "elm_nutrients", "Sphagnum_fraction.xlsx"
         ),
         index_col=0,
         skiprows=1,
@@ -747,72 +747,72 @@ def read_obs_tsoi_daily():
 ########################################
 # Given folder path, get the simulated values matched to the observed values
 ########################################
-def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [], 
-                         extra_col_vars = []):
+def get_sim_carbonfluxes(year_range, runroot, case_name, case_suffix, growing_season, extra_pft_vars = [], 
+                         extra_col_vars = [], ensemble_id = None):
     warnings.filterwarnings("ignore")
 
     mossfrac = pd.read_excel(
-        os.path.join(os.environ['HOME'], 'Git', 'phenology_elm', "Sphagnum_fraction.xlsx"),
+        os.path.join(os.environ['HOME'], 'Git', 'elm_nutrients', "Sphagnum_fraction.xlsx"),
         index_col=0, skiprows=1, engine="openpyxl"
     ).drop(["plot", "Temp", "CO2"], axis=1)
     mossfrac[2015] = mossfrac[2016]
+    # temporary fix until better values become available
+    mossfrac[2022] = mossfrac[2021]
+    mossfrac[2023] = mossfrac[2021]
 
-    var_list = ['Tair', 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
-                'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
+    var_list = ['Tair', # 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub', 'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
                 'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-                'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
+                'BGNPP_TreeShrub', 'NPP', 'HR', 'NEE'] #  'BGtoAG_TreeShrub',
 
-    grid_to_plot = {"T0.00": "P06", "T2.25": "P20", "T4.50": "P13",
-        "T6.75": "P08", "T9.00": "P17", "T0.00CO2": "P19", "T2.25CO2": "P11",
-        "T4.50CO2": "P04", "T6.75CO2": "P16", "T9.00CO2": "P10", "TAMB": "P07"}
+    grid_to_plot = {"T0.00": "P06", "T2.25": "P20", "T4.50": "P13", "T6.75": "P08", "T9.00": "P17", 
+                    "T0.00eCO2": "P19", "T2.25eCO2": "P11", "T4.50eCO2": "P04", "T6.75eCO2": "P16", "T9.00eCO2": "P10", "TAMB": "P07"}
     plot_to_grid = dict([(b,a) for a,b in grid_to_plot.items()])
 
-    pft_stride = 17
+    pft_stride = 32
     plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19', 'P20']
 
     collect = pd.DataFrame(np.nan,
-        index = pd.MultiIndex.from_product([['hummock', 'hollow', 'average'],
-                                            plot_list,
-                                            year_range], names = ['column', 'plot', 'year']),
-        columns = var_list + extra_col_vars + [f'{v}_Spruce' for v in extra_pft_vars] + \
-             [f'{v}_Tamarack' for v in extra_pft_vars] + [f'{v}_Shrub' for v in extra_pft_vars])
+                           index = pd.MultiIndex.from_product([['hummock', 'hollow', 'average'],
+                                                               plot_list,
+                                                               year_range], names = ['column', 'plot', 'year']),
+                           columns = var_list + extra_col_vars + [f'{v}_Spruce' for v in extra_pft_vars] + \
+                                     [f'{v}_Tamarack' for v in extra_pft_vars] + [f'{v}_Shrub' for v in extra_pft_vars])
 
     for plot in plot_list:
-        if not "UQ" in runroot:
-            temp = plot.replace("P", '')
-            rundir = os.path.join(runroot, f'plot{temp}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
-            if not os.path.exists(rundir):
-                # try using descriptive label
-                rundir = glob(os.path.join(runroot, 
-                    f'*{chamber_list_complete_dict[plot]}_US-SPR_ICB20TRCNPRDCTCBC', 'run'))[0]
+        trmt = plot_to_grid[plot]
+        # print(trmt)
+
+        if ensemble_id is None:
+            rundir = os.path.join(runroot, f'{case_name}_{trmt}_{case_suffix}', 'run')
         else:
-            temp = chamber_list_complete_dict[plot]
-            rundir = os.path.join(runroot, temp)
+            rundir = os.path.join(runroot, f'{case_name}_{trmt}_{case_suffix}', f'g{ensemble_id:05g}')
+
+        if not os.path.exists(rundir):
+            raise Exception(f'Cannot find rundir {rundir}')
+
+        #print(rundir)
 
         flist_pft = sorted(glob(rundir + "/*.h2.*.nc"))
-        flist_pft = [f for f in flist_pft if \
-                     int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
-
+        flist_pft = [f for f in flist_pft if int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
         hr = xr.open_mfdataset(flist_pft)
-        flist_col = sorted(glob(rundir + "/*.h1.*.nc"))
-        flist_col = [f for f in flist_col if \
-                     int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
 
+        flist_col = sorted(glob(rundir + "/*.h1.*.nc"))
+        flist_col = [f for f in flist_col if int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
         hr2 = xr.open_mfdataset(flist_col)
 
         if growing_season:
-            filter = (hr['time'].to_index().month >= 5) & (hr['time'].to_index().month <= 10)
+            filter = hr['time'].to_index().month *100 + hr['time'].to_index().day
+            # filter = (filter >= 515) & (filter <= 1015)
+            filter = (filter >= 600) & (filter < 900)
+        else:
+            filter = np.full(len(hr['time']), True)
 
         ##################################################################
         # PFT_specific variables in VAR_LIST
         ##################################################################
         # hummock: 0.64, hollow: 0.36
         # pima: 0.36, lala: 0.14
-        # temporary fix until better values become available
-        if growing_season:
-            temp = hr['AGNPP'][filter, :].resample({'time': '1Y'}).mean() * 365 * 86400
-        else:
-            temp = hr['AGNPP'][:-1, :].resample({'time': '1Y'}).mean() * 365 * 86400
+        temp = hr['AGNPP'][filter, :].resample({'time': '1Y'}).mean() * 365 * 86400
         # convert gC/m2/s to gC/m2/year; otherwise gC m-2
         for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
             collect.loc[(col, plot), f'AGNPP_Spruce'] = temp[:, 2 + add] * 0.36
@@ -820,11 +820,7 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
             collect.loc[(col, plot), f'AGNPP_Shrub'] = temp[:, 11 + add] * 0.25
 
         if not 'y9s' in runroot:
-            # temporary fix until better values become available
-            if growing_season:
-                temp = hr['TOTVEGC_ABG'][filter, :].resample({'time': '1Y'}).mean()
-            else:
-                temp = hr['TOTVEGC_ABG'][:-1, :].resample({'time': '1Y'}).mean()
+            temp = hr['TOTVEGC_ABG'][filter, :].resample({'time': '1Y'}).mean()
             temp = temp.values
             for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
                 collect.loc[(col, plot), f'AGBiomass_Spruce'] = temp[:, 2 + add] * 0.36
@@ -849,22 +845,19 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
             collect.loc[(col, plot), 'BGNPP_TreeShrub'] = \
                 temp[:, 2 + add] * 0.36 + temp[:, 3 + add] * 0.14 + temp[:, 11 + add] * 0.25
 
-        for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
-            collect.loc[(col, plot), 'BGtoAG_TreeShrub'] = \
-                collect.loc[(col, plot), 'BGNPP_TreeShrub'].values / \
-                (collect.loc[(col, plot), 'AGNPP_Spruce'] + \
-                collect.loc[(col, plot), 'AGNPP_Tamarack'] + \
-                collect.loc[(col, plot), 'AGNPP_Shrub']).values
+        #for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
+        #    collect.loc[(col, plot), 'BGtoAG_TreeShrub'] = \
+        #        collect.loc[(col, plot), 'BGNPP_TreeShrub'].values / \
+        #        (collect.loc[(col, plot), 'AGNPP_Spruce'] + \
+        #        collect.loc[(col, plot), 'AGNPP_Tamarack'] + \
+        #        collect.loc[(col, plot), 'AGNPP_Shrub']).values
 
-        if growing_season:
-            temp = hr['NPP'][filter, :].resample({'time': '1Y'}).mean()
-        else:
-            temp = hr['NPP'][:-1, :].resample({'time': '1Y'}).mean()
+        temp = hr['NPP'][filter, :].resample({'time': '1Y'}).mean()
         # convert gC/m2/s to gC/m2/year
         temp = temp * 365 * 86400
         for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
             collect.loc[(col, plot), 'NPP_moss'] = temp[:, 12 + add] * \
-                mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
+                mossfrac.loc[trmt.replace('eCO2','CO2'), :].loc[year_range] / 100.
 
         #if growing_season:
         #    temp = hr['GPP'][filter, :].resample({'time': '1Y'}).mean()
@@ -874,7 +867,7 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
         #temp = temp * 365 * 86400
         #for col, add in zip(['hummock', 'hollow'], [0, pft_stride]):
         #    collect.loc[(col, plot), 'GPP_moss'] = temp[:, 12 + add] * \
-        #        mossfrac.loc[plot_to_grid[plot], :].loc[year_range] / 100.
+        #        mossfrac.loc[trmt, :].loc[year_range] / 100.
 
         ##################################################################
         # PFT variables in extra_pft_vars
@@ -890,7 +883,9 @@ def get_sim_carbonfluxes(year_range, runroot, growing_season, extra_pft_vars = [
                     temp = hr['LEAFC_ALLOC'][:-1, :].resample({'time': '1Y'}).mean() / \
                            hr['TOTVEGC_ABG'][:-1, :].resample({'time': '1Y'}).mean() * \
                            365 * 86400
-            if var == 'AGNPP':
+            else:
+                temp = hr[var][filter, :].resample({'time': '1Y'}).mean()
+            if var == 'AGNPP' or var == 'NPP':
                 # convert gC/m2/s to gC/m2/year; otherwise gC m-2
                 temp = temp.values * 365 * 86400
             else:
@@ -1064,16 +1059,14 @@ def uq_get_obs(VAR_LIST):
     """ Get the observational slope & value at ambient chamber """
     plot_list = [f'P{p:02g}' for p in chamber_list_complete]
 
-    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
+    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                                         'extract_obs_productivity.csv'), index_col = [0, 1])
-    t2m_obs = obs_data.loc[:, 'Tair']
-    # re-order
-    obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
-                   'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
-                   'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-                   'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
-    obs_data = obs_data.loc[:, obs_varname]
+    # restrict to pre-2021
+    obs_data = obs_data.loc[obs_data.index.get_level_values('Year') <= 2021, :]
 
+    # re-order
+    t2m_obs = obs_data.loc[:, 'Tair']
+    obs_data = obs_data.loc[:, VAR_LIST]
 
     collection = pd.DataFrame(np.nan,
                               index = pd.MultiIndex.from_product([VAR_LIST, ['amb', 'elev']]),
@@ -1114,37 +1107,34 @@ def uq_get_obs(VAR_LIST):
 
     # replace the growth uncertainty with the +/- SD in Paul's excel spreadsheet
     # (assume proportional % uncertainty)
-    collection.loc['AGNPP_Spruce', 'mean_std'] = 53.5/90.5 * collection.loc['AGNPP_Spruce', 
-                                                                            'mean'].values
-    collection.loc['AGNPP_Tamarack', 'mean_std'] = 32/73 * collection.loc['AGNPP_Tamarack', 
-                                                                          'mean'].values
-    collection.loc['AGNPP_Shrub', 'mean_std'] = 35/92.1 * collection.loc['AGNPP_Shrub', 
-                                                                          'mean'].values
-    collection.loc['NPP_moss', 'mean_std'] = 67/208 * collection.loc['NPP_moss', 
-                                                                     'mean'].values
-    collection.loc['BGNPP_TreeShrub', 'mean_std'] = 4.8/3.4 * collection.loc['BGNPP_TreeShrub', 'mean'].values
-    collection.loc['HR', 'mean_std'] = -53/283 * collection.loc['HR', 'mean'].values
+    if 'AGNPP_Spruce' in VAR_LIST:
+        collection.loc['AGNPP_Spruce', 'mean_std'] = 53.5/90.5 * collection.loc['AGNPP_Spruce', 'mean'].values
+    if 'AGNPP_Tamarack' in VAR_LIST:
+        collection.loc['AGNPP_Tamarack', 'mean_std'] = 32/73 * collection.loc['AGNPP_Tamarack', 'mean'].values
+    if 'AGNPP_Shrub' in VAR_LIST:
+        collection.loc['AGNPP_Shrub', 'mean_std'] = 35/92.1 * collection.loc['AGNPP_Shrub', 'mean'].values
+    if 'NPP_moss' in VAR_LIST:
+        collection.loc['NPP_moss', 'mean_std'] = 67/208 * collection.loc['NPP_moss', 'mean'].values
+    if 'BGNPP_TreeShrub' in VAR_LIST:
+        collection.loc['BGNPP_TreeShrub', 'mean_std'] = 4.8/3.4 * collection.loc['BGNPP_TreeShrub', 'mean'].values
+    if 'HR' in VAR_LIST:
+        collection.loc['HR', 'mean_std'] = 53/283 * collection.loc['HR', 'mean'].values
 
-    #obs_data2.loc[:, 'NPP'] = \
-    #    (obs_data2.loc[:, 'AGNPP_Spruce'] + obs_data2.loc[:, 'AGNPP_Tamarack'] + \
-    #    obs_data2.loc[:, 'AGNPP_Shrub'] + obs_data2.loc[:, 'BGNPP_TreeShrub'] + \
-    #    obs_data2.loc[:, 'NPP_moss']).values
-    collection.loc['NPP', 'mean_std'] = np.sqrt( \
-        collection.loc['AGNPP_Spruce', 'mean_std']**2 + \
-        collection.loc['AGNPP_Tamarack', 'mean_std']**2 + \
-        collection.loc['AGNPP_Shrub', 'mean_std']**2 + \
-        collection.loc['BGNPP_TreeShrub', 'mean_std']**2 + \
-        collection.loc['NPP_moss', 'mean_std']**2
-    ).values
+    if 'NPP' in VAR_LIST:
+        #obs_data2.loc[:, 'NPP'] = \
+        #    (obs_data2.loc[:, 'AGNPP_Spruce'] + obs_data2.loc[:, 'AGNPP_Tamarack'] + \
+        #    obs_data2.loc[:, 'AGNPP_Shrub'] + obs_data2.loc[:, 'BGNPP_TreeShrub'] + \
+        #    obs_data2.loc[:, 'NPP_moss']).values
+        collection.loc['NPP', 'mean_std'] = np.sqrt( \
+            collection.loc['AGNPP_Spruce', 'mean_std']**2 + \
+            collection.loc['AGNPP_Tamarack', 'mean_std']**2 + \
+            collection.loc['AGNPP_Shrub', 'mean_std']**2 + \
+            collection.loc['BGNPP_TreeShrub', 'mean_std']**2 + \
+            collection.loc['NPP_moss', 'mean_std']**2
+        ).values
 
     ### replace the ingrowth core uncertainty with that estimated from the 2014 data
     ##collection.loc['BGNPP_TreeShrub', 'mean_std'] = 61.72
-
-    # multiply the numbers by -1 to be consistent with model definition
-    collection.loc['HR', 'mean'] = -collection.loc['HR', 'mean'].values
-    collection.loc['HR', 'slope'] = -collection.loc['HR', 'slope'].values
-    collection.loc['NEE', 'mean'] = -collection.loc['NEE', 'mean'].values
-    collection.loc['NEE', 'slope'] = -collection.loc['NEE', 'slope'].values
 
     return collection
 
@@ -1153,9 +1143,12 @@ def uq_get_sim(prefix, VAR_LIST):
     plot_list = [f'P{p:02g}' for p in chamber_list_complete]
 
     sim_data = pd.read_csv(
-        os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', "extract", prefix, 
+        os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', "extract", prefix, 
                      'extract_ts_productivity.csv'), index_col = [0,1,2], header = 0
     )
+
+    # restrict to pre-2021
+    sim_data = sim_data.loc[sim_data.index.get_level_values('year') <= 2021, :]
 
     sim_tair = sim_data.loc['average', 'Tair']
     sim_data = sim_data.loc['average', VAR_LIST]
@@ -1193,7 +1186,7 @@ def get_obs_agnpp():
     """ Get the observational chamber-wise slope & value """
     plot_list = [f'P{p:02g}' for p in chamber_list_complete]
 
-    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
+    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                                         'extract_obs_productivity.csv'), index_col = [0, 1])
     t2m_obs = obs_data.loc[:, 'Tair']
     obs_varname = ['AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss']
@@ -1239,7 +1232,7 @@ def get_obs_agnpp():
 def get_dissolved_nutrients(DEPTH):
     # Observed dissolved N & P at multiple depths
     data = pd.read_csv(
-        os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'input',
+        os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'input',
                     'SPRUCE_plot_porewater_chemistry_release_20240617.csv'),
         na_values=[-9999, -8888]
     )
