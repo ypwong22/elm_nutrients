@@ -31,7 +31,7 @@ COL_DATETIME = "Timestamp"
 COL_NEE      = "CO2_flux"
 COL_PAR      = "PAR"
 COL_TAIR     = "TA_0_5"
-COL_TSOIL    = "collar_soil_temp"
+COL_TSOIL    = "TS_5_B2" # "collar_soil_temp"
 COL_WH       = "WTD (m)"
 
 # Column names for prediction (adjust to match your DataFrame)
@@ -309,15 +309,45 @@ for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
     # =====================================================================
     # STEP 4: PLOTS WITH PREDICTION
     # =====================================================================
+    # ── Compute daily averages for plotting ──
+    # fit_df_night / fit_df_day: MultiIndex with chamber + Timestamp → average over chambers then over hours
+    ts_night = fit_df_night.index.get_level_values('Timestamp')
+    daily_night = fit_df_night.copy()
+    daily_night.index = ts_night
+    daily_night = daily_night.groupby(pd.Grouper(freq='D')).mean()
+
+    ts_day = fit_df_day.index.get_level_values('Timestamp')
+    daily_day = fit_df_day.copy()
+    daily_day.index = ts_day
+    daily_day = daily_day.groupby(pd.Grouper(freq='D')).mean()
+
+    # pred_df: split by PAR threshold before daily averaging
+    daily_pred_index = pd.DatetimeIndex(pred_df.index.get_level_values('Timestamp'))
+    pred_df_flat = pred_df.copy()
+    pred_df_flat.index = daily_pred_index
+
+    night_mask = pred_df_flat[PRED_PAR] < PAR_THRESHOLD
+    day_mask   = pred_df_flat[PRED_PAR] > PAR_THRESHOLD
+
+    reco_cols = [c for c in pred_df_flat.columns if c.startswith("Reco_pred")]
+    gpp_cols  = [c for c in pred_df_flat.columns if c.startswith("GPP_pred")]
+    other_cols = [c for c in pred_df_flat.columns if c not in reco_cols + gpp_cols]
+
+    daily_pred_reco  = pred_df_flat.loc[night_mask, reco_cols].groupby(pd.Grouper(freq='D')).mean()
+    daily_pred_gpp   = pred_df_flat.loc[day_mask,   gpp_cols ].groupby(pd.Grouper(freq='D')).mean()
+    daily_pred_other = pred_df_flat[other_cols].groupby(pd.Grouper(freq='D')).mean()
+
+    daily_pred = pd.concat([daily_pred_other, daily_pred_reco, daily_pred_gpp], axis=1)
+
     # ── Plot 1: Nighttime Reco ──
     fig1, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
     colors = ['#1f77b4', '#ff7f0e']
     for i, (key, color) in enumerate(zip(["Q10 only", "Q10+Wh"], colors)):
         ax1 = axes[i]
-        ax1.plot(fit_df_night.index.get_level_values('Timestamp'), fit_df_night[COL_NEE], '.', color='grey',
-                 markersize=5, alpha=0.5, label='Observed Reco (night)')
-        ax1.plot(pred_df.index.get_level_values('Timestamp'), pred_df[f"Reco_pred {key}"], '-', color=colors[i],
-                 alpha=0.5, label=f'{key} fitted')
+        ax1.plot(daily_night.index, daily_night[COL_NEE], '.', color='grey',
+                 markersize=5, alpha=0.5, label='Observed Reco (night, daily)')
+        ax1.plot(daily_pred.index, daily_pred[f"Reco_pred {key}"], '-', color=colors[i],
+                 alpha=0.5, label=f'{key} fitted (daily)')
         ax1.set_ylabel("Reco (µmol m⁻² s⁻¹)")
         ax1.legend(loc='upper right', markerscale=4)
         rmse = nighttime_params[key].loc[plot, "RMSE"]
@@ -339,9 +369,9 @@ for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
 
     for i, (key, color) in enumerate(zip(["PAR only", "PAR+Wh", "PAR+Tair", "PAR+Wh+Tair"], colors)):
         ax = axes[i]
-        ax.plot(fit_df_day.index.get_level_values('Timestamp'), fit_df_day["GPP_obs"], '.', color='grey', markersize=5,
-                alpha=0.4, label='Observed GPP')
-        ax.plot(pred_df.index.get_level_values('Timestamp'), pred_df[f"GPP_pred {key}"], '-', color=color, alpha=0.4, label=f'{key} fit')
+        ax.plot(daily_day.index, daily_day["GPP_obs"], '.', color='grey', markersize=5,
+                alpha=0.4, label='Observed GPP (daily)')
+        ax.plot(daily_pred.index, daily_pred[f"GPP_pred {key}"], '-', color=color, alpha=0.4, label=f'{key} fit (daily)')
         ax.set_ylabel("GPP (µmol m⁻² s⁻¹)")
         ax.legend(loc='upper right', markerscale=4)
         rmse = daytime_params[key].loc[plot, "RMSE"]
