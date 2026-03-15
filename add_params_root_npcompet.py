@@ -15,8 +15,8 @@ path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm
 #newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet'
 #orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_slatop'
 #newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet_slatop'
-orgfile = 'clm_params_SPRUCE_UQ_20231118_g01181.nc'
-newfile = 'clm_params_SPRUCE_UQ_20231118_g01181.nc_npcompet'
+orgfile = 'clm_params_SPRUCE_UQ_20231118_g03067.nc'
+newfile = 'clm_params_SPRUCE_UQ_20231118_g03067.nc_npcompet'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
@@ -31,6 +31,7 @@ hr['flnr'][3] = 0.28
 hr['flnr'][11] = 0.28
 """
 
+"""
 # sensitivity of fine root to leaf ratio to water table
 # shrub = 1.4
 hr['zwt_froot_a'] = xr.DataArray(
@@ -240,14 +241,15 @@ hr['vmax_fungi_sop'] = xr.DataArray(
 # The effect of the cost variables seem to be mainly on reducing the hollow biomass (TLAI),
 # limited effect on hummock
 hr['fungi_cost_n'] = xr.DataArray(
-    [20], dims=["allpft"],
+    [0], dims=["allpft"], # 20
     attrs={"units": "gC gN-1", "long_name": "carbon cost of fungal N uptake"},
 )
 
 hr['fungi_cost_p'] = xr.DataArray(
-    [200], dims=["allpft"],
+    [0], dims=["allpft"], # 200
     attrs={"units": "gP m-3", "long_name": "carbon cost of fungal P uptake"},
 )
+"""
 
 encoding = {}
 for data_var in hr.data_vars:

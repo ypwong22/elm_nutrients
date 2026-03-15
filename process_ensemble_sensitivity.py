@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys, os, time
 import numpy as np
 from scipy.stats import linregress, t
@@ -17,37 +16,37 @@ size = comm.Get_size()
 workdir = os.getcwd()
 
 # number of simulations
-N = 4000
+#N = 4000
 #N = 2000
 #N = 3125
 #N = 1850
-
-PREFIX = 'UQ_20240113'
+#PREFIX = 'UQ_20240113'
 #PREFIX = "UQ_20240106_OAT"
+
+N = 1850
+case_name = '20260224_ICB20TRCNPMYCICTCBC'
+case_suffix = 'MYCI_OAT'
+
 #time.sleep(0.02*rank) # ensure the mkdir doesn't conflict with each other
-if not os.path.exists(os.path.join(path_out, 'extract', PREFIX)):
-    os.mkdir(os.path.join(path_out, 'extract', PREFIX))
+outdir = os.path.join(path_out, 'extract', f'{case_name}_{case_suffix}')
+if not os.path.exists(outdir):
+    os.mkdir(outdir)
 
 # number of ensembles to save in each bin file
 # this avoids having difficulty in dumping file
-BLOCK = 200
+#BLOCK = 200
 #BLOCK = 125
 #BLOCK = 99
-#BLOCK = 50
+BLOCK = 50
 if np.mod(N, BLOCK) != 0:
     raise Exception("N must be a multiply of BLOCK")
 
 RUNROOT = os.path.join(os.environ["E3SM_ROOT"], "output")
-VAR_LIST = ['Tair', 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
-            'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
+VAR_LIST = ['Tair', # 'AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub', 'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
             'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
-            'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'NPP', 'HR', 'NEE']
+            'BGNPP_TreeShrub', 'NPP', 'HR', 'NEE'] # 'BGtoAG_TreeShrub', 
 YEAR_LIST = range(2015, 2022)  # skip 2015 and 2021 because no observation/no model data
 
-MOSSFRAC = pd.read_excel("Sphagnum_fraction.xlsx", index_col=0, skiprows=1, engine="openpyxl"
-                         ).drop(["plot", "Temp", "CO2"], axis=1)
-MOSSFRAC[2015] = MOSSFRAC[2016]
-# MOSSFRAC = MOSSFRAC.drop(2021, axis=1)
 
 niter = int(N / BLOCK)
 
@@ -76,9 +75,11 @@ def postproc(thisjob, collection):
 
     # ('amb', 'elev') x (mean, mean_std, slope, slope_std)
     # ambient -> elevated CO2
-    chamber_list = {'amb': ['P07', 'P06', 'P20', 'P13', 'P08', 'P17'], 
-                    'elev': ['P19', 'P11', 'P04', 'P16', 'P10']}
+    chamber_list = {'amb': ['TAMB','T0.00','T2.25','T4.50','T6.75','T9.00'],
+                    'elev': ['T0.00eCO2','T2.25eCO2','T4.50eCO2','T6.75eCO2','T9.00eCO2']}
     for i, co2 in enumerate(['amb', 'elev']):
+
+
         temp = values.index.get_level_values(0).isin(chamber_list[co2])
 
         # average of all the chambers

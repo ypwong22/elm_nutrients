@@ -23,7 +23,7 @@ def fit_line(x, y):
 
 
 prefix = "UQ_20231118"
-outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', prefix)
+outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract', prefix)
 
 # T: 0, 2.25, 4.5, 6.75, 9; first ambient, then elevated CO2
 chamber_list = {
@@ -58,7 +58,7 @@ sim_varname += sim_var_unobs
 units_list = units_list + units_list_unobs
 
 
-obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
+obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                                     'extract_obs_productivity.csv'))
 obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
                'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',

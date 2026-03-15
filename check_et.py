@@ -10,7 +10,7 @@ from utils.constants import chamber_list_complete, chamber_list_names_complete
 
 path_in = os.path.join(os.environ['E3SM_ROOT'], 'output', 
                        '20231116_US-SPR_ICB20TRCNPRDCTCBC', 'spruce_treatments')
-path_out = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract', '20231116')
+path_out = os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract', '20231116')
 
 pftfracs = [0.36, 0.14, 0.25, 0.25]
 

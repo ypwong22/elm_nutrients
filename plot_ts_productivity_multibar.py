@@ -34,7 +34,7 @@ def barplot_data(prefix_list, xlabel_list, prefix_out):
                    'AGNPP_Spruce', 'AGNPP_Tamarack', 'AGNPP_Shrub', 'NPP_moss',
                    'BGNPP_TreeShrub', 'BGtoAG_TreeShrub', 'HR', 'NEE', 'AGNPP_Tree']
 
-    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract',
+    obs_data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                                         'extract_obs_productivity.csv'))
     obs_varname = ['AGBiomass_Spruce', 'AGBiomass_Tamarack', 'AGBiomass_Shrub',
                    'AGNPPtoBiomass_Spruce', 'AGNPPtoBiomass_Tamarack', 'AGNPPtoBiomass_Shrub',
@@ -61,7 +61,7 @@ def barplot_data(prefix_list, xlabel_list, prefix_out):
 
         for prefix in prefix_list:
 
-            outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 
+            outdir = os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 
                                   'extract', prefix)
             sim_data = pd.read_csv(os.path.join(outdir, 'extract_ts_productivity.csv'), 
                                    index_col=[0, 1, 2])

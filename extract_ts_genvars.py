@@ -25,19 +25,10 @@ npcompet = False
 #                                     [False, False, True],  [False, True, True]):
 
 var_list = {}
-var_list['pft'] = ['TLAI','GPP','NPP','AGNPP','BGNPP','FROOTC_ALLOC','LEAFC_ALLOC','TOTVEGC',
-                   'TOTVEGC_ABG','MR','GR','XR','LITFALL','FROOTN','FROOTP','LEAFN','LEAFP',
-                   'SMINN_TO_NPOOL', 'SMINP_TO_PPOOL', 'CPOOL', 'NPOOL', 'PPOOL', 'BTRAN',
+var_list['pft'] = ['TLAI','GPP','NPP','AGNPP','FROOTC_ALLOC','TOTVEGC', 'TOTVEGC_ABG','MR','GR','XR','LITFALL','FROOTN','FROOTP','LEAFN','LEAFP',
+                   'SMINN_TO_NPOOL', 'SMINP_TO_PPOOL', 'CPOOL', 'NPOOL', 'PPOOL',
                    'PLANT_NDEMAND','PLANT_PDEMAND', 'RETRANSN_TO_NPOOL','RETRANSP_TO_PPOOL',
                    'XSMRPOOL','AVAILC']
-for pool in ['LEAF', 'FROOT', 'LIVESTEM', 'DEADSTEM', 'LIVECROOT', 'DEADCROOT']:
-    var_list['pft'] = var_list['pft'] + [f'{pool}C',f'{pool}C_STORAGE',f'{pool}C_XFER',
-                                         f'CPOOL_TO_{pool}C', f'CPOOL_TO_{pool}C_STORAGE',
-                                         f'{pool}C_XFER_TO_{pool}C']
-    if not 'DEAD' in pool:
-        var_list['pft'] = var_list['pft'] + [f'{pool}_MR']
-for pool in ['LEAF', 'FROOT']:
-    var_list['pft'].extend([f'{pool}C_TO_LITTER'])
 
 # root fraction weighted environmental variables - must be PFT level
 var_list['pft'].extend([
@@ -66,18 +57,26 @@ if npcompet:
             'FFN_N_PATCH_ROOTFR', 'FFN_P_PATCH_ROOTFR', 'FFR_FPG_PATCH',
             'FFR_FPG_P_PATCH'])
 
-if rootpheno:
-    var_list['pft'] = var_list['pft'] + [
-        'ONSET_FLAG', 'OFFSET_FLAG', 'DORMANT_FLAG',
-        'BGLFR_LEAF', 'BGLFR_FROOT', 'ONSET_FLAG_ROOT',
-        'OFFSET_FLAG_ROOT', 'DORMANT_FLAG_ROOT',
-        'FCUR_DYN', 'ONSET_FROOT_FNMIN', 'ONSET_FROOT_FW',
-        'LFR_FROOT_TD', 'LFR_FROOT_WD']
+##if rootpheno:
+##    var_list['pft'] = var_list['pft'] + [
+##        'ONSET_FLAG', 'OFFSET_FLAG', 'DORMANT_FLAG',
+##        'BGLFR_LEAF', 'BGLFR_FROOT', 'ONSET_FLAG_ROOT',
+##        'OFFSET_FLAG_ROOT', 'DORMANT_FLAG_ROOT',
+##        'FCUR_DYN', 'ONSET_FROOT_FNMIN', 'ONSET_FROOT_FW',
+##        'LFR_FROOT_TD', 'LFR_FROOT_WD']
+##    for pool in ['LEAF', 'FROOT', 'LIVESTEM', 'DEADSTEM', 'LIVECROOT', 'DEADCROOT']:
+##        var_list['pft'] = var_list['pft'] + [f'{pool}C',f'{pool}C_STORAGE',f'{pool}C_XFER',
+##                                             f'CPOOL_TO_{pool}C', f'CPOOL_TO_{pool}C_STORAGE',
+##                                             f'{pool}C_XFER_TO_{pool}C']
+##        if not 'DEAD' in pool:
+##            var_list['pft'] = var_list['pft'] + [f'{pool}_MR']
+##    for pool in ['LEAF', 'FROOT']:
+##        var_list['pft'].extend([f'{pool}C_TO_LITTER'])
 
 var_list['col'] = [
     'TBOT', 'TSOI_30', 'H2OSOI_30', 'GPP', 'AR', 'MR', 'HR', 'NEE', 'FPG', 'FPG_P', 'ZWT', 
     'ACTUAL_IMMOB', 'ACTUAL_IMMOB_P', 'SMINN_30', 'SOLUTIONP_30', 
-    'FPI', 'FPI_P', 'RH2M', 'H2OSFC']
+    'FPI', 'FPI_P', 'H2OSFC'] # 'RH2M', 
 if not npcompet:
     var_list['col'].extend(['FPG', 'FPG_P'])
 var_list['const'] = []

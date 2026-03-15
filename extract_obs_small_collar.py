@@ -16,11 +16,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from scipy.optimize import curve_fit
 import os
 
 from utils.nee_flux_partitioning import (
-    q10_function,
     fit_q10,
     fit_gpp,
 )
@@ -388,17 +386,27 @@ for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
     print("Saved: gpp_fit_comparison.png")
 
     # ── Fitted and table ──
+    pred_df['Plot'] = plot
+    fit_df['Plot'] = plot # add plot labels
     save_pred.append(pred_df)
     save_fit.append(fit_df)
 
 save_pred = pd.concat(save_pred, axis = 0)
 save_fit = pd.concat(save_fit, axis = 0)
 
+# Correct GPP values by setting non-growing seasons to 0
+md = save_pred.index.get_level_values('Timestamp').month * 100 + save_pred.index.get_level_values('Timestamp').day
+save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR only'] = 0.
+save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR+Wh'] = 0.
+save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR+Tair'] = 0.
+save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR+Wh+Tair'] = 0.
+
+
 # Save all results and parameters
-fit_df.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
-                            'extract_obs_small_collar', f"nee_fit.csv"))
-pred_df.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
-                            'extract_obs_small_collar', f"nee_pred.csv"))
+save_fit.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
+                             'extract_obs_small_collar', f"nee_fit.csv"))
+save_pred.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
+                              'extract_obs_small_collar', f"nee_pred.csv"))
 for key in nighttime_params.keys():
     nighttime_params[key].to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                                               'extract_obs_small_collar', f"nighttime_params_{key}.csv"))

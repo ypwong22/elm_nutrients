@@ -5,10 +5,10 @@ import os
 import xarray as xr
 import numpy as np
 
-prefix = '20240106'
+prefix = '20260224' # '20240106'
 basic_file = os.path.join(
     os.environ['E3SM_ROOT'], 'inputdata', 'atm', 'datm7', 'CLM1PT_data', 'SPRUCE_data',
-    'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet_slatop'
+    'clm_params_SPRUCE_20231120_spruceroot.nc_npcompet' # _slatop'
 )
 hr = xr.open_dataset(basic_file)
 
@@ -34,8 +34,8 @@ f.write(f'inh_fungi_b 2 -0.1 0.1\n')
 f.write(f'inh_fungi_b 3 -0.1 0.1\n')
 f.write(f'inh_fungi_b 11 -0.1 0\n')
 f.write(f'zwt_froot_a 11 0 2\n')
-f.write(f'fungi_cost_n 0 10 100\n')
-f.write(f'fungi_cost_p 0 100 1000\n')
+f.write(f'fungi_cost_n 0 0 20\n')
+f.write(f'fungi_cost_p 0 0 200\n')
 f.write(f'q10_upt 0 1 3\n')
 f.write(f'swc_opt 0 0.3 0.9\n')
 f.write(f'alpha_fpg 0 0.75 2.25\n')

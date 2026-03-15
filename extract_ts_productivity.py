@@ -5,7 +5,9 @@ import numpy as np
 from glob import glob
 from utils.constants import chamber_list_complete_dict
 from utils.analysis import get_sim_carbonfluxes
+import warnings
 
+warnings.filterwarnings(action='ignore',category=pd.errors.PerformanceWarning)
 
 grid_to_plot = {
     "T0.00": "P06",
@@ -13,17 +15,17 @@ grid_to_plot = {
     "T4.50": "P13",
     "T6.75": "P08",
     "T9.00": "P17",
-    "T0.00CO2": "P19",
-    "T2.25CO2": "P11",
-    "T4.50CO2": "P04",
-    "T6.75CO2": "P16",
-    "T9.00CO2": "P10",
+    "T0.00eCO2": "P19",
+    "T2.25eCO2": "P11",
+    "T4.50eCO2": "P04",
+    "T6.75eCO2": "P16",
+    "T9.00eCO2": "P10",
     "TAMB": "P07",
 }
 plot_to_grid = dict([(b,a) for a,b in grid_to_plot.items()])
 
 
-pft_stride = 17
+pft_stride = 32
 plot_list = ['P04', 'P06', 'P07', 'P08', 'P10', 'P11', 'P13', 'P16', 'P17', 'P19', 'P20']
 var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
                   'FPG_Spruce', 'FPG_Tamarack', 'FPG_Shrub',
@@ -39,27 +41,27 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
 #ensemble_id = None
 #prefix = "UQ_20231118"
 #ensemble_id = "g03067"
-prefix  = "UQ_20240107"
-ensemble_id = 'g01485'
+#prefix  = "UQ_20240107"
+#ensemble_id = 'g01485'
 #prefix  = "UQ_20240112"
 #ensemble_id = 'g01944'
-extrafix = "" # "_alt_params"
+#extrafix = "" # "_alt_params"
 growing_season = False
 zwt_growing_season = True
 
+#runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 'UQ')
+runroot = os.path.join(os.environ['E3SM_ROOT'], 'output')
+year_range = range(2015, 2024)
+case_name = '20260226_US-SPR_ICB20TRCNPMYCICTCBC'
+#case_suffix = 'MYCI_optim'
+case_suffix = 'MYCI_default'
+#case_name = '20260226_US-SPR_ICB20TRCNPRDCTCBC'
+#case_suffix = 'default_default'
+#case_suffix = 'default_optim'
+ensemble_id = None
 
-year_range = range(2015, 2022)
-if not "UQ" in prefix:
-    runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 
-                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', f'spruce_treatments{extrafix}')
-else:
-    runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 'UQ',
-                           f'{prefix}_US-SPR_ICB20TRCNPRDCTCBC', ensemble_id)
-if 'y9s' in prefix:
-    runroot = os.path.join(os.environ['E3SM_ROOT'], 'y9s_runs')
-
-collect_part1 = get_sim_carbonfluxes(year_range, runroot, growing_season, 
-                                     extra_pft_vars = ['LEAFC_ALLOC_TO_TOTVEGC_ABG'])
+collect_part1 = get_sim_carbonfluxes(year_range, runroot, case_name, case_suffix, growing_season, 
+                                     ensemble_id=ensemble_id, extra_pft_vars = ['NPP'])
 
 collect_part2 = pd.DataFrame(
     np.nan,
@@ -69,31 +71,24 @@ collect_part2 = pd.DataFrame(
     columns = var_list_extra)
 
 for plot in plot_list:
-    if not "UQ" in prefix:
-        temp = plot.replace("P", '')
-        rundir = os.path.join(runroot, f'plot{temp}_US-SPR_ICB20TRCNPRDCTCBC', 'run')
+    trmt = plot_to_grid[plot]
+    #print(trmt)
+    if ensemble_id is None:
+        rundir = os.path.join(runroot, f'{case_name}_{trmt}_{case_suffix}', 'run')
     else:
-        temp = chamber_list_complete_dict[plot]
-        rundir = os.path.join(runroot, temp)
+        rundir = os.path.join(runroot, f'{case_name}_{trmt}_{case_suffix}', f'g{ensemble_id:05g}')
 
     flist = sorted(glob(rundir + "/*.h2.*.nc"))
-    flist = [f for f in flist if \
-             int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
-    # if "UQ" in prefix:
-    #     flist = flist[:-1]
-    # if len(flist) == 0:
-    #    continue
+    flist = [f for f in flist if int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
     hr = xr.open_mfdataset(flist)
 
     flist = sorted(glob(rundir + "/*.h1.*.nc"))
-    flist = [f for f in flist if \
-             int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
-    #if "UQ" in prefix:
-    #    flist = flist[:-1]
+    flist = [f for f in flist if int(f.split('/')[-1].split('.')[-2].split('-')[0]) in year_range]
     hr2 = xr.open_mfdataset(flist)
 
     filter = hr['time'].to_index().month *100 + hr['time'].to_index().day
-    filter = (filter >= 515) & (filter <= 1015)
+    #filter = (filter >= 515) & (filter <= 1015)
+    filter = (filter >= 600) & (filter < 900)
 
     if 'FPI' in var_list_extra:
         # NP limitation should always focus on growing season
@@ -203,11 +198,10 @@ temp = (collect.loc['hummock', :] * 0.64 + collect.loc['hollow' , :] * 0.36)
 for ind, row in temp.iterrows():
     collect.loc[('average', *ind), :] = row.values
 
-path_out = os.path.join(os.environ['PROJDIR'], 'ELM_Phenology', 'output', 'extract')
-if len(extrafix) > 0:
-    path_out = os.path.join(path_out, prefix + extrafix)
-else:
-    path_out = os.path.join(path_out, prefix)
+
+case_prefix = case_name.split('_')[0]
+path_out = os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
+                        f'{case_prefix}_{case_suffix}')
 if not os.path.exists(path_out):
     os.mkdir(path_out)
 

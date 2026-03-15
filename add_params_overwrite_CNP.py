@@ -19,7 +19,8 @@ path_parameter = os.path.join(os.environ["E3SM_ROOT"], "inputdata", "atm", "datm
 
 orgfile = 'clm_params_SPRUCE_20231120_spruceroot.nc'
 #newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP'
-newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_slatop'
+#newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_slatop'
+newfile = 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_P'
 
 hr = xr.open_dataset(os.path.join(path_parameter, orgfile), decode_times=False)
 
@@ -71,6 +72,12 @@ hr['cn_s1'] = 22 # 21-25
 hr['cn_s2'] = 22 # 21-25
 hr['cn_s3'] = 20
 hr['cn_s4'] = 20
+
+if newfile == 'clm_params_SPRUCE_20231120_spruceroot.nc_CNP_P':
+    hr['np_s1_new'] = 40
+    hr['np_s2_new'] = 40
+    hr['np_s3_new'] = 40
+    hr['np_s4_new'] = 40
 
 # (6) Edits based on parameter optimization outcomes 20231113_2a and 20231113_2b
 #hr['flnr'][3] = 1.541807362373865953e-01
