@@ -885,7 +885,7 @@ def get_sim_carbonfluxes(year_range, runroot, case_name, case_suffix, growing_se
                            365 * 86400
             else:
                 temp = hr[var][filter, :].resample({'time': '1Y'}).mean()
-            if var == 'AGNPP' or var == 'NPP':
+            if var == 'AGNPP' or var == 'NPP' or var == 'AR' or var == 'MR':
                 # convert gC/m2/s to gC/m2/year; otherwise gC m-2
                 temp = temp.values * 365 * 86400
             else:

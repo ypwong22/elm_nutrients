@@ -53,15 +53,15 @@ zwt_growing_season = True
 runroot = os.path.join(os.environ['E3SM_ROOT'], 'output')
 year_range = range(2015, 2024)
 case_name = '20260226_US-SPR_ICB20TRCNPMYCICTCBC'
-#case_suffix = 'MYCI_optim'
-case_suffix = 'MYCI_default'
+#case_suffix = 'MYCI_default'
+case_suffix = 'MYCI_optim'
 #case_name = '20260226_US-SPR_ICB20TRCNPRDCTCBC'
 #case_suffix = 'default_default'
 #case_suffix = 'default_optim'
 ensemble_id = None
 
 collect_part1 = get_sim_carbonfluxes(year_range, runroot, case_name, case_suffix, growing_season, 
-                                     ensemble_id=ensemble_id, extra_pft_vars = ['NPP'])
+                                     ensemble_id=ensemble_id, extra_pft_vars = ['MR','NPP','TOTVEGC'])
 
 collect_part2 = pd.DataFrame(
     np.nan,
