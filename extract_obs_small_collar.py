@@ -10,7 +10,7 @@ Workflow:
            If your NEE is defined as GPP - Reco (positive = uptake), then
            GPP = NEE + Reco.  Adjust SIGN_CONVENTION below.
   5. Fit four GPP models (PAR; PAR+Wh; PAR+Tair; PAR+Wh+Tair).
-  6. Plot observed vs fitted Reco and GPP with RMSE and AIC.
+  6. Plot observed vs fitted Reco and GPP with RMSE and AIC, restrict to growing season (May 15-Oct 15)
 """
 import numpy as np
 import pandas as pd
@@ -148,16 +148,19 @@ daytime_params = {
                              columns = ["alpha","gmax","alpha_std","gmax_std","RMSE","AIC"]),
     "PAR+Wh": pd.DataFrame(np.nan, index = plot_list, 
                            columns = ["alpha","gmax","gw","alpha_std","gmax_std","gw_std","RMSE","AIC"]),
-    "PAR+Tair": pd.DataFrame(np.nan, index = plot_list,
-                             columns = ["alpha","gmax","Tmin","Tmax","Topt","alpha_std","gmax_std","Tmin_std","Tmax_std","Topt_std","RMSE","AIC"]),
+    #"PAR+Tair": pd.DataFrame(np.nan, index = plot_list,
+    #                         columns = ["alpha","gmax","Tmin","Tmax","Topt","alpha_std","gmax_std","Tmin_std","Tmax_std","Topt_std","RMSE","AIC"]),
     "PAR+Wh+Tair": pd.DataFrame(np.nan, index = plot_list, 
                                 columns = ["alpha","gmax","gw","Tmin","Tmax","Topt","alpha_std","gmax_std","gw_std","Tmin_std","Tmax_std","Topt_std","RMSE","AIC"])
 }
 save_fit = []
 save_pred = []
+daily_data = {}   # keyed by plot; stores daily aggregates for plotting
 
 
-plot_treatment_co2 = df_all_plots.index.to_frame().iloc[:,:3].drop_duplicates()
+plot_treatment_co2 = (df_all_plots.index.to_frame(index=False).iloc[:,:3].drop_duplicates()
+                      .sort_values(['CO2_treatment', 'warming_treatment'])
+                      .reset_index(drop=True))
 for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
 
     df = df_all_plots.loc[plot,:]
@@ -274,7 +277,7 @@ for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
     # ------ make gapfilled data ---
     pred_df.loc[:, "GPP_pred PAR+Wh"] = np.where(pred_day_mask, model(np.vstack([pred_df[PRED_PAR].values, pred_df[PRED_WH].values]), *popt), 0)
 
-   # --- PAR + Tair ---
+    """# --- PAR + Tair ---
     popt, pcov, names, model = fit_gpp(PAR_d, GPP_d, Tair=Tair_d)
     fitted = model(np.vstack([PAR_d, Tair_d]), *popt)
     k = len(popt)
@@ -284,7 +287,7 @@ for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
         daytime_params["PAR+Tair"].loc[plot, nm] = v
         daytime_params["PAR+Tair"].loc[plot, f"{nm}_std"] = e
     daytime_params["PAR+Tair"].loc[plot, "RMSE"] = rmse
-    daytime_params["PAR+Tair"].loc[plot, "AIC"] = aic
+    daytime_params["PAR+Tair"].loc[plot, "AIC"] = aic"""
 
     # ------ make gapfilled data ---
     pred_df.loc[:, "GPP_pred PAR+Tair"] = np.where(pred_day_mask, model(np.vstack([pred_df[PRED_PAR].values, pred_df[PRED_TAIR]]), *popt), 0)
@@ -305,7 +308,7 @@ for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
     pred_df.loc[:, "GPP_pred PAR+Wh+Tair"] = np.where(pred_day_mask, model(np.vstack([pred_df[PRED_PAR].values, pred_df[PRED_WH].values, pred_df[PRED_TAIR].values]), *popt), 0)
 
     # =====================================================================
-    # STEP 4: PLOTS WITH PREDICTION
+    # STEP 4: STORE PREDICTION RESULTS FOR CSV and PLOTTING
     # =====================================================================
     # ── Compute daily averages for plotting ──
     # fit_df_night / fit_df_day: MultiIndex with chamber + Timestamp → average over chambers then over hours
@@ -337,72 +340,36 @@ for _, (plot, warming, co2) in plot_treatment_co2.iterrows():
 
     daily_pred = pd.concat([daily_pred_other, daily_pred_reco, daily_pred_gpp], axis=1)
 
-    # ── Plot 1: Nighttime Reco ──
-    fig1, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
-    colors = ['#1f77b4', '#ff7f0e']
-    for i, (key, color) in enumerate(zip(["Q10 only", "Q10+Wh"], colors)):
-        ax1 = axes[i]
-        ax1.plot(daily_night.index, daily_night[COL_NEE], '.', color='grey',
-                 markersize=5, alpha=0.5, label='Observed Reco (night, daily)')
-        ax1.plot(daily_pred.index, daily_pred[f"Reco_pred {key}"], '-', color=colors[i],
-                 alpha=0.5, label=f'{key} fitted (daily)')
-        ax1.set_ylabel("Reco (µmol m⁻² s⁻¹)")
-        ax1.legend(loc='upper right', markerscale=4)
-        rmse = nighttime_params[key].loc[plot, "RMSE"]
-        aic = nighttime_params[key].loc[plot, "AIC"]
-        ax1.text(0.02, 0.95,
-                 f"RMSE = {rmse:.3f}\nAIC = {aic:.1f}",
-                 transform=ax1.transAxes, va='top', fontsize=9,
-                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    fig1.autofmt_xdate()
-    fig1.tight_layout()
-    fig1.savefig(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
-                              'extract_obs_small_collar', f"reco_fit_{warming}_{co2}.png"), dpi=150)
-    print("\nSaved: reco_fit.png")
+    # ── Store daily aggregates for summary plotting after the loop ──
+    daily_data[plot] = dict(
+        daily_night=daily_night,
+        daily_day=daily_day,
+        daily_pred=daily_pred,
+        warming=warming,
+        co2=co2,
+    )
 
-    # ── Plot 2: Daytime GPP — four models ──
-    fig2, axes = plt.subplots(4, 1, figsize=(14, 16), sharex=True)
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-
-    for i, (key, color) in enumerate(zip(["PAR only", "PAR+Wh", "PAR+Tair", "PAR+Wh+Tair"], colors)):
-        ax = axes[i]
-        ax.plot(daily_day.index, daily_day["GPP_obs"], '.', color='grey', markersize=5,
-                alpha=0.4, label='Observed GPP (daily)')
-        ax.plot(daily_pred.index, daily_pred[f"GPP_pred {key}"], '-', color=color, alpha=0.4, label=f'{key} fit (daily)')
-        ax.set_ylabel("GPP (µmol m⁻² s⁻¹)")
-        ax.legend(loc='upper right', markerscale=4)
-        rmse = daytime_params[key].loc[plot, "RMSE"]
-        aic = daytime_params[key].loc[plot, "AIC"]
-        ax.text(0.02, 0.95, f"RMSE = {rmse:.3f}\nAIC = {aic:.1f}",
-                transform=ax.transAxes, va='top', fontsize=9,
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-
-    axes[-1].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    fig2.autofmt_xdate()
-    fig2.tight_layout()
-    fig2.savefig(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
-                              'extract_obs_small_collar', f"gpp_fit_{warming}_{co2}.png"), dpi=150)
-    print("Saved: gpp_fit_comparison.png")
-
-    # ── Fitted and table ──
+    # ── Store fitted and predicted values for CSV tables ──
     pred_df['Plot'] = plot
     fit_df['Plot'] = plot # add plot labels
     save_pred.append(pred_df)
     save_fit.append(fit_df)
+
 
 save_pred = pd.concat(save_pred, axis = 0)
 save_fit = pd.concat(save_fit, axis = 0)
 
 # Correct GPP values by setting non-growing seasons to 0
 md = save_pred.index.get_level_values('Timestamp').month * 100 + save_pred.index.get_level_values('Timestamp').day
-save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR only'] = 0.
-save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR+Wh'] = 0.
-save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR+Tair'] = 0.
-save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR+Wh+Tair'] = 0.
+save_pred.loc[(md < 501) | (md > 1031), 'GPP_pred PAR only'] = 0.
+save_pred.loc[(md < 501) | (md > 1031), 'GPP_pred PAR+Wh'] = 0.
+#save_pred.loc[(md < 515) | (md > 1015), 'GPP_pred PAR+Tair'] = 0.
+save_pred.loc[(md < 501) | (md > 1031), 'GPP_pred PAR+Wh+Tair'] = 0.
 
 
-# Save all results and parameters
+# =====================================================================
+# STEP 5: Save all results and parameters
+# =====================================================================
 save_fit.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                              'extract_obs_small_collar', f"nee_fit.csv"))
 save_pred.to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
@@ -413,3 +380,107 @@ for key in nighttime_params.keys():
 for key in daytime_params.keys():
     daytime_params[key].to_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                                             'extract_obs_small_collar', f"daytime_params_{key}.csv"))
+
+
+# =====================================================================
+# STEP 6: PERFORMANCE DIAGNOSTICS PLOTS
+# =====================================================================
+n_plots = len(plot_treatment_co2)
+reco_keys  = ["Q10 only", "Q10+Wh"]
+gpp_keys   = ["PAR only", "PAR+Wh", "PAR+Wh+Tair"]
+reco_colors = ['#1f77b4', '#ff7f0e']
+gpp_colors  = ['#1f77b4', '#ff7f0e', '#2ca02c']
+
+NROWS, NCOLS = 4, 3
+panel_labels = [chr(ord('a') + i) for i in range(NROWS * NCOLS)]
+XLIM = (pd.Timestamp('2023-05-01'), pd.Timestamp('2023-10-31'))
+
+# Leave one blank cell after the 5th plot (panel e → f lands under a)
+GRID_SKIP_AFTER = 5   # insert blank at grid position 5
+def plot_to_grid(plot_idx):
+    return plot_idx if plot_idx < GRID_SKIP_AFTER else plot_idx + 1
+
+# ── Figure 1: Nighttime Reco — 4×3 grid, all models in same panel ──
+fig1, axes1 = plt.subplots(NROWS, NCOLS, figsize=(8, 2 * NROWS), sharex=True, sharey=True)
+axes1_flat = axes1.flatten()
+
+for idx, (_, (plot, warming, co2)) in enumerate(plot_treatment_co2.iterrows()):
+    ax = axes1_flat[plot_to_grid(idx)]
+    d = daily_data[plot]
+    ax.plot(d['daily_night'].index, d['daily_night'][COL_NEE], 'o', color='grey',
+            markersize=4, alpha=0.6, label='Observed R$_{eco}$ (night, daily)')
+    for key, color in zip(reco_keys, reco_colors):
+        ax.plot(d['daily_pred'].index, d['daily_pred'][f"Reco_pred {key}"], '-',
+                color=color, alpha=0.7, label=f'{key} fit')
+    for ki, (key, color) in enumerate(zip(reco_keys, reco_colors)):
+        rmse = nighttime_params[key].loc[plot, 'RMSE']
+        aic  = nighttime_params[key].loc[plot, 'AIC']
+        ax.text(0.02, 0.95 - ki * 0.10,
+                f"RMSE={rmse:.2f}, AIC={int(aic)}",
+                transform=ax.transAxes, va='top', fontsize=7, color=color)
+    ax.set_title(f"+{warming:.2f} {co2.capitalize()} CO\u2082", fontsize=9)
+    ax.set_xlim(XLIM)
+    ax.text(0.01, 1.12, f"$\\bf{{{panel_labels[idx]}}}$",
+            transform=ax.transAxes, va='top', ha='left', fontsize=10)
+
+for ax in axes1[:, 0]:
+    ax.set_ylabel("R$_{eco}$ (µmol m⁻² s⁻¹)")
+
+used1 = {plot_to_grid(i) for i in range(n_plots)}
+for i in range(NROWS * NCOLS):
+    if i not in used1:
+        axes1_flat[i].set_visible(False)
+
+handles1, labels1 = axes1_flat[0].get_legend_handles_labels()
+fig1.legend(handles1, labels1, loc='lower left', bbox_to_anchor=(0.67, 0.15),
+            ncol=1, fontsize=8, frameon=True)
+fig1.autofmt_xdate(rotation=90)
+fig1.tight_layout(rect=[0, 0.06, 1, 1])
+fig1.savefig(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
+                          'extract_obs_small_collar', "reco_fit_all.png"), dpi=150)
+print("\nSaved: reco_fit_all.png")
+
+# ── Figure 2: Daytime GPP — 4×3 grid, all models in same panel ──
+fig2, axes2 = plt.subplots(NROWS, NCOLS, figsize=(8, 2 * NROWS), sharex=True, sharey=True)
+axes2_flat = axes2.flatten()
+
+for idx, (_, (plot, warming, co2)) in enumerate(plot_treatment_co2.iterrows()):
+    ax = axes2_flat[plot_to_grid(idx)]
+    d = daily_data[plot]
+    ax.plot(d['daily_day'].index, d['daily_day']["GPP_obs"], 'o', color='grey',
+            markersize=4, alpha=0.6, label='Observed GPP (daily)')
+    for key, color in zip(gpp_keys, gpp_colors):
+        ax.plot(d['daily_pred'].index, d['daily_pred'][f"GPP_pred {key}"], '-',
+                color=color, alpha=0.7, label=f'{key} fit')
+    for ki, (key, color) in enumerate(zip(gpp_keys, gpp_colors)):
+        rmse = daytime_params[key].loc[plot, 'RMSE']
+        aic  = daytime_params[key].loc[plot, 'AIC']
+        if (idx == 7 and ki > 0) or ((idx == 5 or idx == 8) and ki > 1) or (idx == 9): 
+            ax.text(0.2, 0.3 - ki * 0.10,
+                    f"RMSE={rmse:.2f}, AIC={int(aic)}",
+                    transform=ax.transAxes, va='top', fontsize=7, color=color)
+        else:
+            ax.text(0.02, 0.95 - ki * 0.10,
+                    f"RMSE={rmse:.2f}, AIC={int(aic)}",
+                    transform=ax.transAxes, va='top', fontsize=7, color=color)
+    ax.set_title(f"+{warming:.2f} {co2.capitalize()} CO\u2082", fontsize=9)
+    ax.set_xlim(XLIM)
+    ax.text(0.01, 1.12, f"$\\bf{{{panel_labels[idx]}}}$",
+            transform=ax.transAxes, va='top', ha='left', fontsize=10)
+
+for ax in axes2[:, 0]:
+    ax.set_ylabel("GPP (µmol m⁻² s⁻¹)")
+
+used2 = {plot_to_grid(i) for i in range(n_plots)}
+for i in range(NROWS * NCOLS):
+    if i not in used2:
+        axes2_flat[i].set_visible(False)
+
+handles2, labels2 = axes2_flat[0].get_legend_handles_labels()
+fig2.legend(handles2, labels2, loc='lower left', bbox_to_anchor=(0.67, 0.15),
+            ncol=1, fontsize=8, frameon=True)
+fig2.autofmt_xdate(rotation=90)
+fig2.tight_layout(rect=[0, 0.06, 1, 1])
+fig2.savefig(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
+                          'extract_obs_small_collar', "gpp_fit_all.png"), dpi=150)
+print("Saved: gpp_fit_all.png")

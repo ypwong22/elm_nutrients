@@ -53,22 +53,61 @@ def rectangular_hyperbola(PAR, alpha, gmax_eff):
 
 
 def temp_scalar(T_C, Tmin, Tmax, Topt):
-    """Beta temperature response (Yin et al. 1995).
-    Exactly zero at Tmin and Tmax, peaks at 1.0 at Topt.
+    """Temperature response function in the VPM model
+    Exactly zero beyond Tmin and Tmax, peaks at 1.0 at Topt.
     Typical values: Tmin=0, Topt=20, Tmax=40 (°C)
 
-    Yin, X., Kropff, M.J., McLaren, G., Visperas, R.M. (1995). 
-    A nonlinear model for crop development as a function of temperature. 
-    Agricultural and Forest Meteorology, 77(1–2), 1–16. 
-    https://doi.org/10.1016/0168-1923(95)02236-Q
+    Glauch, T., Marshall, J., Gerbig, C., Botía, S., Gałkowski, M., 
+    Vardag, S. N., & Butz, A. (2025). pyVPRM: a next-generation 
+    vegetation photosynthesis and respiration model for the post-MODIS era. 
+    Geoscientific Model Development, 18(14), 4713–4742. https://doi.org/10.5194/gmd-18-4713-2025
     """
     T_C = np.asarray(T_C, dtype=float)
     scalar = np.zeros_like(T_C)
     mask = (T_C > Tmin) & (T_C < Tmax)
     T = T_C[mask]
-    alpha = (Tmax - Topt) / (Topt - Tmin)
-    scalar[mask] = ((T - Tmin) / (Topt - Tmin)) * ((Tmax - T) / (Tmax - Topt)) ** alpha
+    scalar[mask] = (T-Tmin)*(T-Tmax) / ( (T-Tmin)*(T-Tmax) - (T-Topt)**2 )
     return scalar
+
+
+# The 3-parameter function gives sufficiently good fit
+#def temp_scalar(T_C, Tmin, Tmax, alpha, beta):
+#    """Beta temperature response (Yin et al. 1995, Eq. 3).
+#    Normalized to 1.0 at Topt. Zero at Tmin and Tmax.
+#    Topt is derived internally from alpha, beta, Tmin, Tmax via Eq. 5.
+#
+#    Parameters
+#    ----------
+#    T_C : array-like
+#        Temperature (°C)
+#    Tmin : float
+#        Base (minimum) temperature (°C)
+#    Tmax : float
+#        Ceiling (maximum) temperature (°C)
+#    alpha : float
+#        Shape parameter controlling sub-optimal curvature (must be > 0)
+#    beta : float
+#        Shape parameter controlling supra-optimal curvature (must be > 0)
+#    """
+#    if alpha <= 0 or beta <= 0:
+#        raise ValueError("alpha and beta must be positive.")
+#    if Tmin >= Tmax:
+#        raise ValueError("Tmin must be less than Tmax.")
+#
+#    T_C = np.asarray(T_C, dtype=float)
+#    scalar = np.zeros_like(T_C)
+#    mask = (T_C > Tmin) & (T_C < Tmax)
+#    T = T_C[mask]
+#
+#    Topt = (alpha * Tmax + beta * Tmin) / (alpha + beta)  # Eq. 5
+#
+#    def _beta_raw(T, Tmin, Tmax, alpha, beta):
+#        return (T - Tmin) ** alpha * (Tmax - T) ** beta
+#
+#    peak = _beta_raw(Topt, Tmin, Tmax, alpha, beta)
+#    scalar[mask] = _beta_raw(T, Tmin, Tmax, alpha, beta) / peak
+#
+#    return scalar
 
 
 def gpp_par_only(PAR, alpha, gmax):
@@ -89,24 +128,28 @@ def gpp_par_wh(X, alpha, gmax, gw):
 
 
 def gpp_par_tair(X, alpha, gmax, Tmin, Tmax, Topt):
+#def gpp_par_tair(X, alpha, gmax, Tmin, Tmax, ts_alpha, ts_beta):
     """GPP = rectangular hyperbola * temperature scalar.
     
     X : 2D array where X[0] = PAR, X[1] = Tair (°C)
-    Parameters Ha, Hd in kJ mol⁻¹; Topt in °C (converted internally).
+    # ts_alpha, ts_beta : shape parameters for the beta temperature response.
     """
     PAR, Tair = X[0], X[1]
     return rectangular_hyperbola(PAR, alpha, gmax) * temp_scalar(Tair, Tmin, Tmax, Topt)
+    # return rectangular_hyperbola(PAR, alpha, gmax) * temp_scalar(Tair, Tmin, Tmax, ts_alpha, ts_beta)
 
 
 def gpp_par_wh_tair(X, alpha, gmax, gw, Tmin, Tmax, Topt):
+#def gpp_par_wh_tair(X, alpha, gmax, gw, Tmin, Tmax, ts_alpha, ts_beta):
     """GPP = rectangular hyperbola (with Wh) * temperature scalar.
     
     X : 2D array where X[0] = PAR, X[1] = Wh, X[2] = Tair (°C)
-    Parameters Ha, Hd in kJ mol⁻¹; Topt in °C (converted internally).
+    # ts_alpha, ts_beta : shape parameters for the beta temperature response.
     """
     PAR, Wh, Tair = X[0], X[1], X[2]
     gmax_eff = gmax + gw * Wh
     return rectangular_hyperbola(PAR, alpha, gmax_eff) * temp_scalar(Tair, Tmin, Tmax, Topt)
+    # return rectangular_hyperbola(PAR, alpha, gmax_eff) * temp_scalar(Tair, Tmin, Tmax, ts_alpha, ts_beta)
 
 
 def fit_q10(T, R, T_ref, Wh=None, p0=None):
@@ -240,19 +283,31 @@ def fit_gpp(PAR, GPP, Wh=None, Tair=None, p0=None, bounds=None, **kwargs):
     elif not use_wh and use_tair:
         model = gpp_par_tair
         X = np.vstack([PAR, Tair])
+
         names = ("alpha", "gmax", "Tmin", "Tmax", "Topt") # [°C]
         default_p0 = [0.05, np.max(GPP), 0.0, 45.0, 25.0]
         default_bounds = ([0, 0, -5, 40, 10],
                           [np.inf, np.inf, 10, 60, 40])
 
+        #names = ("alpha", "gmax", "Tmin", "Tmax", "ts_alpha", "ts_beta")
+        #default_p0 = [0.05, np.max(GPP), 0.0, 45.0, 2.0, 2.0]
+        #default_bounds = ([0, 0, -5, 40, 0.1, 0.1],
+        #                  [np.inf, np.inf, 10, 60, np.inf, np.inf])
+
     # ── PAR + Wh + Tair ──
     else:
         model = gpp_par_wh_tair
         X = np.vstack([PAR, Wh, Tair])
+
         names = ("alpha", "gmax", "gw", "Tmin", "Tmax", "Topt") #  [°C]
         default_p0 = [0.05, np.max(GPP), 0.0, 0, 45.0, 25.0]
         default_bounds = ([0, 0, -np.inf, -5, 40, 10],
                           [np.inf, np.inf, np.inf, 10, 60, 40])
+    
+        #names = ("alpha", "gmax", "gw", "Tmin", "Tmax", "ts_alpha", "ts_beta")
+        #default_p0 = [0.05, np.max(GPP), 0.0, 0.0, 45.0, 2.0, 2.0]
+        #default_bounds = ([0, 0, -np.inf, -5, 40, 0.1, 0.1],
+        #                  [np.inf, np.inf, np.inf, 10, 60, np.inf, np.inf])
 
     if p0 is None:
         p0 = default_p0
