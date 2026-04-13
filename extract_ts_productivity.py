@@ -46,18 +46,18 @@ var_list_extra = ['ZWT', 'TOTSOMC', 'SMINN_30', 'SOLUTIONP_30',
 #prefix  = "UQ_20240112"
 #ensemble_id = 'g01944'
 #extrafix = "" # "_alt_params"
-growing_season = False
+growing_season = True
 zwt_growing_season = True
 
 #runroot = os.path.join(os.environ['E3SM_ROOT'], 'output', 'UQ')
 runroot = os.path.join(os.environ['E3SM_ROOT'], 'output')
 year_range = range(2015, 2024)
-case_name = '20260226_US-SPR_ICB20TRCNPMYCICTCBC'
+#case_name = '20260226_US-SPR_ICB20TRCNPMYCICTCBC'
 #case_suffix = 'MYCI_default'
-case_suffix = 'MYCI_optim'
-#case_name = '20260226_US-SPR_ICB20TRCNPRDCTCBC'
+#case_suffix = 'MYCI_optim'
+case_name = '20260226_US-SPR_ICB20TRCNPRDCTCBC'
 #case_suffix = 'default_default'
-#case_suffix = 'default_optim'
+case_suffix = 'default_optim'
 ensemble_id = None
 
 collect_part1 = get_sim_carbonfluxes(year_range, runroot, case_name, case_suffix, growing_season, 
@@ -87,8 +87,7 @@ for plot in plot_list:
     hr2 = xr.open_mfdataset(flist)
 
     filter = hr['time'].to_index().month *100 + hr['time'].to_index().day
-    #filter = (filter >= 515) & (filter <= 1015)
-    filter = (filter >= 600) & (filter < 900)
+    filter = (filter >= 501) & (filter <= 1031)
 
     if 'FPI' in var_list_extra:
         # NP limitation should always focus on growing season

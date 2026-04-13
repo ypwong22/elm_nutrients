@@ -802,8 +802,7 @@ def get_sim_carbonfluxes(year_range, runroot, case_name, case_suffix, growing_se
 
         if growing_season:
             filter = hr['time'].to_index().month *100 + hr['time'].to_index().day
-            # filter = (filter >= 515) & (filter <= 1015)
-            filter = (filter >= 600) & (filter < 900)
+            filter = (filter >= 501) & (filter <= 1031)
         else:
             filter = np.full(len(hr['time']), True)
 
