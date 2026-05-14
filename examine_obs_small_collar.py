@@ -28,6 +28,7 @@ def read_2023():
     data = data.drop(['date_time_30_min_CST', 'julian_day', 'meanCO2_conc', 'meanCH4_conc', 'CH4_flux'], axis = 1)
     data = data.groupby(['date_time_CST', 'plot', 'warming_treatment', 'CO2_treatment', 'collar_number']).mean().reset_index()
     data.rename({'date_time_CST': 'Timestamp'}, axis = 1, inplace = True)
+    data['Timestamp'] = pd.DatetimeIndex(data['Timestamp']).round('15min')
 
     # Reformat the data into consistency with 2022: the collar-specific measurements are 
     # indicated by Collar_1 & Collar_2 suffixes instead of a collar_number column
@@ -75,12 +76,57 @@ def read_2022():
 
     return data
 
+def read_JonScript_night_data():
+    """ The nighttime data table saved from Jon's manuscript R script using
+    write.csv(night.data, "night_data.csv", row.names = FALSE) """
+    data = pd.read_csv(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'input', 'Data and Guide for SPRUCE.104', 
+                                    'night_data.csv'),
+                       parse_dates=["CST_rounded", "Date.Time_CST"])
+    data = data.rename({
+        'CST_rounded': 'Timestamp', 'plot': 'plot', 
+        'treatment': 'warming_treatment', 'CO2': 'CO2_treatment', 
+        'ChamberNumber': 'collar_number',
+        'FluxCO2Lin_umolm2s': 'CO2_flux', 
+        'SoilTemperature_degC': 'collar_soil_temp', 
+        'PARSunLight_umolm2s': 'PAR', 'VWC': 'collar_VWC'
+    }, axis = 1)
+    data.columns = [c.replace('.',' ') for c in data.columns]
+    data = data[['Timestamp', 'plot', 'warming_treatment', 'CO2_treatment', 'collar_number',
+                 'CO2_flux', 'collar_soil_temp', 'PAR', 'collar_VWC']]
+
+    # Columns that vary per collar
+    collar_varying = ['CO2_flux', 'PAR', 'collar_soil_temp', 'collar_VWC']
+
+    # Columns that are identical across collars (shared)
+    shared_cols = [c for c in data.columns if c not in collar_varying + ['collar_number']]
+
+    # Split by collar
+    c1 = data[data['collar_number'] == 1].copy()
+    c2 = data[data['collar_number'] == 2].copy()
+
+    # Rename varying columns with suffix
+    c1 = c1.rename(columns={col: f'{col}_Collar_1' for col in collar_varying})
+    c2 = c2.rename(columns={col: f'{col}_Collar_2' for col in collar_varying})
+
+    # Drop collar_number before merging
+    c1 = c1.drop(columns=['collar_number'])
+    c2 = c2.drop(columns=['collar_number'])[['Timestamp', 'plot', 'warming_treatment', 'CO2_treatment'] + [f'{col}_Collar_2' for col in collar_varying]]
+
+    # Merge on shared identifying columns
+    ###merge_keys = ['date_time_30_min_CST', 'plot', 'warming_treatment', 'CO2_treatment']
+    merge_keys = ['Timestamp', 'plot', 'warming_treatment', 'CO2_treatment']
+    result = c1.merge(c2, on=merge_keys, how='outer')
+
+    result['Timestamp'] = pd.to_datetime(result['Timestamp'])
+
+    return result
+
 
 # It turns out 2023 data is much more complete than 2022; 2022 only has a few months
 # Focus on 2023 then
 #data = pd.concat([read_2023(), read_2022()], axis = 0, ignore_index=True).sort_values(by=['warming_treatment','CO2_treatment','Timestamp'])
-data = read_2023().sort_values(by=['warming_treatment','CO2_treatment','Timestamp'])
-
+#data = read_2023().sort_values(by=['warming_treatment','CO2_treatment','Timestamp'])
+data = read_JonScript_night_data().sort_values(by=['warming_treatment','CO2_treatment','Timestamp'])
 
 ########################################################################
 # (2) Examine the data availability across the two years
@@ -135,7 +181,7 @@ warming_list = data['warming_treatment'].drop_duplicates().sort_values().values
 co2_list = data['CO2_treatment'].drop_duplicates().values
 
 print('CO2,warming,Q10,RMSE')
-fig, axes = plt.subplots(2, 5, figsize = (20, 12), sharex = True, sharey = False)
+fig, axes = plt.subplots(2, 5, figsize = (20, 12), sharex = True, sharey = True)
 count = 0
 for co2, warming in it.product(co2_list, warming_list):
     subset = data.query('warming_treatment == @warming and CO2_treatment == @co2').set_index('Timestamp')
@@ -157,7 +203,7 @@ for co2, warming in it.product(co2_list, warming_list):
     ax = axes.flat[count]
     ax.plot(t1, subset_1, 'o', label = 'Night Obs.', markersize = 3)
 
-    popt,pcov,names = fit_q10(t1, subset_1, T_ref=15)
+    popt,pcov,names,_ = fit_q10(t1, subset_1, T_ref=15)
     tmin, tmax = np.nanmin(t1), np.nanmax(t1)
     t_grid = np.linspace(tmin, tmax, 50)
     fitted = q10_function(t_grid, *popt, T_ref=15)
@@ -181,4 +227,3 @@ for i in range(count, len(axes.flat)):
 plt.savefig(os.path.join(os.environ['PROJDIR'], 'ELM_Nutrients', 'output', 'extract',
                             'extract_obs_small_collar', f'reco_Q10.png'), dpi=300)
 plt.close(fig)
-

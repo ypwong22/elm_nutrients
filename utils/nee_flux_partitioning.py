@@ -123,7 +123,7 @@ def gpp_par_wh(X, alpha, gmax, gw):
     X : 2D array where X[0] = PAR, X[1] = Wh
     """
     PAR, Wh = X[0], X[1]
-    gmax_eff = gmax + gw * Wh
+    gmax_eff = gmax + gw * np.sign(Wh) * (Wh ** 2)
     return rectangular_hyperbola(PAR, alpha, gmax_eff)
 
 
