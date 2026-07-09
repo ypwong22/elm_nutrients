@@ -5,7 +5,7 @@ import os
 from glob import glob
 import xarray as xr
 from .constants import *
-from .paths import *
+from .paths import path_intrim, path_out
 import warnings
 from typing import Union, List
 from scipy.stats import linregress, t
