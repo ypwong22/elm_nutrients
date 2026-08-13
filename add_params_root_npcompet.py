@@ -31,7 +31,6 @@ hr['flnr'][3] = 0.28
 hr['flnr'][11] = 0.28
 """
 
-"""
 # sensitivity of fine root to leaf ratio to water table
 # shrub = 1.4
 hr['zwt_froot_a'] = xr.DataArray(
@@ -249,7 +248,6 @@ hr['fungi_cost_p'] = xr.DataArray(
     [0], dims=["allpft"], # 200
     attrs={"units": "gP m-3", "long_name": "carbon cost of fungal P uptake"},
 )
-"""
 
 encoding = {}
 for data_var in hr.data_vars:
